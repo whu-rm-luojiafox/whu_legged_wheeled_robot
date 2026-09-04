@@ -1,0 +1,25 @@
+{
+    "files.associations": {
+        "crc8_crc16.h": "c",
+        "remote_control.h": "c",
+        "ins_task.h": "c",
+        "cmsis_os.h": "c",
+        "compare": "c",
+        "cstdint": "c",
+        "can_receive.h": "c",
+        "controller.h": "c",
+        "bsp_laser.h": "c",
+        "main.h": "c",
+        "shoot.h": "c",
+        "gimbal_task.h": "c",
+        "detect_task.h": "c",
+        "random": "c",
+        "format": "c",
+        "limits": "c",
+        "type_traits": "c",
+        "functional": "c",
+        "uart_task.h": "c",
+        "usart.h": "c",
+        "struct_typedef.h": "c"
+    }
+}

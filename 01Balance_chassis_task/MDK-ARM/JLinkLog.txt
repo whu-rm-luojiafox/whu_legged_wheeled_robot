@@ -1,0 +1,166 @@
+T7A34 000:262.651   SEGGER J-Link V8.90 Log File
+T7A34 000:263.397   DLL Compiled: Nov 26 2025 17:20:53
+T7A34 000:263.414   Logging started @ 2026-08-08 11:32
+T7A34 000:263.428   Process: D:\Keil5\UV4\UV4.exe
+T7A34 000:263.785 - 263.442ms 
+T7A34 000:263.922 JLINK_SetWarnOutHandler(...)
+T7A34 000:263.942 - 0.133ms 
+T7A34 000:263.960 JLINK_OpenEx(...)
+T7A34 000:274.769   Firmware: J-Link V9 compiled May  7 2021 16:26:12
+T7A34 000:275.656   Firmware: J-Link V9 compiled May  7 2021 16:26:12
+T7A34 000:276.074   Decompressing FW timestamp took 258 us
+T7A34 000:281.920   Hardware: V9.70
+T7A34 000:281.957   S/N: 602712370
+T7A34 000:281.975   OEM: SEGGER
+T7A34 000:281.993   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+T7A34 000:282.909   Bootloader: (FW returned invalid version)
+T7A34 000:283.681   TELNET listener socket opened on port 19021
+T7A34 000:283.798   WEBSRV WEBSRV_Init(): Starting webserver thread(s)
+T7A34 000:283.946   WEBSRV Webserver running on local port 19080
+T7A34 000:284.075   Looking for J-Link GUI Server exe at: D:\Keil5\ARM\Segger\JLinkGUIServer.exe
+T7A34 000:284.293   Looking for J-Link GUI Server exe at: C:\Program Files (x86)\SEGGER\JLink_V722b\JLinkGUIServer.exe
+T7A34 000:284.399   Forking J-Link GUI Server: C:\Program Files (x86)\SEGGER\JLink_V722b\JLinkGUIServer.exe
+T7A34 000:329.325   J-Link GUI Server info: "J-Link GUI server V7.22b "
+T7A34 000:329.560   J-Link GUI Server: Connection breakdown.
+T7A34 000:329.886 - 65.674ms returns "O.K."
+T7A34 000:329.948 JLINK_GetEmuCaps()
+T7A34 000:329.968 - 0.013ms returns 0xB9FF7BBF
+T7A34 000:329.985 JLINK_TIF_GetAvailable(...)
+T7A34 000:330.160 - 0.177ms 
+T7A34 000:330.187 JLINK_SetErrorOutHandler(...)
+T7A34 000:330.201 - 0.014ms 
+T7A34 000:330.432 JLINK_ExecCommand("ProjectFile = "E:\02GC\01RM_Balance_git\01Balance_chassis_task\MDK-ARM\JLinkSettings.ini"", ...). 
+T7A34 000:369.571   Ref file found at: D:\Keil5\ARM\Segger\JLinkDevices.ref
+T7A34 000:369.783   REF file references invalid XML file: C:\Program Files\SEGGER\JLink\JLinkDevices.xml
+T7A34 000:371.982 - 41.554ms returns 0x00
+T7A34 000:372.027 JLINK_ExecCommand("Device = STM32F407IGHx", ...). 
+T7A34 000:373.841   Device "STM32F407IG" selected.
+T7A34 000:374.150 - 2.104ms returns 0x00
+T7A34 000:374.179 JLINK_ExecCommand("DisableConnectionTimeout", ...). 
+T7A34 000:374.302   ERROR: Unknown command
+T7A34 000:374.473 - 0.276ms returns 0x01
+T7A34 000:374.500 JLINK_GetHardwareVersion()
+T7A34 000:374.515 - 0.014ms returns 97000
+T7A34 000:374.599 JLINK_GetDLLVersion()
+T7A34 000:374.630 - 0.030ms returns 89000
+T7A34 000:374.647 JLINK_GetOEMString(...)
+T7A34 000:374.663 JLINK_GetFirmwareString(...)
+T7A34 000:374.677 - 0.013ms 
+T7A34 000:374.697 JLINK_GetDLLVersion()
+T7A34 000:374.710 - 0.012ms returns 89000
+T7A34 000:374.725 JLINK_GetCompileDateTime()
+T7A34 000:374.738 - 0.013ms 
+T7A34 000:374.755 JLINK_GetFirmwareString(...)
+T7A34 000:374.768 - 0.012ms 
+T7A34 000:374.783 JLINK_GetHardwareVersion()
+T7A34 000:374.796 - 0.013ms returns 97000
+T7A34 000:374.811 JLINK_GetSN()
+T7A34 000:374.825 - 0.013ms returns 602712370
+T7A34 000:374.840 JLINK_GetOEMString(...)
+T7A34 000:375.055 JLINK_TIF_Select(JLINKARM_TIF_JTAG)
+T7A34 000:375.894 - 1.034ms returns 0x00
+T7A34 000:375.918 JLINK_HasError()
+T7A34 000:375.940 JLINK_SetSpeed(5000)
+T7A34 000:376.014 - 0.075ms 
+T7A34 000:376.402 JLINK_HasError()
+T7A34 000:376.426 JLINK_SetResetType(JLINKARM_RESET_TYPE_NORMAL)
+T7A34 000:376.441 - 0.015ms returns JLINKARM_RESET_TYPE_NORMAL
+T7A34 000:376.456 JLINK_Reset()
+T7A34 000:376.816   InitTarget() start
+T7A34 000:376.851    J-Link Script File: Executing InitTarget()
+T7A34 000:377.144   JTAG selected. Identifying JTAG Chain...
+T7A34 000:378.039   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:378.273   Error: Scanning JTAG chain failed.
+T7A34 000:378.295   Can not attach to CPU. Trying connect under reset.
+T7A34 000:429.264   JTAG selected. Identifying JTAG Chain...
+T7A34 000:430.437   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:430.805   Error: Scanning JTAG chain failed.
+T7A34 000:430.917   Connecting to CPU via connect under reset failed.
+T7A34 000:481.904   
+  ***** Error: 
+T7A34 000:481.953   J-Link script file function InitTarget() returned with error code -1
+T7A34 000:481.980   InitTarget() end - Took 105ms
+T7A34 000:482.012   Connect failed. Resetting via Reset pin and trying again.
+T7A34 000:543.299   InitTarget() start
+T7A34 000:543.375    J-Link Script File: Executing InitTarget()
+T7A34 000:543.853   JTAG selected. Identifying JTAG Chain...
+T7A34 000:545.136   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:545.656   Error: Scanning JTAG chain failed.
+T7A34 000:545.706   Can not attach to CPU. Trying connect under reset.
+T7A34 000:596.709   JTAG selected. Identifying JTAG Chain...
+T7A34 000:598.146   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:598.658   Error: Scanning JTAG chain failed.
+T7A34 000:598.716   Connecting to CPU via connect under reset failed.
+T7A34 000:649.406   
+  ***** Error: 
+T7A34 000:649.465   J-Link script file function InitTarget() returned with error code -1
+T7A34 000:649.491   InitTarget() end - Took 106ms
+T7A34 000:649.511 - 273.054ms 
+T7A34 000:649.547 JLINK_GetIdData(pIdData)
+T7A34 000:649.899   InitTarget() start
+T7A34 000:649.936    J-Link Script File: Executing InitTarget()
+T7A34 000:650.214   JTAG selected. Identifying JTAG Chain...
+T7A34 000:651.461   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:652.022   Error: Scanning JTAG chain failed.
+T7A34 000:652.072   Can not attach to CPU. Trying connect under reset.
+T7A34 000:703.243   JTAG selected. Identifying JTAG Chain...
+T7A34 000:705.098   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:705.550   Error: Scanning JTAG chain failed.
+T7A34 000:705.619   Connecting to CPU via connect under reset failed.
+T7A34 000:757.011   
+  ***** Error: 
+T7A34 000:757.070   J-Link script file function InitTarget() returned with error code -1
+T7A34 000:757.102   InitTarget() end - Took 107ms
+T7A34 000:757.126   Connect failed. Resetting via Reset pin and trying again.
+T7A34 000:818.585   InitTarget() start
+T7A34 000:818.634    J-Link Script File: Executing InitTarget()
+T7A34 000:818.928   JTAG selected. Identifying JTAG Chain...
+T7A34 000:820.003   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:820.368   Error: Scanning JTAG chain failed.
+T7A34 000:820.406   Can not attach to CPU. Trying connect under reset.
+T7A34 000:870.930   JTAG selected. Identifying JTAG Chain...
+T7A34 000:872.174   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:872.544   Error: Scanning JTAG chain failed.
+T7A34 000:872.582   Connecting to CPU via connect under reset failed.
+T7A34 000:924.050   
+  ***** Error: 
+T7A34 000:924.122   J-Link script file function InitTarget() returned with error code -1
+T7A34 000:924.157   InitTarget() end - Took 105ms
+T7A34 000:924.183 - 274.635ms 
+T7A34 000:924.231 JLINK_GetIdData(pIdData)
+T7A34 000:924.471   InitTarget() start
+T7A34 000:924.514    J-Link Script File: Executing InitTarget()
+T7A34 000:924.754   JTAG selected. Identifying JTAG Chain...
+T7A34 000:925.902   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:926.445   Error: Scanning JTAG chain failed.
+T7A34 000:926.483   Can not attach to CPU. Trying connect under reset.
+T7A34 000:977.338   JTAG selected. Identifying JTAG Chain...
+T7A34 000:978.601   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 000:979.149   Error: Scanning JTAG chain failed.
+T7A34 000:979.187   Connecting to CPU via connect under reset failed.
+T7A34 001:030.484   
+  ***** Error: 
+T7A34 001:030.556   J-Link script file function InitTarget() returned with error code -1
+T7A34 001:030.592   InitTarget() end - Took 105ms
+T7A34 001:030.620   Connect failed. Resetting via Reset pin and trying again.
+T7A34 001:093.038   InitTarget() start
+T7A34 001:093.095    J-Link Script File: Executing InitTarget()
+T7A34 001:093.463   JTAG selected. Identifying JTAG Chain...
+T7A34 001:094.735   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 001:095.283   Error: Scanning JTAG chain failed.
+T7A34 001:095.322   Can not attach to CPU. Trying connect under reset.
+T7A34 001:146.697   JTAG selected. Identifying JTAG Chain...
+T7A34 001:148.048   TotalIRLen = ?, IRPrint = 0x..000000000000000000000000
+T7A34 001:148.553   Error: Scanning JTAG chain failed.
+T7A34 001:148.594   Connecting to CPU via connect under reset failed.
+T7A34 001:200.075   
+  ***** Error: 
+T7A34 001:200.134   J-Link script file function InitTarget() returned with error code -1
+T7A34 001:200.163   InitTarget() end - Took 106ms
+T7A34 001:200.185 - 275.953ms 
+T7A34 001:212.449 JLINK_GetFirmwareString(...)
+T7A34 001:212.487 - 0.037ms 
+T7A34 004:767.028 JLINK_Close()
+T7A34 004:776.938 - 9.909ms
+T7A34 004:776.969   
+T7A34 004:776.981   Closed

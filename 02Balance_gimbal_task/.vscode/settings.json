@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "remote_control.h": "c",
+        "ins_task.h": "c",
+        "bsp_usart.h": "c",
+        "detect_task.h": "c",
+        "cmsis_os.h": "c",
+        "can_receive.h": "c",
+        "bsp_rng.h": "c",
+        "struct_typedef.h": "c"
+    }
+}

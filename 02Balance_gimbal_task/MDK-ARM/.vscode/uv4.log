@@ -1,0 +1,191 @@
+*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'D:\Keil5\ARM\ARMCC\Bin'
+Build target 'standard_robot'
+compiling shoot.c...
+..\application\CAN_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+..\application\CAN_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+..\application\CAN_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+..\application\CAN_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+..\application\INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+..\application\gimbal_task.h(238): error:  #20: identifier "shoot_control_t" is undefined
+    const shoot_control_t *shoot;
+..\application\gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+..\application\gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+..\application\shoot.c(222): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\shoot.c: 8 warnings, 1 error
+compiling CAN_receive.c...
+..\application\CAN_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+..\application\CAN_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+..\application\CAN_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+..\application\CAN_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+..\application\INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+..\application\gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+..\application\gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+..\application\CAN_receive.c(174): warning:  #9-D: nested comment is not allowed
+  /**
+..\application\CAN_receive.c(485): warning:  #1-D: last line of file ends without a newline
+  // }
+..\application\CAN_receive.c: 9 warnings, 0 errors
+compiling calibrate_task.c...
+..\application\can_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+..\application\can_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+..\application\can_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+..\application\can_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+..\application\INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+..\application\gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+..\application\gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+..\application\calibrate_task.c: 7 warnings, 0 errors
+compiling CAN_task.c...
+..\application\CAN_task.h(2): warning:  #1295-D: Deprecated declaration can_task - give arg types
+  void can_task();
+..\application\CAN_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+..\application\CAN_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+..\application\CAN_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+..\application\CAN_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+..\application\INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+..\application\gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+..\application\gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+..\application\CAN_task.c: 8 warnings, 0 errors
+compiling freertos.c...
+../application/CAN_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+../application/CAN_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+../application/CAN_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+../application/CAN_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+../application/INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+../application/gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+../application/gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+../application/CAN_task.h(2): warning:  #1295-D: Deprecated declaration can_task - give arg types
+  void can_task();
+../application/Self_aim.h(49): warning:  #1-D: last line of file ends without a newline
+  InputData *get_selfaim_data();
+../application/Self_aim.h(49): warning:  #1295-D: Deprecated declaration get_selfaim_data - give arg types
+  InputData *get_selfaim_data();
+../Src/freertos.c(196): warning:  #550-D: variable "s"  was set but never used
+    float s[3] = {0};
+../Src/freertos.c: 11 warnings, 0 errors
+compiling gimbal_task.c...
+..\application\CAN_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+..\application\CAN_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+..\application\CAN_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+..\application\CAN_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+..\application\INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+..\application\gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+..\application\gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+..\application\Self_aim.h(49): warning:  #1-D: last line of file ends without a newline
+  InputData *get_selfaim_data();
+..\application\Self_aim.h(49): warning:  #1295-D: Deprecated declaration get_selfaim_data - give arg types
+  InputData *get_selfaim_data();
+..\application\gimbal_task.c(359): warning:  #188-D: enumerated type mixed with another type
+    chassis_data.chassis_mode = 0;
+..\application\gimbal_task.c(468): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+    feedback_update->gimbal_pitch_motor.self_aim_pitch_angle = Self_aim_data->shoot_pitch / 3.14 * 180;
+..\application\gimbal_task.c(470): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+    feedback_update->gimbal_yaw_motor.self_aim_yaw_angle = sliding_average(Self_aim_data->shoot_yaw / 3.14 * 180);
+..\application\gimbal_task.c(517): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      set_control->gimbal_pitch_motor.absolute_angle_set -= pitch_channel * 
+ITCH_RC_SEN + set_control->gimbal_rc_ctrl->mouse.y * 
+ITCH_MOUSE_SEN * 0.5;
+..\application\gimbal_task.c(703): warning:  #177-D: variable "angleset"  was declared but never referenced
+    fp32 angleset;
+..\application\gimbal_task.c(631): warning:  #177-D: function "gimbal_PID_init"  was declared but never referenced
+  static void gimbal_PID_init(gimbal_PID_t *pid, fp32 maxout, fp32 max_iout, fp32 kp, fp32 ki, fp32 kd)
+..\application\gimbal_task.c(679): warning:  #177-D: function "gimbal_PID_clear"  was declared but never referenced
+  static void gimbal_PID_clear(gimbal_PID_t *gimbal_pid_clear)
+..\application\gimbal_task.c(259): warning:  #177-D: variable "chassis_self_aim_yaw_filter"  was declared but never referenced
+  const static fp32 chassis_self_aim_yaw_filter[1] = {CHASSIS_ACCEL_Y_NUM};
+..\application\gimbal_task.c(263): warning:  #177-D: variable "yaw_can_set_current"  was declared but never referenced
+  static int16_t yaw_can_set_current = 0, pitch_can_set_current = 0;
+..\application\gimbal_task.c(263): warning:  #177-D: variable "pitch_can_set_current"  was declared but never referenced
+  static int16_t yaw_can_set_current = 0, pitch_can_set_current = 0;
+..\application\gimbal_task.c(608): warning:  #177-D: function "gimbal_motor_absolute_angle_control"  was declared but never referenced
+  static void gimbal_motor_absolute_angle_control(gimbal_motor_t *gimbal_motor)
+..\application\gimbal_task.c: 20 warnings, 0 errors
+compiling main.c...
+../application/CAN_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+../application/CAN_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+../application/CAN_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+../application/CAN_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+../application/INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+../application/gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+../application/gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+../Src/main.c: 7 warnings, 0 errors
+compiling Self_aim.c...
+..\application\Self_aim.h(49): warning:  #1-D: last line of file ends without a newline
+  InputData *get_selfaim_data();
+..\application\Self_aim.h(49): warning:  #1295-D: Deprecated declaration get_selfaim_data - give arg types
+  InputData *get_selfaim_data();
+..\application\CAN_receive.h(88): warning:  #64-D: declaration does not declare anything
+  extern motor_measure_t;
+..\application\CAN_receive.h(88): warning:  #1000-D: a storage class may not be specified here
+  extern motor_measure_t;
+..\application\CAN_receive.h(100): warning:  #64-D: declaration does not declare anything
+  extern lkmotor_measure_t;
+..\application\CAN_receive.h(100): warning:  #1000-D: a storage class may not be specified here
+  extern lkmotor_measure_t;
+..\application\INS_task.h(85): warning:  #1295-D: Deprecated declaration get_INS - give arg types
+  extern INS_t *get_INS();
+..\application\gimbal_task.h(293): warning:  #1295-D: Deprecated declaration get_chassis_data_point - give arg types
+  extern chassis_data_t *get_chassis_data_point();
+..\application\gimbal_task.h(294): warning:  #1295-D: Deprecated declaration get_gimbal_data - give arg types
+  extern gimbal_control_t *get_gimbal_data();
+..\application\Self_aim.c(66): warning:  #177-D: variable "tail"  was declared but never referenced
+                  FrameTailer *tail = (FrameTailer *)(buffer + sizeof(FrameHeader) + sizeof(InputData));
+..\application\Self_aim.c(94): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      Send_Data.output_data.curr_yaw = gimbal_data->gimbal_yaw_motor.absolute_angle / 180 * 3.1415926;
+..\application\Self_aim.c(95): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      Send_Data.output_data.curr_pitch = gimbal_data->gimbal_pitch_motor.absolute_angle / 180 * 3.1415926;
+..\application\Self_aim.c(138): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\Self_aim.c: 13 warnings, 0 errors
+".\standard_tpye_c\standard_tpye_c.axf" - 1 Error(s), 83 Warning(s).
+Target not created.
+Build Time Elapsed:  00:02:14

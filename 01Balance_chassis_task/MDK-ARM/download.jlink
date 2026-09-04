@@ -1,0 +1,30 @@
+// J-Link Download Script
+// Download hex file to STM32F407IGHx
+
+// Select device
+device STM32F407IGHx
+
+// Select interface
+si 1  // SWD
+
+// Speed
+speed 4000
+
+// Connect to device
+connect
+
+// Erase chip
+erase
+
+// Load hex file
+loadfile "chassis_task\chassis_task.hex"
+
+// Verify
+verify
+
+// Reset and run
+r
+go
+
+// Exit
+exit
