@@ -13,6 +13,10 @@ static uint8_t chassis_can_send_data[8];
 static CAN_TxHeaderTypeDef referee_tx_message;
 static uint8_t referee_can_send_data[1];
 
+static CAN_TxHeaderTypeDef  dm_tx_message;
+static uint8_t  			dm_can_send_data[8];
+static uint8_t  			dm_speed_ctrl_data[4];
+
 motor_measure_t motor_chassis[7];
 lkmotor_measure_t lkmotor_data[2];
 HTmotor_measure_t htmotor_data[4];
@@ -188,7 +192,7 @@ void CAN_INIT_STATUS(uint8_t status)
   referee_can_send_data[0] = status;
   HAL_CAN_AddTxMessage(&REFEREE_CAN, &referee_tx_message, referee_can_send_data, &send_mail_box);
 }
-/*------------------------6020ÔÆÌ¨µç»ú---------------------*/
+/*------------------------6020ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½---------------------*/
 void CAN_cmd_gimbal(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4)
 {
   uint32_t send_mail_box;
@@ -207,7 +211,7 @@ void CAN_cmd_gimbal(int16_t motor1, int16_t motor2, int16_t motor3, int16_t moto
 
   HAL_CAN_AddTxMessage(&hcan2, &gimbal_tx_message, gimbal_can_send_data, &send_mail_box);
 }
-/* ------------------------º£Ì©µç»ú------------------------- */
+/* ------------------------ï¿½ï¿½Ì©ï¿½ï¿½ï¿½------------------------- */
 void CAN_HT_CMD(uint8_t id, fp32 f_t)
 {
   float t1,t2,t3,t4;
@@ -279,7 +283,7 @@ void CAN_CMD_HT_Enable(uint8_t id, uint8_t unterleib_motor_send_data[8])
   HAL_CAN_AddTxMessage(
       &hcan1, &chassis_tx_message, unterleib_motor_send_data, &can_tx_mailbox);
 }
-/* ------------------------ê²¿Øµç»ú------------------------- */
+/* ------------------------ê²¿Øµï¿½ï¿½------------------------- */
 void CAN_LK_START_control(uint16_t id)
 {
   uint32_t send_mail_box;
@@ -399,7 +403,7 @@ void CAN_LK_Boradcast_Control(int16_t iqControl_1,int16_t iqControl_2,int16_t iq
   chassis_can_send_data[7] = *((uint8_t *)(&iqControl_4)+1);
   HAL_CAN_AddTxMessage(&hcan2, &chassis_tx_message, chassis_can_send_data, &send_mail_box);
 }
-/* -----------------³¬¼¶µçÈİ¹¦ÂÊ¿ØÖÆ----------------- */
+/* -----------------ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¹ï¿½ï¿½Ê¿ï¿½ï¿½ï¿½----------------- */
 void CAN_SuperPower_Control(super_power_t super_power_data)
 {
   uint32_t send_mail_box;
@@ -410,7 +414,7 @@ void CAN_SuperPower_Control(super_power_t super_power_data)
   chassis_tx_message.IDE = CAN_ID_STD;
   chassis_tx_message.RTR = CAN_RTR_DATA;
   chassis_tx_message.DLC = 0x08;
-  // Ö±½Ó¸´ÖÆÕû¸ö½á¹¹Ìå
+  // Ö±ï¿½Ó¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½
   for (i = 0; i < 8U; i++)
   {
     chassis_can_send_data[i] = p_data[i];
@@ -418,7 +422,7 @@ void CAN_SuperPower_Control(super_power_t super_power_data)
   HAL_CAN_AddTxMessage(&CHASSIS_CAN, &chassis_tx_message, chassis_can_send_data, &send_mail_box);
 }
 
-//===============Êı¾İ·´À¡º¯ÊıÖ¸Õë=================
+//==============ä»¥ä¸‹å‡½æ•°ä½œä¸ºè¿”å›æŒ‡é’ˆ è¿”å›æ•°æ®=================
 const motor_measure_t *get_yaw_gimbal_motor_measure_point(void)
 {
   return &motor_chassis[4];
@@ -457,3 +461,139 @@ float get_wheel_velocity_point(uint8_t index)
 }
 
 
+/* -----------------ä»¥ä¸‹ä¸ºdmç”µæœºæ‰€æœ‰çš„å‡½æ•°----------------- */
+
+void CAN_clear_dm_error()
+{
+    uint32_t send_mail_box;
+    dm_tx_message.StdId = CAN_DM_CLEAR_ERROR_ID;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+    dm_can_send_data[0] = 0x06;
+    dm_can_send_data[1] =(0x06 >>8);
+    dm_can_send_data[2] = 0x55 ;
+    dm_can_send_data[3] = 0x3C;
+    dm_can_send_data[4] = 0;
+    dm_can_send_data[5] = 0;
+    dm_can_send_data[6] = 0;
+    dm_can_send_data[7] = 0;
+    HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_can_send_data, &send_mail_box);
+}
+
+void CAN_dm_enable(uint16_t motor_ID)
+{
+    uint32_t send_mail_box;
+    dm_tx_message.StdId = motor_ID - 0x200;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+    dm_can_send_data[0] = 0xFF;
+    dm_can_send_data[1] = 0xFF;
+    dm_can_send_data[2] = 0xFF ;
+    dm_can_send_data[3] = 0xFF;
+    dm_can_send_data[4] = 0xFF;
+    dm_can_send_data[5] = 0xFF;
+    dm_can_send_data[6] = 0xFF;
+    dm_can_send_data[7] = 0xFC;
+    HAL_CAN_AddTxMessage(&hcan1, &dm_tx_message, dm_can_send_data, &send_mail_box);
+}
+void CAN_dm_disable(uint16_t motor_ID)
+{
+	  uint32_t send_mail_box;
+    dm_tx_message.StdId = motor_ID - 0x200 ;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+    dm_can_send_data[0] = 0xFF;
+    dm_can_send_data[1] = 0xFF;
+    dm_can_send_data[2] = 0xFF ;
+    dm_can_send_data[3] = 0xFF;
+    dm_can_send_data[4] = 0xFF;
+    dm_can_send_data[5] = 0xFF;
+    dm_can_send_data[6] = 0xFF;
+    dm_can_send_data[7] = 0xFD;
+    HAL_CAN_AddTxMessage(&hcan1, &dm_tx_message, dm_can_send_data, &send_mail_box);
+}
+
+void CAN_dm_save_0_point(uint16_t motor_ID)
+{
+    uint32_t send_mail_box;
+    dm_tx_message.StdId = motor_ID - 0x200;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+    dm_can_send_data[0] = 0xFF;
+    dm_can_send_data[1] = 0xFF;
+    dm_can_send_data[2] = 0xFF ;
+    dm_can_send_data[3] = 0xFF;
+    dm_can_send_data[4] = 0xFF;
+    dm_can_send_data[5] = 0xFF;
+    dm_can_send_data[6] = 0xFF;
+    dm_can_send_data[7] = 0xFE;
+    HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_can_send_data, &send_mail_box);
+}
+
+
+void get_dm_measure(dm_motor_measure_t *ptr,uint8_t *data)										
+{                                                                   
+	(ptr)->ID = (uint8_t)((data)[0]&0x0F);							
+	(ptr)->state = (uint8_t)((data[0])>>4);
+    (ptr)->p_int = (uint16_t)((data)[1] << 8 | (data)[2]);            
+    (ptr)->v_int = (uint16_t)((data)[3] << 4 | (data)[4]>>4);     	
+    (ptr)->t_int = (uint16_t)(((data)[4]&0x0F)<<8 | (data)[5]);    
+	
+	(ptr)->pos = uint_to_float(ptr->p_int, P_MIN, P_MAX, 16); // (-12.5,12.5)
+	(ptr)->vel = uint_to_float(ptr->v_int, V_MIN, V_MAX, 12); // (-45.0,45.0)
+    (ptr)->torque =uint_to_float(ptr->t_int, Tor_MIN, Tor_MAX, 12); // (-18.0,18.0)                             
+	(ptr)->rotor_temperate = (data)[7];                             
+}
+/**
+  * @brief:      	pos_speed_ctrl: ä½ç½®é€Ÿåº¦æ§åˆ¶å‡½æ•°
+  * @param[in]:     hcan:æŒ‡å‘CAN_HandleTypeDefç»“æ„çš„æŒ‡é’ˆï¼Œç”¨äºæŒ‡å®šCANæ€»çº¿
+  * @param[in]:     motor_id:ç”µæœºIDï¼ŒæŒ‡å®šç›®æ ‡ç”µæœº
+  * @param[in]:     vel:é€Ÿåº¦ç»™å®šå€¼
+  * @retval:     	void
+  */
+void pos_sped_ctrl(float p_des,float v_limit,uint16_t motor_ID)
+{
+    uint32_t send_mail_box;
+    dm_tx_message.StdId = motor_ID - 0x100;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+	
+	uint8_t *p_des_temp,*v_limit_temp;
+	p_des_temp = (uint8_t*) & p_des;
+	v_limit_temp = (uint8_t*) & v_limit;
+	
+    dm_can_send_data[0] = *p_des_temp;;
+    dm_can_send_data[1] = *(p_des_temp+1);
+    dm_can_send_data[2] = *(p_des_temp+2);
+    dm_can_send_data[3] = *(p_des_temp+3);
+	
+    dm_can_send_data[4] = *v_limit_temp;
+    dm_can_send_data[5] = *(v_limit_temp+1);
+    dm_can_send_data[6] = *(v_limit_temp+2);
+    dm_can_send_data[7] = *(v_limit_temp+3);
+    HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_can_send_data, &send_mail_box);
+}
+
+void speed_ctrl(float vel,uint16_t motor_ID)
+{
+    uint32_t send_mail_box;
+    dm_tx_message.StdId = motor_ID;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+
+	uint8_t *vbuf;
+	vbuf=(uint8_t*)&vel;
+	
+	dm_speed_ctrl_data[0] = *vbuf; 
+	dm_speed_ctrl_data[1] = *(vbuf+1);
+	dm_speed_ctrl_data[2] = *(vbuf+2);
+	dm_speed_ctrl_data[3] = *(vbuf+3);
+
+	 HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_speed_ctrl_data, &send_mail_box);
+}

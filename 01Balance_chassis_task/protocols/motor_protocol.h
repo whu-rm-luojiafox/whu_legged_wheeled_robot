@@ -13,7 +13,17 @@
 #define KD_MAX 5.0f
 #define T_MIN -18.0f
 #define T_MAX 18.0f
-
+//========dm电机参数===========
+#define P_MIN   -12.5  
+#define P_MAX   12.5   
+#define V_MIN   -30.0    
+#define V_MAX   30.0     
+#define KP_MIN  0      
+#define KP_MAX  500    
+#define KD_MIN  0      
+#define KD_MAX  5      
+#define Tor_MIN   -18.0f  
+#define Tor_MAX   18.0f
 //=======can_id================
 /* CAN send and receive ID */
 typedef enum
@@ -44,6 +54,9 @@ typedef enum
   CAN_LK_MOTOR_ID2 = 0x142,
   CAN_LK_MOTOR_ID3 = 0x143,
 
+  CAN_DM_CLEAR_ERROR_ID = 0x7FF,
+  CAN_DM_IMU_ID = 0x11,
+
   CAN_SUPER_CAP_ID = 0x211,
   CAN_SUPER_CAP_SET_ID = 0x210,
   CAN_DISTANCE_ID = 0x208,
@@ -62,6 +75,7 @@ typedef struct
 	fp32 angle;
     int32_t ecd_count;
 } motor_measure_t;
+
 typedef struct
 {
 	int8_t temp;
@@ -80,6 +94,20 @@ typedef struct
   float velocity_rad_s;
   float real_torque;
 }HTmotor_measure_t;
+//
+typedef struct
+{
+    uint8_t ID;
+	uint8_t state;
+	int p_int;
+    int v_int;
+    int t_int;
+    float pos;
+    float vel;
+    float torque;
+    uint8_t mos_temperate;
+	uint8_t rotor_temperate;
+} dm_motor_measure_t;
 
 //=======解包宏/函数=======
 #define get_motor_measure(ptr, data)                                             \
