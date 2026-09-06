@@ -32,7 +32,7 @@ typedef enum
   CAN_3508_M1_ID = 0x201,
   CAN_3508_M2_ID = 0x202,
   CAN_3508_M3_ID = 0x203,
-  CAN_3508_M4_ID = 0x204,
+  // CAN_3508_M4_ID = 0x204,
 
   CAN_YAW_MOTOR_ID = 0x205,
   CAN_PIT_MOTOR_ID = 0x206,
@@ -56,6 +56,7 @@ typedef enum
 
   CAN_DM_CLEAR_ERROR_ID = 0x7FF,
   CAN_DM_IMU_ID = 0x11,
+  CAN_DM_MOTOR_ID4 = 0x204,
 
   CAN_SUPER_CAP_ID = 0x211,
   CAN_SUPER_CAP_SET_ID = 0x210,
@@ -173,6 +174,20 @@ typedef struct
     (ptr)->chassisPowerLimit =                                                   \
         (uint16_t)(((data)[6] << 8) | (data)[5]);                                \
     (ptr)->capEnergy = (uint8_t)(data)[7];                                       \
+  } while (0)
+
+#define get_dm_measure(ptr, data)                                             \
+  do                                                                           \
+  {                                                                            \
+    (ptr)->ID = (uint8_t)((data)[0] & 0x0F);                                   \
+    (ptr)->state = (uint8_t)((data)[0] >> 4);                                  \
+    (ptr)->p_int = (uint16_t)(((data)[1] << 8) | (data)[2]);                   \
+    (ptr)->v_int = (uint16_t)(((data)[3] << 4) | ((data)[4] >> 4));            \
+    (ptr)->t_int = (uint16_t)((((data)[4] & 0x0F) << 8) | (data)[5]);          \
+    (ptr)->pos = uint_to_float((ptr)->p_int, P_MIN, P_MAX, 16);                \
+    (ptr)->vel = uint_to_float((ptr)->v_int, V_MIN, V_MAX, 12);                \
+    (ptr)->torque = uint_to_float((ptr)->t_int, Tor_MIN, Tor_MAX, 12);         \
+    (ptr)->rotor_temperate = (data)[7];                                       \
   } while (0)
 
 //===========数学工具宏/函数============= 

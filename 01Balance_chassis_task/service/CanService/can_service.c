@@ -16,6 +16,7 @@ static uint8_t referee_can_send_data[1];
 static CAN_TxHeaderTypeDef  dm_tx_message;
 static uint8_t  			dm_can_send_data[8];
 static uint8_t  			dm_speed_ctrl_data[4];
+dm_motor_measure_t dm_motor[4];
 
 motor_measure_t motor_chassis[7];
 lkmotor_measure_t lkmotor_data[2];
@@ -40,28 +41,27 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     {
       return;
     }
-    switch (rx_data[0])
-    {
-      case CAN_HT_MOTOR_ID1:
-      case CAN_HT_MOTOR_ID2:
-      case CAN_HT_MOTOR_ID3:
-      case CAN_HT_MOTOR_ID4:
-      {
-        uint8_t i = rx_data[0] - CAN_HT_MOTOR_ID1;
-        get_HT_motor_measure(&htmotor_data[i], rx_data);
-        break;
-      }
-      default:
-      {
-        break;
-      }
-    }
+    // switch (rx_data[0])
+    // {
+    //   case CAN_DM_MOTOR_ID1:
+    //   case CAN_DM_MOTOR_ID2:
+    //   case CAN_DM_MOTOR_ID3:
+    //   case CAN_DM_MOTOR_ID4:
+    //   {
+    //     uint8_t i = rx_data[0] - CAN_HT_MOTOR_ID1;
+    //     get_HT_motor_measure(&htmotor_data[i], rx_data);
+    //     break;
+    //   }
+    //   default:
+    //   {
+    //     break;
+    //   }
+    // }
     switch (rx_header.StdId)
     {
     case CAN_3508_M1_ID:
     case CAN_3508_M2_ID:
     case CAN_3508_M3_ID:
-    case CAN_3508_M4_ID:
     {
       uint8_t i = rx_header.StdId - CAN_3508_M1_ID;
       get_motor_measure(&motor_chassis[i], rx_data);
@@ -72,6 +72,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     {
       get_superpower_measure(&super_power_data, rx_data);
       break;
+    }
+
+    case CAN_DM_MOTOR_ID4:
+    {
+      uint8_t i = rx_header.StdId - 0x200;
+      get_dm_measure(&dm_motor[i], rx_data);
+       break;
     }
     default:
     {
@@ -535,19 +542,6 @@ void CAN_dm_save_0_point(uint16_t motor_ID)
 }
 
 
-void get_dm_measure(dm_motor_measure_t *ptr,uint8_t *data)										
-{                                                                   
-	(ptr)->ID = (uint8_t)((data)[0]&0x0F);							
-	(ptr)->state = (uint8_t)((data[0])>>4);
-    (ptr)->p_int = (uint16_t)((data)[1] << 8 | (data)[2]);            
-    (ptr)->v_int = (uint16_t)((data)[3] << 4 | (data)[4]>>4);     	
-    (ptr)->t_int = (uint16_t)(((data)[4]&0x0F)<<8 | (data)[5]);    
-	
-	(ptr)->pos = uint_to_float(ptr->p_int, P_MIN, P_MAX, 16); // (-12.5,12.5)
-	(ptr)->vel = uint_to_float(ptr->v_int, V_MIN, V_MAX, 12); // (-45.0,45.0)
-    (ptr)->torque =uint_to_float(ptr->t_int, Tor_MIN, Tor_MAX, 12); // (-18.0,18.0)                             
-	(ptr)->rotor_temperate = (data)[7];                             
-}
 /**
   * @brief:      	pos_speed_ctrl: 位置速度控制函数
   * @param[in]:     hcan:指向CAN_HandleTypeDef结构的指针，用于指定CAN总线
@@ -596,4 +590,43 @@ void speed_ctrl(float vel,uint16_t motor_ID)
 	dm_speed_ctrl_data[3] = *(vbuf+3);
 
 	 HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_speed_ctrl_data, &send_mail_box);
+}
+
+/**
+  * @brief          dm j4310motor ctrl 
+  * @param[in]      _pos: expecteed position
+  * @param[in]      _vel: expecteed velocity
+  * @param[in]      _KP:  propotional argument for p
+  * @param[in]      _KD:  propotional argument for p
+  * @param[in]      _torq: 前馈力矩（重力+摩擦.etc）
+  * @retval         none
+  */
+void MIT_CtrlMotor(float _pos, float _vel,float _KP, float _KD, float _torq,uint16_t motor_ID)
+{
+    uint32_t send_mail_box;
+    uint16_t pos_tmp,vel_tmp,kp_tmp,kd_tmp,tor_tmp;
+   
+    pos_tmp = float_to_uint(_pos, -12.5, 12.5, 16); //位置最大最小值
+    vel_tmp = float_to_uint(_vel, -45, 45, 12); //velocity
+    kp_tmp = float_to_uint(_KP, 0, 500, 12); //kp
+    kd_tmp = float_to_uint(_KD, 0, 5, 12); //kd
+    tor_tmp = float_to_uint(_torq, -18, 18, 12);//转矩最大最小值
+	
+	dm_tx_message.StdId = motor_ID-0x200;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+	
+    dm_can_send_data[0] = (pos_tmp >> 8);
+    dm_can_send_data[1] = pos_tmp;
+    dm_can_send_data[2] = (vel_tmp >> 4);
+    dm_can_send_data[3] = ((vel_tmp&0xF)<<4)|(kp_tmp>>8);
+	
+    dm_can_send_data[4] = kp_tmp;
+    dm_can_send_data[5] = (kd_tmp >> 4);
+    dm_can_send_data[6] = ((kd_tmp&0xF)<<4)|(tor_tmp>>8);
+    dm_can_send_data[7] = tor_tmp;
+	
+    HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_can_send_data, &send_mail_box);
+
 }
