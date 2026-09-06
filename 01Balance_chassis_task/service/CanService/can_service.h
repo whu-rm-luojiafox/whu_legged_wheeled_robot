@@ -25,10 +25,17 @@ extern void CAN_LK_POSITION_Control(int32_t angleControl);
 extern void CAN_LK_SPEED_Control(int16_t iqControl,int32_t speedControl);
 extern void CAN_LK_Torque_Control(uint16_t id,int16_t iqControl);
 void CAN_LK_Boradcast_Control(int16_t iqControl_1,int16_t iqControl_2,int16_t iqControl_3,int16_t iqControl_4);
-
+/* -----------------------DM_func------------------------ */
+extern void CAN_clear_dm_error(void);
+extern void CAN_dm_enable(uint16_t motor_ID);
+extern void speed_ctrl(float vel,uint16_t motor_ID);
+extern void pos_sped_ctrl(float p_des,float v_limit,uint16_t motor_ID);
+extern void MIT_CtrlMotor(float _pos, float _vel,float _KP, float _KD, float _torq,uint16_t motor_ID);
+extern void CAN_dm_save_0_point(uint16_t motor_ID);
+extern void CAN_dm_disable(uint16_t motor_ID);
 /* -----------------------Setpower------------------------ */
 extern void CAN_SuperPower_Control(super_power_t super_power_data);
-//==========Êý¾Ý·´À¡º¯ÊýÖ¸Õë=============
+//==========ï¿½ï¿½ï¿½Ý·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½=============
 extern const motor_measure_t *get_yaw_gimbal_motor_measure_point(void);
 extern const motor_measure_t *get_pitch_gimbal_motor_measure_point(void);
 extern const motor_measure_t *get_trigger_motor_measure_point(void);
