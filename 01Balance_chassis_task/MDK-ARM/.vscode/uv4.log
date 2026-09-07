@@ -1,107 +1,147 @@
-*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'D:\Keil5\ARM\ARMCC\Bin'
-Build target 'chassis_task'
+*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'D:\Keil5 MDK\ARM\ARMCC\Bin'
+Rebuild target 'chassis_task'
+assembling startup_stm32f407xx.s...
+compiling calibrate_task.c...
+compiling detect_task.c...
+compiling tim.c...
+compiling i2c.c...
+compiling uart_receive.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\uart_receive.h(32): warning:  #1295-D: Deprecated declaration get_Uart_Chassisdata_point - give arg types
+  const chassis_data_t *get_Uart_Chassisdata_point();
+..\application\uart_receive.c(57): warning:  #223-D: function "memcpy" declared implicitly
+                  memcpy(&uart_data, buffer, sizeof(uart_data_t));
+..\application\uart_receive.c(75): warning:  #223-D: function "osDelay" declared implicitly
+         osDelay(100);
+..\application\uart_receive.c: 4 warnings, 0 errors
+compiling can.c...
+compiling main.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+../application/shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+../application/shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+../Src/main.c: 3 warnings, 0 errors
+compiling adc.c...
+compiling stm32f4xx_it.c...
+compiling remote_control.c...
+compiling rtc.c...
+compiling usart.c...
+compiling stm32f4xx_hal_msp.c...
+compiling spi.c...
+compiling gpio.c...
+compiling led_flow_task.c...
+compiling dma.c...
+compiling shoot.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+..\application\uart_receive.h(32): warning:  #1295-D: Deprecated declaration get_Uart_Chassisdata_point - give arg types
+  const chassis_data_t *get_Uart_Chassisdata_point();
+..\application\shoot.c(110): warning:  #223-D: function "abs" declared implicitly
+          (abs(given_current) > TRIGGER_JAM_MIN_CMD_CURRENT))
+..\application\shoot.c(430): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\shoot.c: 6 warnings, 0 errors
+compiling gimbal_task.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+..\application\uart_receive.h(32): warning:  #1295-D: Deprecated declaration get_Uart_Chassisdata_point - give arg types
+  const chassis_data_t *get_Uart_Chassisdata_point();
+..\application\gimbal_task.c(84): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	gimbal_control->gimbal_yaw_motor.motor_gyro=0.95*gimbal_control->gimbal_yaw_motor.motor_gyro+0.05*gimbal_control->gimbal_yaw_motor.last_motor_gyro;
+..\application\gimbal_task.c(84): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	gimbal_control->gimbal_yaw_motor.motor_gyro=0.95*gimbal_control->gimbal_yaw_motor.motor_gyro+0.05*gimbal_control->gimbal_yaw_motor.last_motor_gyro;
+..\application\gimbal_task.c(14): warning:  #177-D: function "gimbal_PID_init"  was declared but never referenced
+  static void gimbal_PID_init(gimbal_PID_t *pid, fp32 maxout, fp32 max_iout, fp32 kp, fp32 ki, fp32 kd)
+..\application\gimbal_task.c: 7 warnings, 0 errors
 compiling chassis_task.c...
-..\application\CAN_receive.h(189): warning:  #1295-D: Deprecated declaration get_Chassisdata_point - give arg types
-  extern const chassis_data_t *get_Chassisdata_point();
-..\application\shoot.h(43): warning:  #1295-D: Deprecated declaration shoot - give arg types
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
   extern shoot_control_t *shoot();
-..\application\shoot.h(44): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
   extern void shoot_init();
-..\application\shoot.h(46): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\gimbal_task.h(77): warning:  #1295-D: Deprecated declaration gimbal_task - give arg types
-  void gimbal_task();
-..\application\gimbal_task.h(79): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\vofa.h(2): warning:  #1-D: last line of file ends without a newline
-  void sendfloatdata(float data[],uint8_t number);
-..\application\Chassis_power_control.h(9): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\chassis_task.c(260): error:  #20: identifier "CHASSIS_VECTOR_RAW" is undefined
-    chassis_move_init->chassis_mode = CHASSIS_VECTOR_RAW;
-..\application\chassis_task.c(330): error:  #20: identifier "CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW" is undefined
-    if ((chassis_move_transit->last_chassis_mode != CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW) && chassis_move_transit->chassis_mode == CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW)
-..\application\chassis_task.c(336): error:  #20: identifier "CHASSIS_VECTOR_NO_FOLLOW_YAW" is undefined
-    else if ((chassis_move_transit->last_chassis_mode != CHASSIS_VECTOR_NO_FOLLOW_YAW) && chassis_move_transit->chassis_mode == CHASSIS_VECTOR_NO_FOLLOW_YAW)
-..\application\chassis_task.c(343): error:  #20: identifier "CHASSIS_VECTOR_FOLLOW_CHASSIS_YAW" is undefined
-    else if ((chassis_move_transit->last_chassis_mode != CHASSIS_VECTOR_FOLLOW_CHASSIS_YAW) && chassis_move_transit->chassis_mode == CHASSIS_VECTOR_FOLLOW_CHASSIS_YAW)
-..\application\chassis_task.c(387): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-    chassis_move_update->chassis_relative_angle = (
-ad_format((chassis_move_update->chassis_data_->yaw_angle) * 3.1415926535 / 180) - rad_format(*(chassis_move_update->chassis_INS_angle + INS_YAW_ADDRESS_OFFSET))) * 180 / 3.1415926535; // angle_change((chassis_move_update->gimbal_yaw_motor.gimbal_motor_measure->ecd-2)*360/8192);
-..\application\chassis_task.c(387): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-    chassis_move_update->chassis_relative_angle = (
-ad_format((chassis_move_update->chassis_data_->yaw_angle) * 3.1415926535 / 180) - 
-ad_format(*(chassis_move_update->chassis_INS_angle + INS_YAW_ADDRESS_OFFSET))) * 180 / 3.1415926535; // angle_change((chassis_move_update->gimbal_yaw_motor.gimbal_motor_measure->ecd-2)*360/8192);
-..\application\chassis_task.c(487): error:  #20: identifier "CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW" is undefined
-    if (chassis_move_control->chassis_mode == CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW)
-..\application\chassis_task.c(511): error:  #20: identifier "CHASSIS_VECTOR_NO_FOLLOW_YAW" is undefined
-    else if (chassis_move_control->chassis_mode == CHASSIS_VECTOR_NO_FOLLOW_YAW)
-..\application\chassis_task.c(524): error:  #20: identifier "CHASSIS_VECTOR_RAW" is undefined
-    else if (chassis_move_control->chassis_mode == CHASSIS_VECTOR_RAW)
-..\application\chassis_task.c(585): error:  #20: identifier "CHASSIS_VECTOR_RAW" is undefined
-    if (chassis_move_control_loop->chassis_mode == CHASSIS_VECTOR_RAW)
-..\application\chassis_task.c(140): warning:  #177-D: function "motor_ecd_to_angle_change"  was declared but never referenced
-  static fp32 motor_ecd_to_angle_change(uint16_t ecd, uint16_t offset_ecd)
-..\application\chassis_task.c: 11 warnings, 8 errors
+..\application\uart_receive.h(32): warning:  #1295-D: Deprecated declaration get_Uart_Chassisdata_point - give arg types
+  const chassis_data_t *get_Uart_Chassisdata_point();
+..\application\chassis_task.c: 4 warnings, 0 errors
+compiling chassis_behaviour.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+..\application\chassis_behaviour.c(284): warning:  #177-D: function "chassis_zero_force_control"  was declared but never referenced
+  static void chassis_zero_force_control(fp32 *vx_can_set, fp32 *vy_can_set, fp32 *wz_can_set, chassis_move_t *chassis_move_rc_to_vector)
+..\application\chassis_behaviour.c(369): warning:  #177-D: function "chassis_engineer_follow_chassis_yaw_control"  was declared but never referenced
+  static void chassis_engineer_follow_chassis_yaw_control(fp32 *vx_set, fp32 *vy_set, fp32 *angle_set, chassis_move_t *chassis_move_rc_to_vector)
+..\application\chassis_behaviour.c(430): warning:  #177-D: function "chassis_open_set_control"  was declared but never referenced
+  static void chassis_open_set_control(fp32 *vx_set, fp32 *vy_set, fp32 *wz_set, chassis_move_t *chassis_move_rc_to_vector)
+..\application\chassis_behaviour.c: 6 warnings, 0 errors
+compiling vofa.c...
+compiling freertos.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+../application/shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+../application/shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+../application/uart_receive.h(32): warning:  #1295-D: Deprecated declaration get_Uart_Chassisdata_point - give arg types
+  const chassis_data_t *get_Uart_Chassisdata_point();
+../Src/freertos.c: 4 warnings, 0 errors
 compiling test_task.c...
-..\application\vofa.h(2): warning:  #1-D: last line of file ends without a newline
-  void sendfloatdata(float data[],uint8_t number);
-..\application\CAN_receive.h(189): warning:  #1295-D: Deprecated declaration get_Chassisdata_point - give arg types
-  extern const chassis_data_t *get_Chassisdata_point();
-..\application\shoot.h(43): warning:  #1295-D: Deprecated declaration shoot - give arg types
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
   extern shoot_control_t *shoot();
-..\application\shoot.h(44): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
   extern void shoot_init();
-..\application\shoot.h(46): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\gimbal_task.h(77): warning:  #1295-D: Deprecated declaration gimbal_task - give arg types
-  void gimbal_task();
-..\application\gimbal_task.h(79): warning:  #1-D: last line of file ends without a newline
-  #endif
-../components/UI/ui_types.h(8): warning:  #14-D: extra text after expected end of preprocessing directive
-  #ifdef __CC_ARM || __GNUC__
-../components/UI/ui_default_Ungroup_0.h(12): warning:  #1295-D: Deprecated declaration _ui_init_default_Ungroup_0 - give arg types
-  void _ui_init_default_Ungroup_0();
-../components/UI/ui_default_Ungroup_0.h(13): warning:  #1295-D: Deprecated declaration _ui_update_default_Ungroup_0 - give arg types
-  void _ui_update_default_Ungroup_0();
-../components/UI/ui_default_Ungroup_0.h(14): warning:  #1295-D: Deprecated declaration _ui_remove_default_Ungroup_0 - give arg types
-  void _ui_remove_default_Ungroup_0();
-../components/UI/ui_default_Ungroup_1.h(12): warning:  #1295-D: Deprecated declaration _ui_init_default_Ungroup_1 - give arg types
-  void _ui_init_default_Ungroup_1();
-../components/UI/ui_default_Ungroup_1.h(13): warning:  #1295-D: Deprecated declaration _ui_update_default_Ungroup_1 - give arg types
-  void _ui_update_default_Ungroup_1();
-../components/UI/ui_default_Ungroup_1.h(14): warning:  #1295-D: Deprecated declaration _ui_remove_default_Ungroup_1 - give arg types
-  void _ui_remove_default_Ungroup_1();
-../components/UI/ui_default_Ungroup_2.h(12): warning:  #1295-D: Deprecated declaration _ui_init_default_Ungroup_2 - give arg types
-  void _ui_init_default_Ungroup_2();
-../components/UI/ui_default_Ungroup_2.h(13): warning:  #1295-D: Deprecated declaration _ui_update_default_Ungroup_2 - give arg types
-  void _ui_update_default_Ungroup_2();
-../components/UI/ui_default_Ungroup_2.h(14): warning:  #1295-D: Deprecated declaration _ui_remove_default_Ungroup_2 - give arg types
-  void _ui_remove_default_Ungroup_2();
-../components/UI/ui_default_Ungroup_3.h(12): warning:  #1295-D: Deprecated declaration _ui_init_default_Ungroup_3 - give arg types
-  void _ui_init_default_Ungroup_3();
-../components/UI/ui_default_Ungroup_3.h(13): warning:  #1295-D: Deprecated declaration _ui_update_default_Ungroup_3 - give arg types
-  void _ui_update_default_Ungroup_3();
-../components/UI/ui_default_Ungroup_3.h(14): warning:  #1295-D: Deprecated declaration _ui_remove_default_Ungroup_3 - give arg types
-  void _ui_remove_default_Ungroup_3();
-../components/UI/ui_default_Ungroup_4.h(18): warning:  #1295-D: Deprecated declaration _ui_init_default_Ungroup_4 - give arg types
-  void _ui_init_default_Ungroup_4();
-../components/UI/ui_default_Ungroup_4.h(19): warning:  #1295-D: Deprecated declaration _ui_update_default_Ungroup_4 - give arg types
-  void _ui_update_default_Ungroup_4();
-../components/UI/ui_default_Ungroup_4.h(20): warning:  #1295-D: Deprecated declaration _ui_remove_default_Ungroup_4 - give arg types
-  void _ui_remove_default_Ungroup_4();
-../components/UI/ui_default_Ungroup_5.h(12): warning:  #1295-D: Deprecated declaration _ui_init_default_Ungroup_5 - give arg types
-  void _ui_init_default_Ungroup_5();
-../components/UI/ui_default_Ungroup_5.h(13): warning:  #1295-D: Deprecated declaration _ui_update_default_Ungroup_5 - give arg types
-  void _ui_update_default_Ungroup_5();
-../components/UI/ui_default_Ungroup_5.h(14): warning:  #1295-D: Deprecated declaration _ui_remove_default_Ungroup_5 - give arg types
-  void _ui_remove_default_Ungroup_5();
-..\application\test_task.c(59): error:  #20: identifier "CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW" is undefined
-  	if(chassis_move.chassis_mode == CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW)
-..\application\test_task.c(63): error:  #20: identifier "CHASSIS_VECTOR_NO_FOLLOW_YAW" is undefined
-      else if(chassis_move.chassis_mode == CHASSIS_VECTOR_NO_FOLLOW_YAW)
-..\application\test_task.c(67): error:  #20: identifier "CHASSIS_VECTOR_RAW" is undefined
-  	 else if(chassis_move.chassis_mode == CHASSIS_VECTOR_RAW)
+../components/UI/ui_g.h(19): warning:  #1295-D: Deprecated declaration ui_init_g_DynamicGroup - give arg types
+  void ui_init_g_DynamicGroup();
+../components/UI/ui_g.h(20): warning:  #1295-D: Deprecated declaration ui_update_g_DynamicGroup - give arg types
+  void ui_update_g_DynamicGroup();
+../components/UI/ui_g.h(21): warning:  #1295-D: Deprecated declaration ui_remove_g_DynamicGroup - give arg types
+  void ui_remove_g_DynamicGroup();
+../components/UI/ui_g.h(31): warning:  #1295-D: Deprecated declaration ui_init_g_StaticGraphicGroup - give arg types
+  void ui_init_g_StaticGraphicGroup();
+../components/UI/ui_g.h(32): warning:  #1295-D: Deprecated declaration ui_update_g_StaticGraphicGroup - give arg types
+  void ui_update_g_StaticGraphicGroup();
+../components/UI/ui_g.h(33): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticGraphicGroup - give arg types
+  void ui_remove_g_StaticGraphicGroup();
+../components/UI/ui_g.h(41): warning:  #1295-D: Deprecated declaration ui_init_g_StaticTextGroup - give arg types
+  void ui_init_g_StaticTextGroup();
+../components/UI/ui_g.h(42): warning:  #1295-D: Deprecated declaration ui_update_g_StaticTextGroup - give arg types
+  void ui_update_g_StaticTextGroup();
+../components/UI/ui_g.h(43): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticTextGroup - give arg types
+  void ui_remove_g_StaticTextGroup();
+../components/UI/ui.h(28): warning:  #1295-D: Deprecated declaration ui_init_g_DynamicGroup - give arg types
+  void ui_init_g_DynamicGroup();
+../components/UI/ui.h(29): warning:  #1295-D: Deprecated declaration ui_update_g_DynamicGroup - give arg types
+  void ui_update_g_DynamicGroup();
+../components/UI/ui.h(30): warning:  #1295-D: Deprecated declaration ui_remove_g_DynamicGroup - give arg types
+  void ui_remove_g_DynamicGroup();
+../components/UI/ui.h(31): warning:  #1295-D: Deprecated declaration ui_init_g_StaticGraphicGroup - give arg types
+  void ui_init_g_StaticGraphicGroup();
+../components/UI/ui.h(32): warning:  #1295-D: Deprecated declaration ui_update_g_StaticGraphicGroup - give arg types
+  void ui_update_g_StaticGraphicGroup();
+../components/UI/ui.h(33): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticGraphicGroup - give arg types
+  void ui_remove_g_StaticGraphicGroup();
+../components/UI/ui.h(34): warning:  #1295-D: Deprecated declaration ui_init_g_StaticTextGroup - give arg types
+  void ui_init_g_StaticTextGroup();
+../components/UI/ui.h(35): warning:  #1295-D: Deprecated declaration ui_update_g_StaticTextGroup - give arg types
+  void ui_update_g_StaticTextGroup();
+../components/UI/ui.h(36): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticTextGroup - give arg types
+  void ui_remove_g_StaticTextGroup();
 ..\application\test_task.c(49): warning:  #177-D: variable "error"  was declared but never referenced
       static uint8_t error, last_error;
 ..\application\test_task.c(49): warning:  #177-D: variable "last_error"  was declared but never referenced
@@ -110,97 +150,223 @@ compiling test_task.c...
       static uint8_t error_num;
 ..\application\test_task.c(119): warning:  #177-D: function "buzzer_warn_error"  was declared but never referenced
   static void buzzer_warn_error(uint8_t num)
-..\application\test_task.c: 30 warnings, 3 errors
-compiling chassis_behaviour.c...
-..\application\CAN_receive.h(189): warning:  #1295-D: Deprecated declaration get_Chassisdata_point - give arg types
-  extern const chassis_data_t *get_Chassisdata_point();
-..\application\shoot.h(43): warning:  #1295-D: Deprecated declaration shoot - give arg types
+..\application\test_task.c: 25 warnings, 0 errors
+compiling INS_task.c...
+compiling referee.c...
+..\application\referee.c(205): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\referee.c: 1 warning, 0 errors
+compiling ist8310driver.c...
+compiling set_power_task.c...
+..\application\set_power_task.c(20): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\set_power_task.c: 1 warning, 0 errors
+compiling Can_task.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
   extern shoot_control_t *shoot();
-..\application\shoot.h(44): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
   extern void shoot_init();
-..\application\shoot.h(46): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\gimbal_task.h(77): warning:  #1295-D: Deprecated declaration gimbal_task - give arg types
-  void gimbal_task();
-..\application\gimbal_task.h(79): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\chassis_behaviour.c(260): error:  #20: identifier "CHASSIS_VECTOR_RAW" is undefined
-          chassis_move_mode->chassis_mode = CHASSIS_VECTOR_RAW; 
-..\application\chassis_behaviour.c(264): error:  #20: identifier "CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW" is undefined
-          chassis_move_mode->chassis_mode = CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW;
-..\application\chassis_behaviour.c(268): error:  #20: identifier "CHASSIS_VECTOR_NO_FOLLOW_YAW" is undefined
-          chassis_move_mode->chassis_mode = CHASSIS_VECTOR_NO_FOLLOW_YAW;
-..\application\chassis_behaviour.c(333): warning:  #177-D: function "chassis_zero_force_control"  was declared but never referenced
-  static void chassis_zero_force_control(fp32 *vx_can_set, fp32 *vy_can_set, fp32 *wz_can_set, chassis_move_t *chassis_move_rc_to_vector)
-..\application\chassis_behaviour.c(418): warning:  #177-D: function "chassis_engineer_follow_chassis_yaw_control"  was declared but never referenced
-  static void chassis_engineer_follow_chassis_yaw_control(fp32 *vx_set, fp32 *vy_set, fp32 *angle_set, chassis_move_t *chassis_move_rc_to_vector)
-..\application\chassis_behaviour.c(479): warning:  #177-D: function "chassis_open_set_control"  was declared but never referenced
-  static void chassis_open_set_control(fp32 *vx_set, fp32 *vy_set, fp32 *wz_set, chassis_move_t *chassis_move_rc_to_vector)
-..\application\chassis_behaviour.c: 9 warnings, 3 errors
-compiling main.c...
-../application/CAN_receive.h(189): warning:  #1295-D: Deprecated declaration get_Chassisdata_point - give arg types
-  extern const chassis_data_t *get_Chassisdata_point();
-../application/shoot.h(43): warning:  #1295-D: Deprecated declaration shoot - give arg types
-  extern shoot_control_t *shoot();
-../application/shoot.h(44): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
-  extern void shoot_init();
-../application/shoot.h(46): warning:  #1-D: last line of file ends without a newline
-  #endif
-../application/gimbal_task.h(77): warning:  #1295-D: Deprecated declaration gimbal_task - give arg types
-  void gimbal_task();
-../application/gimbal_task.h(79): warning:  #1-D: last line of file ends without a newline
-  #endif
-../Src/main.c: 6 warnings, 0 errors
-compiling freertos.c...
-../application/CAN_receive.h(189): warning:  #1295-D: Deprecated declaration get_Chassisdata_point - give arg types
-  extern const chassis_data_t *get_Chassisdata_point();
-../application/shoot.h(43): warning:  #1295-D: Deprecated declaration shoot - give arg types
-  extern shoot_control_t *shoot();
-../application/shoot.h(44): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
-  extern void shoot_init();
-../application/shoot.h(46): warning:  #1-D: last line of file ends without a newline
-  #endif
-../application/gimbal_task.h(77): warning:  #1295-D: Deprecated declaration gimbal_task - give arg types
-  void gimbal_task();
-../application/gimbal_task.h(79): warning:  #1-D: last line of file ends without a newline
-  #endif
-../application/Can_task.h(2): warning:  #1-D: last line of file ends without a newline
-  extern void Can_task(void const *pvParameters);
-../Src/freertos.c: 7 warnings, 0 errors
+..\application\Can_task.c(46): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\Can_task.c: 4 warnings, 0 errors
 compiling Chassis_power_control.c...
-..\application\CAN_receive.h(189): warning:  #1295-D: Deprecated declaration get_Chassisdata_point - give arg types
-  extern const chassis_data_t *get_Chassisdata_point();
-..\application\shoot.h(43): warning:  #1295-D: Deprecated declaration shoot - give arg types
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
   extern shoot_control_t *shoot();
-..\application\shoot.h(44): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
   extern void shoot_init();
-..\application\shoot.h(46): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\gimbal_task.h(77): warning:  #1295-D: Deprecated declaration gimbal_task - give arg types
-  void gimbal_task();
-..\application\gimbal_task.h(79): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\Chassis_power_control.h(9): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\Chassis_power_control.c(15): warning:  #177-D: variable "Power_Max"  was declared but never referenced
-  static uint16_t  Power_Max;
-..\application\Chassis_power_control.c: 8 warnings, 0 errors
-compiling gimbal_task.c...
-..\application\CAN_receive.h(189): warning:  #1295-D: Deprecated declaration get_Chassisdata_point - give arg types
-  extern const chassis_data_t *get_Chassisdata_point();
-..\application\shoot.h(43): warning:  #1295-D: Deprecated declaration shoot - give arg types
+..\application\Chassis_power_control.c: 3 warnings, 0 errors
+compiling can_service.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+../application/shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
   extern shoot_control_t *shoot();
-..\application\shoot.h(44): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+../application/shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
   extern void shoot_init();
-..\application\shoot.h(46): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\gimbal_task.h(77): warning:  #1295-D: Deprecated declaration gimbal_task - give arg types
-  void gimbal_task();
-..\application\gimbal_task.h(79): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\application\gimbal_task.c(76): warning:  #223-D: function "fabl" declared implicitly
-  		if(fabl(gimbal_control->gimbal_yaw_motor.relative_angle-gimbal_control->gimbal_yaw_motor.relative_angle_set)>1)
-..\application\gimbal_task.c: 7 warnings, 0 errors
-"chassis_task\chassis_task.axf" - 14 Error(s), 78 Warning(s).
+..\service\CanService\can_service.c(213): warning:  #550-D: variable "t1"  was set but never used
+    float t1,t2,t3,t4;
+..\service\CanService\can_service.c(213): warning:  #550-D: variable "t2"  was set but never used
+    float t1,t2,t3,t4;
+..\service\CanService\can_service.c(213): warning:  #550-D: variable "t3"  was set but never used
+    float t1,t2,t3,t4;
+..\service\CanService\can_service.c(213): warning:  #550-D: variable "t4"  was set but never used
+    float t1,t2,t3,t4;
+..\service\CanService\can_service.c(465): error:  #20: identifier "dm_tx_message" is undefined
+      dm_tx_message.StdId = CAN_DM_CLEAR_ERROR_ID;
+..\service\CanService\can_service.c(465): error:  #20: identifier "CAN_DM_CLEAR_ERROR_ID" is undefined
+      dm_tx_message.StdId = CAN_DM_CLEAR_ERROR_ID;
+..\service\CanService\can_service.c(469): error:  #20: identifier "dm_can_send_data" is undefined
+      dm_can_send_data[0] = 0x06;
+..\service\CanService\can_service.c(483): error:  #20: identifier "dm_tx_message" is undefined
+      dm_tx_message.StdId = motor_ID - 0x200;
+..\service\CanService\can_service.c(487): error:  #20: identifier "dm_can_send_data" is undefined
+      dm_can_send_data[0] = 0xFF;
+..\service\CanService\can_service.c(500): error:  #20: identifier "dm_tx_message" is undefined
+      dm_tx_message.StdId = motor_ID - 0x200 ;
+..\service\CanService\can_service.c(504): error:  #20: identifier "dm_can_send_data" is undefined
+      dm_can_send_data[0] = 0xFF;
+..\service\CanService\can_service.c(518): error:  #20: identifier "dm_tx_message" is undefined
+      dm_tx_message.StdId = motor_ID - 0x200;
+..\service\CanService\can_service.c(522): error:  #20: identifier "dm_can_send_data" is undefined
+      dm_can_send_data[0] = 0xFF;
+..\service\CanService\can_service.c(541): error:  #247: function "uint_to_float"  has already been defined
+  float uint_to_float(int x_int, float x_min, float x_max, int bits)
+..\service\CanService\can_service.c(547): error:  #247: function "float_to_uint"  has already been defined
+  int float_to_uint(float x, float x_min, float x_max, int bits)
+..\service\CanService\can_service.c(553): error:  #20: identifier "dm_motor_measure_t" is undefined
+  void get_dm_measure(dm_motor_measure_t *ptr,uint8_t *data)										
+..\service\CanService\can_service.c(563): error:  #20: identifier "Tor_MIN" is undefined
+      (ptr)->torque =uint_to_float(ptr->t_int, Tor_MIN, Tor_MAX, 12); // (-18.0,18.0)                             
+..\service\CanService\can_service.c(563): error:  #20: identifier "Tor_MAX" is undefined
+      (ptr)->torque =uint_to_float(ptr->t_int, Tor_MIN, Tor_MAX, 12); // (-18.0,18.0)                             
+..\service\CanService\can_service.c(576): error:  #20: identifier "dm_tx_message" is undefined
+      dm_tx_message.StdId = motor_ID - 0x100;
+..\service\CanService\can_service.c(585): error:  #20: identifier "dm_can_send_data" is undefined
+      dm_can_send_data[0] = *p_des_temp;;
+..\service\CanService\can_service.c(600): error:  #20: identifier "dm_tx_message" is undefined
+      dm_tx_message.StdId = motor_ID;
+..\service\CanService\can_service.c(608): error:  #20: identifier "dm_speed_ctrl_data" is undefined
+  	dm_speed_ctrl_data[0] = *vbuf; 
+..\service\CanService\can_service.c: 7 warnings, 18 errors
+compiling referee_usart_task.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\uart_receive.h(32): warning:  #1295-D: Deprecated declaration get_Uart_Chassisdata_point - give arg types
+  const chassis_data_t *get_Uart_Chassisdata_point();
+../components/UI/ui_g.h(19): warning:  #1295-D: Deprecated declaration ui_init_g_DynamicGroup - give arg types
+  void ui_init_g_DynamicGroup();
+../components/UI/ui_g.h(20): warning:  #1295-D: Deprecated declaration ui_update_g_DynamicGroup - give arg types
+  void ui_update_g_DynamicGroup();
+../components/UI/ui_g.h(21): warning:  #1295-D: Deprecated declaration ui_remove_g_DynamicGroup - give arg types
+  void ui_remove_g_DynamicGroup();
+../components/UI/ui_g.h(31): warning:  #1295-D: Deprecated declaration ui_init_g_StaticGraphicGroup - give arg types
+  void ui_init_g_StaticGraphicGroup();
+../components/UI/ui_g.h(32): warning:  #1295-D: Deprecated declaration ui_update_g_StaticGraphicGroup - give arg types
+  void ui_update_g_StaticGraphicGroup();
+../components/UI/ui_g.h(33): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticGraphicGroup - give arg types
+  void ui_remove_g_StaticGraphicGroup();
+../components/UI/ui_g.h(41): warning:  #1295-D: Deprecated declaration ui_init_g_StaticTextGroup - give arg types
+  void ui_init_g_StaticTextGroup();
+../components/UI/ui_g.h(42): warning:  #1295-D: Deprecated declaration ui_update_g_StaticTextGroup - give arg types
+  void ui_update_g_StaticTextGroup();
+../components/UI/ui_g.h(43): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticTextGroup - give arg types
+  void ui_remove_g_StaticTextGroup();
+../components/UI/ui.h(28): warning:  #1295-D: Deprecated declaration ui_init_g_DynamicGroup - give arg types
+  void ui_init_g_DynamicGroup();
+../components/UI/ui.h(29): warning:  #1295-D: Deprecated declaration ui_update_g_DynamicGroup - give arg types
+  void ui_update_g_DynamicGroup();
+../components/UI/ui.h(30): warning:  #1295-D: Deprecated declaration ui_remove_g_DynamicGroup - give arg types
+  void ui_remove_g_DynamicGroup();
+../components/UI/ui.h(31): warning:  #1295-D: Deprecated declaration ui_init_g_StaticGraphicGroup - give arg types
+  void ui_init_g_StaticGraphicGroup();
+../components/UI/ui.h(32): warning:  #1295-D: Deprecated declaration ui_update_g_StaticGraphicGroup - give arg types
+  void ui_update_g_StaticGraphicGroup();
+../components/UI/ui.h(33): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticGraphicGroup - give arg types
+  void ui_remove_g_StaticGraphicGroup();
+../components/UI/ui.h(34): warning:  #1295-D: Deprecated declaration ui_init_g_StaticTextGroup - give arg types
+  void ui_init_g_StaticTextGroup();
+../components/UI/ui.h(35): warning:  #1295-D: Deprecated declaration ui_update_g_StaticTextGroup - give arg types
+  void ui_update_g_StaticTextGroup();
+../components/UI/ui.h(36): warning:  #1295-D: Deprecated declaration ui_remove_g_StaticTextGroup - give arg types
+  void ui_remove_g_StaticTextGroup();
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+..\application\referee_usart_task.c: 22 warnings, 0 errors
+compiling motor_cmd.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+..\application\motor_cmd.c(29): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\motor_cmd.c: 4 warnings, 0 errors
+compiling oled_task.c...
+compiling user_lib.c...
+compiling voltage_task.c...
+compiling iwdg_task.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+..\application\shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+..\application\shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+..\application\iwdg_task.c(39): warning:  #1-D: last line of file ends without a newline
+  }
+..\application\iwdg_task.c: 4 warnings, 0 errors
+compiling kalman_service.c...
+compiling OLED.c...
+compiling BMI088Middleware.c...
+compiling kalman_filter.c...
+compiling CRC8_CRC16.c...
+compiling AHRS_middleware.c...
+compiling BMI088driver.c...
+compiling ist8310driver_middleware.c...
+compiling fifo.c...
+compiling LQR.c...
+..\protocols\gim_cha_protocol.h(44): warning:  #1-D: last line of file ends without a newline
+  #endif // !
+../application/shoot.h(69): warning:  #1295-D: Deprecated declaration shoot - give arg types
+  extern shoot_control_t *shoot();
+../application/shoot.h(70): warning:  #1295-D: Deprecated declaration shoot_init - give arg types
+  extern void shoot_init();
+..\components\algorithm\LQR.c: 3 warnings, 0 errors
+compiling bsp_buzzer.c...
+compiling pid.c...
+compiling bsp_delay.c...
+compiling bsp_can.c...
+compiling bsp_imu_pwm.c...
+compiling bsp_flash.c...
+compiling bsp_led.c...
+compiling ui_g.c...
+compiling bsp_rc.c...
+compiling stm32f4xx_ll_adc.c...
+compiling bsp_usart.c...
+compiling bsp_adc.c...
+compiling system_stm32f4xx.c...
+compiling bsp_i2c.c...
+compiling ui_interface.c...
+compiling bsp_spi.c...
+compiling stm32f4xx_hal_adc_ex.c...
+compiling stm32f4xx_hal_adc.c...
+compiling stm32f4xx_hal_flash_ramfunc.c...
+compiling stm32f4xx_hal_rcc_ex.c...
+compiling stm32f4xx_hal_flash.c...
+compiling stm32f4xx_hal_gpio.c...
+compiling stm32f4xx_hal_flash_ex.c...
+compiling stm32f4xx_hal_rcc.c...
+compiling stm32f4xx_hal_pwr.c...
+compiling stm32f4xx_hal_dma_ex.c...
+compiling stm32f4xx_hal_pwr_ex.c...
+compiling stm32f4xx_hal_dma.c...
+compiling stm32f4xx_hal_exti.c...
+compiling stm32f4xx_hal.c...
+compiling stm32f4xx_hal_cortex.c...
+compiling croutine.c...
+compiling stm32f4xx_hal_i2c_ex.c...
+compiling stm32f4xx_hal_can.c...
+compiling event_groups.c...
+compiling list.c...
+compiling queue.c...
+compiling stream_buffer.c...
+compiling heap_4.c...
+compiling timers.c...
+compiling stm32f4xx_hal_rtc_ex.c...
+compiling stm32f4xx_hal_rtc.c...
+compiling tasks.c...
+compiling stm32f4xx_hal_i2c.c...
+compiling stm32f4xx_hal_spi.c...
+compiling port.c...
+compiling stm32f4xx_hal_tim_ex.c...
+compiling stm32f4xx_hal_uart.c...
+compiling cmsis_os.c...
+compiling stm32f4xx_hal_tim.c...
+"chassis_task\chassis_task.axf" - 18 Error(s), 108 Warning(s).
 Target not created.
-Build Time Elapsed:  00:00:12
+Build Time Elapsed:  00:00:09
