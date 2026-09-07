@@ -1,7 +1,7 @@
 /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
   * @file       test_task.c/h
-  * @brief      buzzer warning task.·äÃùÆ÷±¨¾¯ÈÎÎñ
+  * @brief      buzzer warning task.èœ‚é¸£å™¨æŠ¥è­¦ä»»åŠ¡
   * @note       
   * @history
   *  Version    Date            Author          Modification
@@ -40,7 +40,7 @@ uint32_t sendTick =0;
   * @retval         none
   */
 /**
-  * @brief          testÈÎÎñ
+  * @brief          testä»»åŠ¡
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
@@ -69,29 +69,29 @@ void test_task(void const * argument)
 ////		ui_default_Ungroup_NewRound->color=7;
 ////	}
 //	switch (chassis_move.chassis_data_->shoot_mode & 0x01) {
-//		case 0x01:  // µ± shoot_mode µÄ×îµÍÎ»Îª 1 Ê±
+//		case 0x01:  // å½“ shoot_mode çš„æœ€ä½ä½ä¸º 1 æ—¶
 //			ui_default_Ungroup_NewRound2->color = 5;
 //			_ui_update_default_Ungroup_3();
 //			break;
-//		case 0x00:  // µ± shoot_mode µÄ×îµÍÎ»Îª 0 Ê±
+//		case 0x00:  // å½“ shoot_mode çš„æœ€ä½ä½ä¸º 0 æ—¶
 //			ui_default_Ungroup_NewRound2->color= 7;
 //			_ui_update_default_Ungroup_3();
 //			break;
 //		default:
-//			// Ä¬ÈÏÇé¿ö£¬¿ÉÒÔ¸ù¾İĞèÒª´¦Àí
+//			// é»˜è®¤æƒ…å†µï¼Œå¯ä»¥æ ¹æ®éœ€è¦å¤„ç†
 //			break;
 //}
 //	switch (chassis_move.chassis_data_->shoot_mode & 0x04) {
-//		case 0x04:  // µ± shoot_mode µÄµÚÈıÎ»Îª 1 Ê±
+//		case 0x04:  // å½“ shoot_mode çš„ç¬¬ä¸‰ä½ä¸º 1 æ—¶
 //			ui_default_Ungroup_NewRound1->color = 5;
 //			_ui_update_default_Ungroup_3();
 //        break;
-//		case 0x00:  // µ± shoot_mode µÄµÚÈıÎ»Îª 0 Ê±
+//		case 0x00:  // å½“ shoot_mode çš„ç¬¬ä¸‰ä½ä¸º 0 æ—¶
 //			ui_default_Ungroup_NewRound1->color = 7;
 //			_ui_update_default_Ungroup_3();
 //			break;
 //		default:
-//        // Ä¬ÈÏÇé¿ö£¬¿ÉÒÔ¸ù¾İĞèÒª´¦Àí
+//        // é»˜è®¤æƒ…å†µï¼Œå¯ä»¥æ ¹æ®éœ€è¦å¤„ç†
 //			break;
 //}
 //	
@@ -112,8 +112,8 @@ void test_task(void const * argument)
   * @retval         none
   */
 /**
-  * @brief          Ê¹µÃ·äÃùÆ÷Ïì
-  * @param[in]      num:ÏìÉù´ÎÊı
+  * @brief          ä½¿å¾—èœ‚é¸£å™¨å“
+  * @param[in]      num:å“å£°æ¬¡æ•°
   * @retval         none
   */
 static void buzzer_warn_error(uint8_t num)

@@ -28,16 +28,16 @@
 
 typedef struct
 {
-    float q[4]; // ËÄÔªÊı¹À¼ÆÖµ
+    float q[4]; // å››å…ƒæ•°ä¼°è®¡å€¼
 	
-    float Gyro[3];  // ½ÇËÙ¶È ĞòºÅÎªroll pitch yaw
-    float Accel[3]; // ¼ÓËÙ¶È
-    float MotionAccel_b[3]; // »úÌå×ø±ê¼ÓËÙ¶È
-    float MotionAccel_n[3]; // ¾ø¶ÔÏµ¼ÓËÙ¶È
+    float Gyro[3];  // è§’é€Ÿåº¦ åºå·ä¸ºroll pitch yaw
+    float Accel[3]; // åŠ é€Ÿåº¦
+    float MotionAccel_b[3]; // æœºä½“åæ ‡åŠ é€Ÿåº¦
+    float MotionAccel_n[3]; // ç»å¯¹ç³»åŠ é€Ÿåº¦
 
-    float AccelLPF; // ¼ÓËÙ¶ÈµÍÍ¨ÂË²¨ÏµÊı
+    float AccelLPF; // åŠ é€Ÿåº¦ä½é€šæ»¤æ³¢ç³»æ•°
 
-    // ¼ÓËÙ¶ÈÔÚ¾ø¶ÔÏµµÄÏòÁ¿±íÊ¾
+    // åŠ é€Ÿåº¦åœ¨ç»å¯¹ç³»çš„å‘é‡è¡¨ç¤º
     float xn[3];
     float yn[3];
     float zn[3];
@@ -45,7 +45,7 @@ typedef struct
     float atanxz;
     float atanyz;
 
-    // Î»×Ë
+    // ä½å§¿
     float Roll;
     float Pitch;
     float Yaw;
@@ -54,7 +54,7 @@ typedef struct
 
 
 /**
- * @brief ÓÃÓÚĞŞÕı°²×°Îó²îµÄ²ÎÊı,demoÖĞ¿ÉÎŞÊÓ
+ * @brief ç”¨äºä¿®æ­£å®‰è£…è¯¯å·®çš„å‚æ•°,demoä¸­å¯æ— è§†
  * 
  */
 typedef struct

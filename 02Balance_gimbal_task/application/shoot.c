@@ -15,7 +15,7 @@ int32_t time_cnt;
 int8_t continue_flag;
 uint8_t friction_speed_set_state = 0;
 uint8_t fric_flag = 0;
-//×ÔÃéÊı¾İ½á¹¹ÌåÖ¸Õë
+//è‡ªç„æ•°æ®ç»“æ„ä½“æŒ‡é’ˆ
 
 static const fp32 friction_speed_pid[3]={FRICTION_SPEED_PID_KP ,FRICTION_SPEED_PID_KI,FRICTION_SPEED_PID_KD};
 static const fp32 friction_current_pid[3]={FRICTION_CURRENT_PID_KP ,FRICTION_CURRENT_PID_KI,FRICTION_CURRENT_PID_KD};
@@ -35,13 +35,13 @@ void shoot_Init()
 	PID_init(&shoot_control.friction_left_motor_current_pid,PID_POSITION,friction_current_pid,FRICTION_CURRENT_PID_MAX_OUT,FRICTION_CURRENT_PID_MAX_IOUT);
 	PID_init(&shoot_control.friction_right_motor_current_pid,PID_POSITION,friction_current_pid,FRICTION_CURRENT_PID_MAX_OUT,FRICTION_CURRENT_PID_MAX_IOUT);
 	
-	//Éä»÷Ä£Ê½³õÊ¼»¯
+	//å°„å‡»æ¨¡å¼åˆå§‹åŒ–
 	shoot_control.shoot_mode = SHOOT_STOP;
 	shoot_control.shoot_rc = get_remote_control_point();
 	shoot_control.friction_motor_measure[0]=get_chassis_motor_measure_point(0);
 	shoot_control.friction_motor_measure[1]=get_chassis_motor_measure_point(1);
 
-	  //×ÔÃéÊı¾İ»ñÈ¡
+	  //è‡ªç„æ•°æ®è·å–
   	Self_aim_data = get_selfaim_data();
 
 }
@@ -50,12 +50,12 @@ void shoot_Init()
 
 void shoot_feedback_update()
 {
-	//µ±Ç°Öµ¼ÇÂ¼
+	//å½“å‰å€¼è®°å½•
 	shoot_control.last_press_l = shoot_control.press_l;
 	shoot_control.last_press_fric = shoot_control.press_fric;
 	shoot_control.last_keyboard = shoot_control.keyboard;
 	shoot_control.last_press_shoot = shoot_control.press_shoot;
-	//¸üĞÂÖµ
+	//æ›´æ–°å€¼
 	shoot_control.press_l = shoot_control.shoot_rc->mouse.press_l;
 	shoot_control.keyboard = shoot_control.shoot_rc->key.v;
 	shoot_control.press_fric = shoot_control.shoot_rc->rc.s[3];
@@ -69,20 +69,20 @@ void shoot_speed_filter()
 	shoot_control.friction_left_last_speed=shoot_control.friction_left_speed;
 	shoot_control.friction_right_last_speed=shoot_control.friction_right_speed;
 	
-	//ËùÎ½Ò»½×µÍÍ¨ÂË²¨
+	//æ‰€è°“ä¸€é˜¶ä½é€šæ»¤æ³¢
 	shoot_control.friction_left_speed=0.5f*shoot_control.friction_motor_measure[0]->speed_rpm+0.5f*shoot_control.friction_left_last_speed;
 	shoot_control.friction_right_speed=0.5f*shoot_control.friction_motor_measure[1]->speed_rpm+0.5f*shoot_control.friction_right_last_speed;
 	
-	//ËÙ¶ÈÏŞ·ù
+	//é€Ÿåº¦é™å¹…
 	shoot_control.friction_left_speed = fp32_constrain(shoot_control.friction_left_speed,-10000,10000);
 	shoot_control.friction_right_speed = fp32_constrain(shoot_control.friction_right_speed,-10000,10000);
 }
 void shoot_set_mode()
 {
 	if((shoot_control.press_fric==1&&shoot_control.last_press_fric==0)
-	||((shoot_control.keyboard & KEY_PRESSED_OFFSET_B) && !(shoot_control.last_keyboard& KEY_PRESSED_OFFSET_B)))	//ÓÒÉÏ½Ç×Ô¶¨Òå°´¼ü
+	||((shoot_control.keyboard & KEY_PRESSED_OFFSET_B) && !(shoot_control.last_keyboard& KEY_PRESSED_OFFSET_B)))	//å³ä¸Šè§’è‡ªå®šä¹‰æŒ‰é”®
 	{
-		fric_flag = !fric_flag;		//1 -> ¿ªÆôÄ¦²ÁÂÖ  0 -> ¹Ø±ÕÄ¦²ÁÂÖ
+		fric_flag = !fric_flag;		//1 -> å¼€å¯æ‘©æ“¦è½®  0 -> å…³é—­æ‘©æ“¦è½®
 		continue_flag = 0;
 		if(fric_flag == 1)		{shoot_control.shoot_mode=SHOOT_READY_FRIC;}
 		else if(fric_flag == 0)	{shoot_control.shoot_mode=SHOOT_STOP;}
@@ -90,7 +90,7 @@ void shoot_set_mode()
 	
 	if(fric_flag == 1) 
 	{
-		if( shoot_control.press_shoot==1||(shoot_control.press_l&&shoot_control.last_press_l))	//°â»ú°´ÏÂ
+		if( shoot_control.press_shoot==1||(shoot_control.press_l&&shoot_control.last_press_l))	//æ‰³æœºæŒ‰ä¸‹
 		{
 			shoot_control.shoot_mode=SHOOT_SINGLE;
 		}
@@ -117,13 +117,13 @@ void shoot_set_mode()
 			shoot_control.shoot_mode=SHOOT_READY_FRIC;
 			continue_flag = 0;
 		}
-		//¹ØÓÚ×ÔÃéµÄ¿ª²¥µ¯ÅÌ
+		//å…³äºè‡ªç„çš„å¼€æ’­å¼¹ç›˜
 		if(aimflag == 1)
 		{
 			if(Self_aim_data->mode == 2)
 			{
 				// continue_flag=0;
-				if( shoot_control.press_shoot==1||(shoot_control.press_l&&shoot_control.last_press_l))	//°â»ú°´ÏÂ
+				if( shoot_control.press_shoot==1||(shoot_control.press_l&&shoot_control.last_press_l))	//æ‰³æœºæŒ‰ä¸‹
 				{
 					shoot_control.shoot_mode=SHOOT_SINGLE;
 				}
@@ -180,16 +180,16 @@ void friction_control_set()
 
 const shoot_control_t *shoot_control_loop()
 {
-	//¸üĞÂÒ£¿ØºÍ°´¼üÊı¾İ
+	//æ›´æ–°é¥æ§å’ŒæŒ‰é”®æ•°æ®
 	shoot_feedback_update(); 
 
-	//ËÙ¶È¸³ÖµÓëÂË²¨
+	//é€Ÿåº¦èµ‹å€¼ä¸æ»¤æ³¢
 	shoot_speed_filter();
 
-	//Éä»÷Ä£Ê½ÉèÖÃ£¬×îÖÕ·¢µ½µ×ÅÌ
+	//å°„å‡»æ¨¡å¼è®¾ç½®ï¼Œæœ€ç»ˆå‘åˆ°åº•ç›˜
 	shoot_set_mode();		
 	
-	//ËÙ¶ÈÖµÉèÖÃ
+	//é€Ÿåº¦å€¼è®¾ç½®
 	friction_control_set();
 
 	PID_calc(&shoot_control.friction_left_motor_speed_pid, shoot_control.friction_left_speed, shoot_control.friction_left_speed_set);

@@ -1,7 +1,7 @@
 /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
   * @file       referee_usart_task.c/h
-  * @brief      RM referee system data solve. RM²ÃÅĞÏµÍ³Êı¾İ´¦Àí
+  * @brief      RM referee system data solve. RMè£åˆ¤ç³»ç»Ÿæ•°æ®å¤„ç†
   * @note       
   * @history
   *  Version    Date            Author          Modification
@@ -36,7 +36,7 @@
   * @retval         none
   */
 /**
-  * @brief          µ¥×Ö½Ú½â°ü
+  * @brief          å•å­—èŠ‚è§£åŒ…
   * @param[in]      void
   * @retval         none
   */
@@ -50,42 +50,42 @@ fifo_s_t referee_fifo;
 uint8_t referee_fifo_buf[REFEREE_FIFO_BUF_LENGTH];
 unpack_data_t referee_unpack_obj;
 
-uint32_t ui_fpsTick; // Ë¢ĞÂ¼ÆÊı
+uint32_t ui_fpsTick; // åˆ·æ–°è®¡æ•°
 uint32_t ui_period = 100;
-uint32_t ui_initTick_1; // ÖØĞÂ³õÊ¼»¯»æÖÆ¼ÆÊı£¨½â¾ö¶ª°üµ¼ÖÂ¾²Ì¬Í¼°¸¶ªÊ§£©
+uint32_t ui_initTick_1; // é‡æ–°åˆå§‹åŒ–ç»˜åˆ¶è®¡æ•°ï¼ˆè§£å†³ä¸¢åŒ…å¯¼è‡´é™æ€å›¾æ¡ˆä¸¢å¤±ï¼‰
 uint32_t ui_initTick_2;
 uint32_t ui_initTick_3;
-extern __IO uint32_t uwTick; // ÏµÍ³Ê±ÖÓ
+extern __IO uint32_t uwTick; // ç³»ç»Ÿæ—¶é’Ÿ
 
-//²ÃÅĞÏµÍ³
-extern robot_status_t robot_state; //»úÆ÷ÈË×´Ì¬
-extern power_heat_data_t power_heat_data;  //»úÆ÷ÈË¹¦ÂÊÓë·¢ÉäÈÈÁ¿
-extern projectile_allowance_t bullet_remaining;  //Ê£Óàµ¯Á¿
-extern game_status_t game_state;   //±ÈÈüĞÅÏ¢
-extern int ui_self_id;  //»úÆ÷ÈËID
+//è£åˆ¤ç³»ç»Ÿ
+extern robot_status_t robot_state; //æœºå™¨äººçŠ¶æ€
+extern power_heat_data_t power_heat_data;  //æœºå™¨äººåŠŸç‡ä¸å‘å°„çƒ­é‡
+extern projectile_allowance_t bullet_remaining;  //å‰©ä½™å¼¹é‡
+extern game_status_t game_state;   //æ¯”èµ›ä¿¡æ¯
+extern int ui_self_id;  //æœºå™¨äººID
 
-//ÔÆÌ¨Êı¾İ
+//äº‘å°æ•°æ®
 extern uart_data_t uart_data;
-//²¦µ¯ÅÌ½á¹¹ÌåÊı¾İ
+//æ‹¨å¼¹ç›˜ç»“æ„ä½“æ•°æ®
 extern shoot_control_t shoot_control;
 
-// Ïà»ú²ÎÊı
-#define HORIZONTAL_FOV     139.0f    // Ë®Æ½ÊÓ½Ç
-#define FOCAL_LENGTH_MM   12.0f      // µÈĞ§½¹¾à mm
-#define CAMERA_HEIGHT      0.6f     // Ïà»ú°²×°¸ß¶È£¨Ã×£©
+// ç›¸æœºå‚æ•°
+#define HORIZONTAL_FOV     139.0f    // æ°´å¹³è§†è§’
+#define FOCAL_LENGTH_MM   12.0f      // ç­‰æ•ˆç„¦è· mm
+#define CAMERA_HEIGHT      0.6f     // ç›¸æœºå®‰è£…é«˜åº¦ï¼ˆç±³ï¼‰
 
-// ÏñËØ½¹¾à¼ÆËã
-// f_ÏñËØ = Í¼Ïñ¿í¶È / (2 * tan(ÊÓ½Ç/2))
-#define FOCAL_LENGTH      (1920.0f / (2.0f * tanf(HORIZONTAL_FOV * 3.14159f / 360.0f)))  // ¡Ö 835 ÏñËØ
-#define CX                960.0f     // ¹âĞÄX
-#define CY                540.0f     // ¹âĞÄY
+// åƒç´ ç„¦è·è®¡ç®—
+// f_åƒç´  = å›¾åƒå®½åº¦ / (2 * tan(è§†è§’/2))
+#define FOCAL_LENGTH      (1920.0f / (2.0f * tanf(HORIZONTAL_FOV * 3.14159f / 360.0f)))  // â‰ˆ 835 åƒç´ 
+#define CX                960.0f     // å…‰å¿ƒX
+#define CY                540.0f     // å…‰å¿ƒY
 
 fp32 pitch_rad;
-// ================== ¶¯Ì¬ÆğÌøÏß¼ÆËã ==================
+// ================== åŠ¨æ€èµ·è·³çº¿è®¡ç®— ==================
 static int32_t calculate_jump_line_position(void)
 {
 
-    fp32 jump_distance = 0.8f;  // 0.6Ã×£¬¿É¸ù¾İËÙ¶Èµ÷Õû
+    fp32 jump_distance = 0.8f;  // 0.6ç±³ï¼Œå¯æ ¹æ®é€Ÿåº¦è°ƒæ•´
     
 
     pitch_rad = uart_data.receive_chassis_data.pitch_angle*PI/180.0f;
@@ -93,7 +93,7 @@ static int32_t calculate_jump_line_position(void)
     fp32 sin_p = sinf(pitch_rad);
     
     fp32 world_x = jump_distance;
-    fp32 world_z = 0.0f;  // µØÃæ¸ß¶È
+    fp32 world_z = 0.0f;  // åœ°é¢é«˜åº¦
     
 
     fp32 P_c_x = world_x;
@@ -109,7 +109,7 @@ static int32_t calculate_jump_line_position(void)
     if (v > 1080) v = 1080;
 
     
-    return (int32_t)v;  // ·µ»ØÏßµÄ¸ß¶ÈÏñËØÖµ
+    return (int32_t)v;  // è¿”å›çº¿çš„é«˜åº¦åƒç´ å€¼
 }
 // ==================================================
 
@@ -129,7 +129,7 @@ void referee_usart_task(void const * argument)
         ui_self_id =robot_state.robot_id;        
         referee_unpack_fifo_data();
         osDelay(10);
-        //¶¨Ê±³õÊ¼»¯·ÀÖ¹Í¼ĞÎÎ´½øĞĞ³õÊ¼»¯
+        //å®šæ—¶åˆå§‹åŒ–é˜²æ­¢å›¾å½¢æœªè¿›è¡Œåˆå§‹åŒ–
         if(uwTick - ui_initTick_1 >= 2*ui_period)
         {
           ui_initTick_1 =uwTick;
@@ -145,7 +145,7 @@ void referee_usart_task(void const * argument)
           ui_initTick_3 =uwTick;
           ui_init_g_StaticTextGroup();
         }
-        //ÉèÖÃ°´¼ü´¥·¢ÖØĞÂ³õÊ¼»¯
+        //è®¾ç½®æŒ‰é”®è§¦å‘é‡æ–°åˆå§‹åŒ–
         if(uart_data.receive_chassis_data.ui_init_flag==1)
         {
           ui_init_g_DynamicGroup();
@@ -153,8 +153,8 @@ void referee_usart_task(void const * argument)
           ui_init_g_StaticTextGroup();
           osDelay(ui_period);
         }
-        //¿ªÊ¼Î°´óµÄ±à³Ì°É
-        //×ÔÃéºÍÄ¦²ÁÂÖ
+        //å¼€å§‹ä¼Ÿå¤§çš„ç¼–ç¨‹å§
+        //è‡ªç„å’Œæ‘©æ“¦è½®
         if(uart_data.receive_chassis_data.fric_flag==1)
         {
           ui_g_DynamicGroup_FricRound->color = UI_Color_Pink;
@@ -201,7 +201,7 @@ void referee_usart_task(void const * argument)
   * @retval         none
   */
 /**
-  * @brief          µ¥×Ö½Ú½â°ü
+  * @brief          å•å­—èŠ‚è§£åŒ…
   * @param[in]      void
   * @retval         none
   */

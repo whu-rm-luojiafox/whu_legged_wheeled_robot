@@ -6,7 +6,7 @@
 #include "pid.h"
 #include "shoot.h"
 #include "user_lib.h"
-// yaw ËÙ¶È»· PID²ÎÊıÒÔ¼° PID×î´óÊä³ö£¬»ı·ÖÊä³ö
+// yaw é€Ÿåº¦ç¯ PIDå‚æ•°ä»¥åŠ PIDæœ€å¤§è¾“å‡ºï¼Œç§¯åˆ†è¾“å‡º
 #define YAW_ANGLE_PID_KP      0.35f
 #define YAW_ANGLE_PID_KI      0.0f
 #define YAW_ANGLE_PID_KD      0.95f
@@ -25,8 +25,8 @@
 #define YAW_SET_NUM 0.2  
 typedef enum
 {
-    GIMBAL_MOTOR_OFF = 0, // µç»úÔ­Ê¼Öµ¿ØÖÆ
-    GIMBAL_MOTOR_GYRO,    // µç»úÍÓÂİÒÇ½Ç¶È¿ØÖÆ
+    GIMBAL_MOTOR_OFF = 0, // ç”µæœºåŸå§‹å€¼æ§åˆ¶
+    GIMBAL_MOTOR_GYRO,    // ç”µæœºé™€èºä»ªè§’åº¦æ§åˆ¶
     GIMBAL_MOTOR_INIT,   
 } gimbal_motor_mode_e;
 typedef struct

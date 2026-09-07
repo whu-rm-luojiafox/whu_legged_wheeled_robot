@@ -1,7 +1,7 @@
 /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
   * @file       test_task.c/h
-  * @brief      buzzer warning task.·äÃùÆ÷±¨¾¯ÈÎÎñ
+  * @brief      buzzer warning task.èœ‚é¸£å™¨æŠ¥è­¦ä»»åŠ¡
   * @note       
   * @history
   *  Version    Date            Author          Modification
@@ -33,7 +33,7 @@ const error_t *error_list_test_local;
   * @retval         none
   */
 /**
-  * @brief          testÈÎÎñ
+  * @brief          testä»»åŠ¡
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
@@ -48,7 +48,7 @@ void test_task(void const * argument)
         error = 0;
 
         //find error
-        //·¢ÏÖ´íÎó
+        //å‘ç°é”™è¯¯
         for(error_num = 0; error_num < REFEREE_TOE; error_num++)
         {
             if(error_list_test_local[error_num].error_exist)
@@ -59,13 +59,13 @@ void test_task(void const * argument)
         }
 
         //no error, stop buzzer
-        //Ã»ÓĞ´íÎó, Í£Ö¹·äÃùÆ÷
+        //æ²¡æœ‰é”™è¯¯, åœæ­¢èœ‚é¸£å™¨
         if(error == 0 && last_error != 0)
         {
             buzzer_off();
         }
         //have error
-        //ÓĞ´íÎó
+        //æœ‰é”™è¯¯
         if(error)
         {
             buzzer_warn_error(error_num+1);
@@ -83,8 +83,8 @@ void test_task(void const * argument)
   * @retval         none
   */
 /**
-  * @brief          Ê¹µÃ·äÃùÆ÷Ïì
-  * @param[in]      num:ÏìÉù´ÎÊı
+  * @brief          ä½¿å¾—èœ‚é¸£å™¨å“
+  * @param[in]      num:å“å£°æ¬¡æ•°
   * @retval         none
   */
 static void buzzer_warn_error(uint8_t num)

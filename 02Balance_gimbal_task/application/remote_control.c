@@ -1,10 +1,10 @@
 /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
   * @file       remote_control.c/h
-  * @brief      Ò£¿ØÆ÷´¦Àí£¬Ò£¿ØÆ÷ÊÇÍ¨¹ıÀàËÆSBUSµÄĞ­Òé´«Êä£¬ÀûÓÃDMA´«Êä·½Ê½½ÚÔ¼CPU
-  *             ×ÊÔ´£¬ÀûÓÃ´®¿Ú¿ÕÏĞÖĞ¶ÏÀ´À­Æğ´¦Àíº¯Êı£¬Í¬Ê±Ìá¹©Ò»Ğ©µôÏßÖØÆôDMA£¬´®¿Ú
-  *             µÄ·½Ê½±£Ö¤ÈÈ²å°ÎµÄÎÈ¶¨ĞÔ¡£
-  * @note       ¸ÃÈÎÎñÊÇÍ¨¹ı´®¿ÚÖĞ¶ÏÆô¶¯£¬²»ÊÇfreeRTOSÈÎÎñ
+  * @brief      é¥æ§å™¨å¤„ç†ï¼Œé¥æ§å™¨æ˜¯é€šè¿‡ç±»ä¼¼SBUSçš„åè®®ä¼ è¾“ï¼Œåˆ©ç”¨DMAä¼ è¾“æ–¹å¼èŠ‚çº¦CPU
+  *             èµ„æºï¼Œåˆ©ç”¨ä¸²å£ç©ºé—²ä¸­æ–­æ¥æ‹‰èµ·å¤„ç†å‡½æ•°ï¼ŒåŒæ—¶æä¾›ä¸€äº›æ‰çº¿é‡å¯DMAï¼Œä¸²å£
+  *             çš„æ–¹å¼ä¿è¯çƒ­æ’æ‹”çš„ç¨³å®šæ€§ã€‚
+  * @note       è¯¥ä»»åŠ¡æ˜¯é€šè¿‡ä¸²å£ä¸­æ–­å¯åŠ¨ï¼Œä¸æ˜¯freeRTOSä»»åŠ¡
   * @history
   *  Version    Date            Author          Modification
   *  V1.0.0     Dec-26-2018     RM              1. done
@@ -29,14 +29,14 @@
 
 
 
-//Ò£¿ØÆ÷³ö´íÊı¾İÉÏÏŞ
+//é¥æ§å™¨å‡ºé”™æ•°æ®ä¸Šé™
 #define RC_CHANNAL_ERROR_VALUE 700
 
 extern UART_HandleTypeDef huart6;
 extern DMA_HandleTypeDef hdma_usart6_rx;
 
 
-//È¡Õıº¯Êı
+//å–æ­£å‡½æ•°
 static int16_t RC_abs(int16_t value);
 /**
   * @brief          remote control protocol resolution
@@ -45,17 +45,17 @@ static int16_t RC_abs(int16_t value);
   * @retval         none
   */
 /**
-  * @brief          Ò£¿ØÆ÷Ğ­Òé½âÎö
-  * @param[in]      sbus_buf: Ô­ÉúÊı¾İÖ¸Õë
-  * @param[out]     rc_ctrl: Ò£¿ØÆ÷Êı¾İÖ¸
+  * @brief          é¥æ§å™¨åè®®è§£æ
+  * @param[in]      sbus_buf: åŸç”Ÿæ•°æ®æŒ‡é’ˆ
+  * @param[out]     rc_ctrl: é¥æ§å™¨æ•°æ®æŒ‡
   * @retval         none
   */
 static void sbus_to_rc(volatile const uint8_t *sbus_buf, RC_ctrl_t *rc_ctrl);
 
 //remote control data 
-//Ò£¿ØÆ÷¿ØÖÆ±äÁ¿
+//é¥æ§å™¨æ§åˆ¶å˜é‡
 RC_ctrl_t rc_ctrl;
-//½ÓÊÕÔ­Ê¼Êı¾İ£¬Îª18¸ö×Ö½Ú£¬¸øÁË36¸ö×Ö½Ú³¤¶È£¬·ÀÖ¹DMA´«ÊäÔ½½ç
+//æ¥æ”¶åŸå§‹æ•°æ®ï¼Œä¸º18ä¸ªå­—èŠ‚ï¼Œç»™äº†36ä¸ªå­—èŠ‚é•¿åº¦ï¼Œé˜²æ­¢DMAä¼ è¾“è¶Šç•Œ
 static uint8_t sbus_rx_buf[2][SBUS_RX_BUF_NUM];
 
 
@@ -65,7 +65,7 @@ static uint8_t sbus_rx_buf[2][SBUS_RX_BUF_NUM];
   * @retval         none
   */
 /**
-  * @brief          Ò£¿ØÆ÷³õÊ¼»¯
+  * @brief          é¥æ§å™¨åˆå§‹åŒ–
   * @param[in]      none
   * @retval         none
   */
@@ -79,19 +79,19 @@ void remote_control_init(void)
   * @retval         remote control data point
   */
 /**
-  * @brief          »ñÈ¡Ò£¿ØÆ÷Êı¾İÖ¸Õë
+  * @brief          è·å–é¥æ§å™¨æ•°æ®æŒ‡é’ˆ
   * @param[in]      none
-  * @retval         Ò£¿ØÆ÷Êı¾İÖ¸Õë
+  * @retval         é¥æ§å™¨æ•°æ®æŒ‡é’ˆ
   */
 const RC_ctrl_t *get_remote_control_point(void)
 {
     return &rc_ctrl;
 }
 
-//ÅĞ¶ÏÒ£¿ØÆ÷Êı¾İÊÇ·ñ³ö´í£¬
+//åˆ¤æ–­é¥æ§å™¨æ•°æ®æ˜¯å¦å‡ºé”™ï¼Œ
 uint8_t RC_data_is_error(void)
 {
-    //Ê¹ÓÃÁËgo toÓï¾ä ·½±ã³ö´íÍ³Ò»´¦ÀíÒ£¿ØÆ÷±äÁ¿Êı¾İ¹éÁã
+    //ä½¿ç”¨äº†go toè¯­å¥ æ–¹ä¾¿å‡ºé”™ç»Ÿä¸€å¤„ç†é¥æ§å™¨å˜é‡æ•°æ®å½’é›¶
     if (RC_abs(rc_ctrl.rc.ch[0]) > RC_CHANNAL_ERROR_VALUE)
     {
         goto error;
@@ -144,10 +144,10 @@ void slove_data_error(void)
     RC_restart(SBUS_RX_BUF_NUM);
 }
 
-//´®¿ÚÖĞ¶Ï
+//ä¸²å£ä¸­æ–­
 void USART6_IRQHandler(void)
 {
-    if(huart6.Instance->SR & UART_FLAG_RXNE)//½ÓÊÕµ½Êı¾İ
+    if(huart6.Instance->SR & UART_FLAG_RXNE)//æ¥æ”¶åˆ°æ•°æ®
     {
         __HAL_UART_CLEAR_PEFLAG(&huart6);
     }
@@ -162,34 +162,34 @@ void USART6_IRQHandler(void)
             /* Current memory buffer used is Memory 0 */
 
             //disable DMA
-            //Ê§Ğ§DMA
+            //å¤±æ•ˆDMA
             __HAL_DMA_DISABLE(&hdma_usart6_rx);
 
             //get receive data length, length = set_data_length - remain_length
-            //»ñÈ¡½ÓÊÕÊı¾İ³¤¶È,³¤¶È = Éè¶¨³¤¶È - Ê£Óà³¤¶È
+            //è·å–æ¥æ”¶æ•°æ®é•¿åº¦,é•¿åº¦ = è®¾å®šé•¿åº¦ - å‰©ä½™é•¿åº¦
             this_time_rx_len = SBUS_RX_BUF_NUM - hdma_usart6_rx.Instance->NDTR;
 
             //reset set_data_lenght
-            //ÖØĞÂÉè¶¨Êı¾İ³¤¶È
+            //é‡æ–°è®¾å®šæ•°æ®é•¿åº¦
             hdma_usart6_rx.Instance->NDTR = SBUS_RX_BUF_NUM;
 
             //set memory buffer 1
-            //Éè¶¨»º³åÇø1
+            //è®¾å®šç¼“å†²åŒº1
             hdma_usart6_rx.Instance->CR |= DMA_SxCR_CT;
             
             //enable DMA
-            //Ê¹ÄÜDMA
+            //ä½¿èƒ½DMA
             __HAL_DMA_ENABLE(&hdma_usart6_rx);
 
             if(this_time_rx_len == RC_FRAME_LENGTH)
             {
-                //ÅĞ¶ÏÊÇÒ£¿ØÆ÷µÄÖ¡Í·²Å´¦Àí£¬·ñÔòÖ±½Ó¶ªÆú
+                //åˆ¤æ–­æ˜¯é¥æ§å™¨çš„å¸§å¤´æ‰å¤„ç†ï¼Œå¦åˆ™ç›´æ¥ä¸¢å¼ƒ
                 if(sbus_rx_buf[0][0] == 0xA9 && sbus_rx_buf[0][1] == 0x53)
                 {
                     if(verify_CRC16_check_sum(sbus_rx_buf[0],RC_FRAME_LENGTH))
                     {
                         sbus_to_rc(sbus_rx_buf[0], &rc_ctrl);
-                        //¼ÇÂ¼Êı¾İ½ÓÊÕÊ±¼ä
+                        //è®°å½•æ•°æ®æ¥æ”¶æ—¶é—´
                         detect_hook(DBUS_TOE);
                     }
                 }
@@ -199,34 +199,34 @@ void USART6_IRQHandler(void)
         {
             /* Current memory buffer used is Memory 1 */
             //disable DMA
-            //Ê§Ğ§DMA
+            //å¤±æ•ˆDMA
             __HAL_DMA_DISABLE(&hdma_usart6_rx);
 
             //get receive data length, length = set_data_length - remain_length
-            //»ñÈ¡½ÓÊÕÊı¾İ³¤¶È,³¤¶È = Éè¶¨³¤¶È - Ê£Óà³¤¶È
+            //è·å–æ¥æ”¶æ•°æ®é•¿åº¦,é•¿åº¦ = è®¾å®šé•¿åº¦ - å‰©ä½™é•¿åº¦
             this_time_rx_len = SBUS_RX_BUF_NUM - hdma_usart6_rx.Instance->NDTR;
 
             //reset set_data_lenght
-            //ÖØĞÂÉè¶¨Êı¾İ³¤¶È
+            //é‡æ–°è®¾å®šæ•°æ®é•¿åº¦
             hdma_usart6_rx.Instance->NDTR = SBUS_RX_BUF_NUM;
 
             //set memory buffer 0
-            //Éè¶¨»º³åÇø0
+            //è®¾å®šç¼“å†²åŒº0
             DMA1_Stream1->CR &= ~(DMA_SxCR_CT);
             
             //enable DMA
-            //Ê¹ÄÜDMA
+            //ä½¿èƒ½DMA
             __HAL_DMA_ENABLE(&hdma_usart6_rx);
 
             if(this_time_rx_len == RC_FRAME_LENGTH)
             {
-                //ÅĞ¶ÏÊÇÒ£¿ØÆ÷µÄÖ¡Í·²Å´¦Àí£¬·ñÔòÖ±½Ó¶ªÆú
+                //åˆ¤æ–­æ˜¯é¥æ§å™¨çš„å¸§å¤´æ‰å¤„ç†ï¼Œå¦åˆ™ç›´æ¥ä¸¢å¼ƒ
                 if(sbus_rx_buf[1][0] == 0xA9 && sbus_rx_buf[1][1] == 0x53)
                 {
                     if(verify_CRC16_check_sum(sbus_rx_buf[1],RC_FRAME_LENGTH))
                     {
                         sbus_to_rc(sbus_rx_buf[1], &rc_ctrl);
-                        //¼ÇÂ¼Êı¾İ½ÓÊÕÊ±¼ä
+                        //è®°å½•æ•°æ®æ¥æ”¶æ—¶é—´
                         detect_hook(DBUS_TOE);
                     }
                 }
@@ -236,7 +236,7 @@ void USART6_IRQHandler(void)
 
 }
 
-//È¡Õıº¯Êı
+//å–æ­£å‡½æ•°
 static int16_t RC_abs(int16_t value)
 {
     if (value > 0)
@@ -255,9 +255,9 @@ static int16_t RC_abs(int16_t value)
   * @retval         none
   */
 /**
-  * @brief          Ò£¿ØÆ÷Ğ­Òé½âÎö
-  * @param[in]      sbus_buf: Ô­ÉúÊı¾İÖ¸Õë
-  * @param[out]     rc_ctrl: Ò£¿ØÆ÷Êı¾İÖ¸
+  * @brief          é¥æ§å™¨åè®®è§£æ
+  * @param[in]      sbus_buf: åŸç”Ÿæ•°æ®æŒ‡é’ˆ
+  * @param[out]     rc_ctrl: é¥æ§å™¨æ•°æ®æŒ‡
   * @retval         none
   */
 static void sbus_to_rc(volatile const uint8_t *sbus_buf, RC_ctrl_t *rc_ctrl)
@@ -267,7 +267,7 @@ static void sbus_to_rc(volatile const uint8_t *sbus_buf, RC_ctrl_t *rc_ctrl)
         return;
     }
 
-    /* ------------------------ĞÂÍ¼´«Êı¾İ½ÓÊÕĞ­Òé------------------------ */
+    /* ------------------------æ–°å›¾ä¼ æ•°æ®æ¥æ”¶åè®®------------------------ */
     rc_ctrl->rc.ch[0] = (sbus_buf[2] | (sbus_buf[3] << 8)) & 0x07ff;        //!< Channel 0
     rc_ctrl->rc.ch[1] = ((sbus_buf[3] >> 3) | (sbus_buf[4] << 5)) & 0x07ff; //!< Channel 1
     rc_ctrl->rc.ch[2] = ((sbus_buf[4] >> 6) | (sbus_buf[5] << 2) |          //!< Channel 2
@@ -294,79 +294,79 @@ static void sbus_to_rc(volatile const uint8_t *sbus_buf, RC_ctrl_t *rc_ctrl)
     rc_ctrl->rc.ch[3] -= RC_CH_VALUE_OFFSET;
     rc_ctrl->rc.ch[4] -= RC_CH_VALUE_OFFSET;
 }
-// ¸ù¾İËµÃ÷ÊéÖØĞÂ±àĞ´µÄ½âÎöº¯Êı
+// æ ¹æ®è¯´æ˜ä¹¦é‡æ–°ç¼–å†™çš„è§£æå‡½æ•°
 //void sbus_to_rc(uint8_t* vtm_buf, RC_ctrl_t * rc_ctrl) {
-//    // 1. ÑéÖ¤Ö¡Í·
+//    // 1. éªŒè¯å¸§å¤´
 //    if (vtm_buf[0] != 0x09 || vtm_buf[1] != 0x53) {
-//        return; // Ö¡Í·´íÎó
+//        return; // å¸§å¤´é”™è¯¯
 //    }    
-//    // ·½·¨2£ºÊÖ¶¯½âÎö£¨¸ü¿É¿¿£©
-//    uint32_t* data = (uint32_t*)(vtm_buf + 1); // Ìø¹ıÖ¡Í·
+//    // æ–¹æ³•2ï¼šæ‰‹åŠ¨è§£æï¼ˆæ›´å¯é ï¼‰
+//    uint32_t* data = (uint32_t*)(vtm_buf + 1); // è·³è¿‡å¸§å¤´
 //    
-//    // Í¨µÀ0 (Î»0-10)
+//    // é€šé“0 (ä½0-10)
 //    rc_ctrl->rc.ch[0] = (data[0] & 0x07FF);
 //    
-//    // Í¨µÀ1 (Î»11-21)
+//    // é€šé“1 (ä½11-21)
 //    rc_ctrl->rc.ch[1] = ((data[0] >> 11) & 0x07FF);
 //    
-//    // Í¨µÀ2 (Î»22-32) - ¿ç×Ö½Ú±ß½ç
+//    // é€šé“2 (ä½22-32) - è·¨å­—èŠ‚è¾¹ç•Œ
 //    rc_ctrl->rc.ch[2] = ((data[0] >> 22) & 0x07FF) | ((data[1] & 0x0003) << 10);
 //    
-//    // Í¨µÀ3 (Î»33-43)
+//    // é€šé“3 (ä½33-43)
 //    rc_ctrl->rc.ch[3] = ((data[1] >> 2) & 0x07FF);
 //    
-//    // µ²Î»ÇĞ»»¿ª¹Ø (Î»60-61, 2Î»)
+//    // æŒ¡ä½åˆ‡æ¢å¼€å…³ (ä½60-61, 2ä½)
 //    rc_ctrl->rc.s[0] = ((data[1] >> 13) & 0x03);  // 0:C, 1:N, 2:S
 //    
-//    // ÔİÍ£°´¼ü (Î»62, 1Î»)
+//    // æš‚åœæŒ‰é”® (ä½62, 1ä½)
 //    rc_ctrl->rc.s[1] = ((data[1] >> 15) & 0x01);
 //    
-//    // ×Ô¶¨Òå°´¼ü(×ó) (Î»63, 1Î»)
+//    // è‡ªå®šä¹‰æŒ‰é”®(å·¦) (ä½63, 1ä½)
 //    rc_ctrl->rc.s[2] = ((data[1] >> 16) & 0x01);
 //    
-//    // ×Ô¶¨Òå°´¼ü(ÓÒ) (Î»64, 1Î»)
+//    // è‡ªå®šä¹‰æŒ‰é”®(å³) (ä½64, 1ä½)
 //    rc_ctrl->rc.s[3] = ((data[1] >> 17) & 0x01);
 //    
-//    // ²¦ÂÖ (Î»65-75, 11Î») - ĞèÒª¿ç¶à¸ö×Ö½Ú
-//    uint32_t dial_low = (data[1] >> 18) & 0x3FFF;  // µÍ14Î»
-//    uint32_t dial_high = (data[2] & 0x0007) << 14; // ¸ß3Î»
+//    // æ‹¨è½® (ä½65-75, 11ä½) - éœ€è¦è·¨å¤šä¸ªå­—èŠ‚
+//    uint32_t dial_low = (data[1] >> 18) & 0x3FFF;  // ä½14ä½
+//    uint32_t dial_high = (data[2] & 0x0007) << 14; // é«˜3ä½
 //    rc_ctrl->rc.ch[4] = (dial_low | dial_high) & 0x07FF;
 //    
-//    // °â»ú¼ü (Î»76, 1Î»)
+//    // æ‰³æœºé”® (ä½76, 1ä½)
 //    rc_ctrl->rc.s[4] = ((data[2] >> 3) & 0x01);
 //    
-//    // Êó±êXÖá (Î»80-95, 16Î»£¬ÓĞ·ûºÅ)
-//    // Î»Æ«ÒÆ£º80Î» = 10×Ö½Ú + 0Î»
+//    // é¼ æ ‡Xè½´ (ä½80-95, 16ä½ï¼Œæœ‰ç¬¦å·)
+//    // ä½åç§»ï¼š80ä½ = 10å­—èŠ‚ + 0ä½
 //    int16_t mouse_x = (vtm_buf[10] | (vtm_buf[11] << 8));
 //    rc_ctrl->mouse.x = mouse_x;
 //    
-//    // Êó±êYÖá (Î»96-111, 16Î»£¬ÓĞ·ûºÅ)
+//    // é¼ æ ‡Yè½´ (ä½96-111, 16ä½ï¼Œæœ‰ç¬¦å·)
 //    int16_t mouse_y = (vtm_buf[12] | (vtm_buf[13] << 8));
 //    rc_ctrl->mouse.y = mouse_y;
 //    
-//    // Êó±êZÖá (Î»112-127, 16Î»£¬ÓĞ·ûºÅ)
+//    // é¼ æ ‡Zè½´ (ä½112-127, 16ä½ï¼Œæœ‰ç¬¦å·)
 //    int16_t mouse_z = (vtm_buf[14] | (vtm_buf[15] << 8));
 //    rc_ctrl->mouse.z = mouse_z;
 //    
-//    // Êó±ê×ó¼ü (Î»128-129, 2Î»)
+//    // é¼ æ ‡å·¦é”® (ä½128-129, 2ä½)
 //    rc_ctrl->mouse.press_l = (vtm_buf[16] & 0x03);
 //    
-//    // Êó±êÓÒ¼ü (Î»130-131, 2Î»)
+//    // é¼ æ ‡å³é”® (ä½130-131, 2ä½)
 //    rc_ctrl->mouse.press_r = ((vtm_buf[16] >> 2) & 0x03);
 //    
-//    // Êó±êÖĞ¼ü (Î»132-133, 2Î»)
+//    // é¼ æ ‡ä¸­é”® (ä½132-133, 2ä½)
 //    rc_ctrl->mouse.press_m = ((vtm_buf[16] >> 4) & 0x03);
 //    
-//    // ¼üÅÌ (Î»136-151, 16Î»)
+//    // é”®ç›˜ (ä½136-151, 16ä½)
 //    rc_ctrl->key.v = (vtm_buf[17] | (vtm_buf[18] << 8));
 //    
-//    // 3. Í¨µÀÖµÆ«ÒÆ£¨¸ù¾İËµÃ÷ÊéµÄ364-1024-1684·¶Î§£©
+//    // 3. é€šé“å€¼åç§»ï¼ˆæ ¹æ®è¯´æ˜ä¹¦çš„364-1024-1684èŒƒå›´ï¼‰
 //    const uint16_t RC_MIN = 364;
 //    const uint16_t RC_MID = 1024;
 //    const uint16_t RC_MAX = 1684;
 //    
-//    // ×¢Òâ£ºÕâÀï¿ÉÄÜĞèÒª¼õÈ¥ÖĞ¼äÖµ1024£¬¶ø²»ÊÇ¹Ì¶¨µÄÆ«ÒÆ
-//    // rc_ctrl->rc.ch[0] -= 1024; // Èç¹ûĞèÒª×ª»»Îª-660µ½+660µÄ·¶Î§
+//    // æ³¨æ„ï¼šè¿™é‡Œå¯èƒ½éœ€è¦å‡å»ä¸­é—´å€¼1024ï¼Œè€Œä¸æ˜¯å›ºå®šçš„åç§»
+//    // rc_ctrl->rc.ch[0] -= 1024; // å¦‚æœéœ€è¦è½¬æ¢ä¸º-660åˆ°+660çš„èŒƒå›´
 //}
 
 void sbus_to_usart1(uint8_t *sbus)

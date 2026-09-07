@@ -1,0 +1,39 @@
+# Keil/ARM generated objects, dependency files and build reports.
+# Restrict these rules to MDK-ARM so other project assets stay visible.
+**/MDK-ARM/**/*.o
+**/MDK-ARM/**/*.obj
+**/MDK-ARM/**/*.d
+**/MDK-ARM/**/*.crf
+**/MDK-ARM/**/*.dep
+**/MDK-ARM/**/*.axf
+**/MDK-ARM/**/*.elf
+**/MDK-ARM/**/*.hex
+**/MDK-ARM/**/*.bin
+**/MDK-ARM/**/*.map
+**/MDK-ARM/**/*.lst
+**/MDK-ARM/**/*.lnp
+**/MDK-ARM/**/*.iex
+**/MDK-ARM/**/*.build_log.htm
+/02Balance_gimbal_task/MDK-ARM/standard_tpye_c/standard_tpye_c.htm
+
+# Personal IDE state and automatically generated local include paths.
+**/*.uvguix.*
+**/*.jdebug.user
+**/.vscode/c_cpp_properties.json
+**/.vscode/*.log
+**/.vscode/*.log.lock
+
+# OS/editor temporary files.
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+__pycache__/
+*.pyc
+
+# Keep source dependencies and shared project/debug settings tracked:
+# Middlewares/, Drivers/, RTE/, *.lib, *.uvprojx, *.uvoptx, *.ioc,
+# *.sct, *.jdebug, *.jscope, JLinkSettings.ini, launch.json, settings.json.
+# Do not ignore entire MDK-ARM output directories: they contain debug assets too.

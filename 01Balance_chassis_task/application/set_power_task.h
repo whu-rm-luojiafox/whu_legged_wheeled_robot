@@ -2,7 +2,7 @@
 #define _SET_POWER_TASK_H
 #include "can_service.h"
 
-void send_setpower_task(void const *pvParameters);//·¶Î§£º 3000-13000 ¶ÔÓ¦30W-130W
+void send_setpower_task(void const *pvParameters);//èŒƒå›´ï¼š 3000-13000 å¯¹åº”30W-130W
 
 
 #endif

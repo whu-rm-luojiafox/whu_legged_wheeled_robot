@@ -174,7 +174,7 @@ typedef __packed struct
 {
     uint8_t data[32];
 } ext_download_stream_data_t;
-/****************************红方机器人ID********************/
+/****************************绾㈡柟鏈哄櫒浜篒D********************/
 #define UI_Data_RobotID_RHero 1         
 #define UI_Data_RobotID_REngineer 2
 #define UI_Data_RobotID_RStandard1 3
@@ -183,7 +183,7 @@ typedef __packed struct
 #define UI_Data_RobotID_RAerial 6
 #define UI_Data_RobotID_RSentry 7
 #define UI_Data_RobotID_RRadar 9
-/****************************蓝方机器人ID********************/
+/****************************钃濇柟鏈哄櫒浜篒D********************/
 #define UI_Data_RobotID_BHero 101
 #define UI_Data_RobotID_BEngineer 102
 #define UI_Data_RobotID_BStandard1 103

@@ -1,4 +1,6 @@
 {
+    "files.encoding": "utf8",
+    "files.autoGuessEncoding": false,
     "files.associations": {
         "bsp_i2c.h": "c",
         "struct_typedef.h": "c",
