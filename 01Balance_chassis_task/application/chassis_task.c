@@ -63,14 +63,14 @@ float a2,b2,c2,d2;
 int temp;
 
 
-//ÎïÀí/³µÌå ÊôÐÔ
+//ç‰©ç†/è½¦ä½“ å±žæ€§
 const fp32 g = 9.8f;
 const fp32 m_w = 1.19f;
 
-// µ×ÅÌÔË¶¯Êý¾Ý
+// åº•ç›˜è¿åŠ¨æ•°æ®
 chassis_move_t chassis_move;
 
-//ËÙ¶ÈÐ±ÆÂº¯Êý
+//é€Ÿåº¦æ–œå¡å‡½æ•°
 ramp_function_source_t speed_ramp_vx, speed_ramp_vy, speed_ramp_wz;
 
 
@@ -89,7 +89,7 @@ fp32 jump_canstacting_PD_R[2] = {30000000.0f, 10.0f};
 
 fp32 suspend_stand_PD[2] = {220.0f, 10.0f};
 
-/* ------------------------Æ½²½Êý¾Ý------------------------ */
+/* ------------------------å¹³æ­¥æ•°æ®------------------------ */
 fp32 delta;
 float alpha_dx = 1.0f;
 float alpha_dv = 1.0f;
@@ -139,36 +139,36 @@ void chassis_task(void const *pvParameters)
 {
 	vTaskDelay(CHASSIS_TASK_INIT_TIME);
 
-	//³õÊ¼»¯µç»ú ´«¸ÐÆ÷Êý¾Ý»ñÈ¡
+	//åˆå§‹åŒ–ç”µæœº ä¼ æ„Ÿå™¨æ•°æ®èŽ·å–
 	chassis_init(&chassis_move);
 
 	while (1)
 	{
-		//¸üÐÂ´«¸ÐÆ÷ µç»úÊý¾Ý
+		//æ›´æ–°ä¼ æ„Ÿå™¨ ç”µæœºæ•°æ®
 		chassis_feedback_update(&chassis_move);
 
-		//×´Ì¬¼ì²â
+		//çŠ¶æ€æ£€æµ‹
 		Chassis_Status_Detect(&chassis_move);
 
-		//Ä£Ê½ÉèÖÃ
+		//æ¨¡å¼è®¾ç½®
 		chassis_set_mode(&chassis_move);
 
-		//Ä£Ê½ÇÐ»»¿ØÖÆ
+		//æ¨¡å¼åˆ‡æ¢æŽ§åˆ¶
 		chassis_mode_change_control_transit(&chassis_move);
 
-		//Ä¿±êÖµÉèÖÃ
+		//ç›®æ ‡å€¼è®¾ç½®
 		Target_Value_Set(&chassis_move);
 		
-		//¹¦ÂÊÏÞÖÆ
+		//åŠŸçŽ‡é™åˆ¶
 		chassis_power_limit(&chassis_move);
 
-		//Á¦¾ØÊä³ö¼ÆËã
+		//åŠ›çŸ©è¾“å‡ºè®¡ç®—
 		Chassis_Torque_Calculation(&chassis_move);
 
-		//ÐéÄâÍÈÓ³Éä¹Ø½Úµç»úÁ¦¾Ø¼ÆËã
+		//è™šæ‹Ÿè…¿æ˜ å°„å…³èŠ‚ç”µæœºåŠ›çŸ©è®¡ç®—
 		Chassis_Torque_Combine(&chassis_move);
 
-		//·¢ËÍ¼ÆËã½á¹û
+		//å‘é€è®¡ç®—ç»“æžœ
 		Motor_CMD_Send(&chassis_move);	
 		
 		vTaskDelay(CHASSIS_CONTROL_TIME_MS);
@@ -229,11 +229,11 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 	chassis_move_init->joint_motor_4.position = (chassis_move_init->joint_motor_4.motor_measure->ecd - chassis_move_init->joint_motor_4.position_offset) + LEG_OFFSET;
 	chassis_move_init->foot_motor_L.distance_offset = (chassis_move_init->foot_motor_L.position / 360.0f) * WHEEL_PERIMETER;
 	chassis_move_init->foot_motor_R.distance_offset = ((360.0f - chassis_move_init->foot_motor_R.position )/ 360.0f) * WHEEL_PERIMETER;
-	// ³õÊ¼»¯yaw½Ç¶ÈPID
+	// åˆå§‹åŒ–yawè§’åº¦PID
 	const static fp32 chassis_yaw_pid[3] = {CHASSIS_FOLLOW_GIMBAL_PID_KP, CHASSIS_FOLLOW_GIMBAL_PID_KI, CHASSIS_FOLLOW_GIMBAL_PID_KD};
 	PID_init(&chassis_move_init->chassis_yaw_pid, PID_POSITION, chassis_yaw_pid, CHASSIS_FOLLOW_GIMBAL_PID_MAX_OUT, CHASSIS_FOLLOW_GIMBAL_PID_MAX_IOUT);
 
-	// ³õÊ¼»¯ÍÈ³¤PID
+	// åˆå§‹åŒ–è…¿é•¿PID
 	const static fp32 leg_length_pid[3] = {LEG_SET_PID_KP, LEG_SET_PID_KI, LEG_SET_PID_KD};
 	PID_init(&chassis_move_init->leg_L_length_pid, PID_POSITION, leg_length_pid, LEG_SET_PID_OUT, LEG_SET_PID_IOUT);
 	PID_init(&chassis_move_init->leg_R_length_pid, PID_POSITION, leg_length_pid, LEG_SET_PID_OUT, LEG_SET_PID_IOUT);
@@ -244,13 +244,13 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 	chassis_move_init->flag_info.init_flag = 0;
 
 	chassis_move_init->gimbal_yaw_motor.relative_angle_init =179.0f;
-	// ³õÊ¼»¯ËÙ¶ÈÐ±ÆÂº¯Êý
+	// åˆå§‹åŒ–é€Ÿåº¦æ–œå¡å‡½æ•°
 	ramp_init(&speed_ramp_vx, 0.003f, 2.2f, -2.2f);
 	ramp_init(&speed_ramp_vy, 0.003f, 2.2f, -2.2f);
 	ramp_init(&speed_ramp_wz, 0.004f,15.0f, -15.0f);
 		
 	/* ----------------------------------VMC J-------------------------------- */
-	//N11 ÏµÊý
+	//N11 ç³»æ•°
 	chassis_move_init->InverseJacobianCoefficient.N11.c0 = 0.132f;//0.1226f;	  
 	chassis_move_init->InverseJacobianCoefficient.N11.c1 = -1.885f;//-1.824f;	 
 	chassis_move_init->InverseJacobianCoefficient.N11.c2 = 0.0761f;//-0.08976f; 
@@ -258,7 +258,7 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 	chassis_move_init->InverseJacobianCoefficient.N11.c4 = -0.2059f;//-0.2468f;  
 	chassis_move_init->InverseJacobianCoefficient.N11.c5 = 0.03211f;//0.0434;	  
 	
-	// N12 ÏµÊý
+	// N12 ç³»æ•°
 	chassis_move_init->InverseJacobianCoefficient.N12.c0 = 0.06866f;//0.05869f;   
 	chassis_move_init->InverseJacobianCoefficient.N12.c1 = 2.388f;//2.473f;	   
 	chassis_move_init->InverseJacobianCoefficient.N12.c2 = -0.6333f;//-0.6447f; 
@@ -266,7 +266,7 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 	chassis_move_init->InverseJacobianCoefficient.N12.c4 = 2.333f;//2.438f;	   
 	chassis_move_init->InverseJacobianCoefficient.N12.c5 = 0.01124f;//-0.003233f;
 	
-	// N21 ÏµÊý
+	// N21 ç³»æ•°
 	chassis_move_init->InverseJacobianCoefficient.N21.c0 = 0.132f;// 0.1226f;	  
 	chassis_move_init->InverseJacobianCoefficient.N21.c1 = -1.855f;//-1.824f;	 
 	chassis_move_init->InverseJacobianCoefficient.N21.c2 = -0.0761f;//-0.08976f; 
@@ -274,7 +274,7 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 	chassis_move_init->InverseJacobianCoefficient.N21.c4 = 0.2095f;//-0.2468f;  
 	chassis_move_init->InverseJacobianCoefficient.N21.c5 = 0.03211f;//0.0434;	  
 	
-	// N22 ÏµÊý
+	// N22 ç³»æ•°
 	chassis_move_init->InverseJacobianCoefficient.N22.c0 = -0.06866f;//-0.05869f; 
 	chassis_move_init->InverseJacobianCoefficient.N22.c1 = -2.388f;//-2.473f;	   
 	chassis_move_init->InverseJacobianCoefficient.N22.c2 = -0.6333f;//-0.6447f; 
@@ -320,7 +320,7 @@ void chassis_feedback_update(chassis_move_t *fdb)
 	fdb->joint_motor_3.velocity = fdb->joint_motor_3.motor_measure->velocity_rad_s;
 	fdb->joint_motor_4.velocity = fdb->joint_motor_4.motor_measure->velocity_rad_s;
 
-	//¸üÐÂÁ¦¾Ø·´À¡
+	//æ›´æ–°åŠ›çŸ©åé¦ˆ
 	fdb->joint_motor_1.torque_get = fdb->joint_motor_1.motor_measure->real_torque;
 	fdb->joint_motor_2.torque_get = fdb->joint_motor_2.motor_measure->real_torque;
 	fdb->joint_motor_3.torque_get = fdb->joint_motor_3.motor_measure->real_torque;
@@ -338,13 +338,13 @@ void chassis_feedback_update(chassis_move_t *fdb)
 
 
 	
-	//×ã¶Ë½Ç¶È½âËã
+	//è¶³ç«¯è§’åº¦è§£ç®—
 	Forward_kinematic_solution(fdb, fdb->joint_motor_1.position, fdb->joint_motor_1.velocity,
 							   fdb->joint_motor_2.position, fdb->joint_motor_2.velocity, 1);
 	Forward_kinematic_solution(fdb, fdb->joint_motor_4.position, fdb->joint_motor_4.velocity,
 							   fdb->joint_motor_3.position, fdb->joint_motor_3.velocity, 0);
 	
-	//ÍÓÂÝÒÇÊý¾Ý¸üÐÂ
+	//é™€èžºä»ªæ•°æ®æ›´æ–°
 	fdb->chassis_posture_info.yaw_gyro = *(fdb->chassis_INS_gyro + INS_GYRO_YAW_ADDRESS_OFFSET);	
 	fdb->chassis_posture_info.pitch_gyro = *(fdb->chassis_INS_gyro + INS_GYRO_PITCH_ADDRESS_OFFSET);
 	fdb->chassis_posture_info.roll_gyro = *(fdb->chassis_INS_gyro + INS_GYRO_ROLL_ADDRESS_OFFSET);
@@ -368,13 +368,13 @@ void chassis_feedback_update(chassis_move_t *fdb)
 	fdb->chassis_posture_info.pitch_angle = rad_format(*(fdb->chassis_INS_angle + INS_PITCH_ADDRESS_OFFSET)); 
 	fdb->chassis_posture_info.roll_angle = *(fdb->chassis_INS_angle + INS_ROLL_ADDRESS_OFFSET);
 
-	//ÍÈ²¿½Ç¶È¡¢½ÇËÙ¶È¸üÐÂ£»ÍÈ³¤ºÍÍÈ³¤ËÙ¶ÈÒÑÔÚÎåÁ¬¸ËÕý½âÖÐ¸üÐÂ
+	//è…¿éƒ¨è§’åº¦ã€è§’é€Ÿåº¦æ›´æ–°ï¼›è…¿é•¿å’Œè…¿é•¿é€Ÿåº¦å·²åœ¨äº”è¿žæ†æ­£è§£ä¸­æ›´æ–°
 	fdb->chassis_posture_info.leg_angle_L += fdb->chassis_posture_info.pitch_angle;
 	fdb->chassis_posture_info.leg_angle_R += fdb->chassis_posture_info.pitch_angle;
 	fdb->chassis_posture_info.leg_gyro_L += fdb->chassis_posture_info.pitch_gyro;
 	fdb->chassis_posture_info.leg_gyro_R += fdb->chassis_posture_info.pitch_gyro;
 	
-	// ¼ÆËã¼ÓËÙ¶È
+	// è®¡ç®—åŠ é€Ÿåº¦
 	if (fdb->flag_info.init_flag)
 	{
 		/* Establish a derivative baseline before off-ground detection starts. */
@@ -399,7 +399,7 @@ void chassis_feedback_update(chassis_move_t *fdb)
 	fdb->chassis_posture_info.last_leg_dlength_R_jacobian = fdb->chassis_posture_info.leg_dlength_R_jacobian;
 	fdb->chassis_posture_info.last_leg_ddlength_L = fdb->chassis_posture_info.leg_ddlength_L;
 	fdb->chassis_posture_info.last_leg_ddlength_R = fdb->chassis_posture_info.leg_ddlength_R;
-	//ÔÆÌ¨Ïà¶Ô½Ç¶È¸üÐÂ
+	//äº‘å°ç›¸å¯¹è§’åº¦æ›´æ–°
 	fdb->gimbal_yaw_motor.relative_angle = theta_format(fdb->gimbal_yaw_motor.gimbal_motor_measure->angle);
 
 	ramp_calc(&speed_ramp_vx, fdb->chassis_data_->vx_set);
@@ -438,12 +438,12 @@ static void chassis_set_mode(chassis_move_t *chassis_move_mode)
 		chassis_move_mode->foot_motor_L.motor_mode = MOTOR_FORCE;
 		chassis_move_mode->foot_motor_R.motor_mode = MOTOR_FORCE;
 		uint32_t current_tick = xTaskGetTickCount();
-		uint32_t timeout_threshold = pdMS_TO_TICKS(100);  // 100ms³¬Ê±
+		uint32_t timeout_threshold = pdMS_TO_TICKS(100);  // 100msè¶…æ—¶
 
 		if (current_tick - chassis_move_mode->foot_motor_L.motor_measure->last_update_time > timeout_threshold ||
 			current_tick - chassis_move_mode->foot_motor_R.motor_measure->last_update_time > timeout_threshold)
 		{
-			// ÂÖì±µç»úÀëÏß£¬ÈÃ÷Å¹Ø½ÚÊ§ÄÜ
+			// è½®æ¯‚ç”µæœºç¦»çº¿ï¼Œè®©é«‹å…³èŠ‚å¤±èƒ½
 			chassis_move_mode->joint_motor_1.motor_mode = MOTOR_NO_FORCE;
 			chassis_move_mode->joint_motor_2.motor_mode = MOTOR_NO_FORCE;
 			chassis_move_mode->joint_motor_3.motor_mode = MOTOR_NO_FORCE;
@@ -454,7 +454,7 @@ static void chassis_set_mode(chassis_move_t *chassis_move_mode)
 	}
 	else if (chassis_move_mode->mode.chassis_mode == DEBUG_CHASSIS)
 	{
-		// ¼ì²âÂÖì±µç»ú³¬Ê±
+		// æ£€æµ‹è½®æ¯‚ç”µæœºè¶…æ—¶
 		chassis_move_mode->joint_motor_1.motor_mode = MOTOR_NO_FORCE;
 		chassis_move_mode->joint_motor_2.motor_mode = MOTOR_NO_FORCE;
 		chassis_move_mode->joint_motor_3.motor_mode = MOTOR_NO_FORCE;
@@ -487,7 +487,7 @@ static void chassis_set_mode(chassis_move_t *chassis_move_mode)
 	/*-------------------------- Sport Mode Update ----------------------------------*/
 	if (chassis_move_mode->mode.chassis_balancing_mode == BALANCING_READY)
 	{
-		/* Ö®ºóÔÙ¿¼ÂÇÌí¼Ó */
+		/* ä¹‹åŽå†è€ƒè™‘æ·»åŠ  */
 		if (chassis_move_mode->flag_info.abnormal_flag)
 			chassis_move_mode->mode.sport_mode = ABNORMAL_MOVING_MODE;
 		else if (chassis_move_mode->mode.sport_mode == JUMPING_MODE && chassis_move_mode->mode.jumping_stage != FINISHED)
@@ -510,7 +510,7 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
 	{
 		return;
 	}
-	/* --------------------------------Ê¹ÄÜ/Ê§ÄÜ ºóÅÐ¶ÏÊÇ·ñ ½øÈë/ÍË³ö Æ½ºâÄ£Ê½--------------------------------  */
+	/* --------------------------------ä½¿èƒ½/å¤±èƒ½ åŽåˆ¤æ–­æ˜¯å¦ è¿›å…¥/é€€å‡º å¹³è¡¡æ¨¡å¼--------------------------------  */
 	if (chassis_mode_change->mode.chassis_mode == ENABLE_CHASSIS && chassis_mode_change->mode.last_chassis_mode == DISABLE_CHASSIS)
 		{
 			chassis_mode_change->mode.chassis_balancing_mode = FOOT_LAUNCHING;
@@ -537,7 +537,7 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
 		chassis_mode_change->mode.chassis_balancing_mode = NO_FORCE;
 		reduce_flag = 0;
 	}
-	//ÌøÔ¾Ä£Ê½Á÷³Ì
+	//è·³è·ƒæ¨¡å¼æµç¨‹
 	if (chassis_mode_change->mode.sport_mode == JUMPING_MODE && chassis_mode_change->mode.last_sport_mode != JUMPING_MODE)
     {
         chassis_mode_change->mode.jumping_mode = STANDING_JUMP;
@@ -552,17 +552,17 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
 
     else if (chassis_mode_change->mode.jumping_mode == STANDING_JUMP)
     {
-	 // Õ¾Á¢ÌøÔ¾×´Ì¬»ú
+	 // ç«™ç«‹è·³è·ƒçŠ¶æ€æœº
         switch(chassis_mode_change->mode.jumping_stage)
         {
             case READY_TO_JUMP:
-                // ½øÈë×¼±¸½×¶Î
+                // è¿›å…¥å‡†å¤‡é˜¶æ®µ
                 chassis_mode_change->mode.jumping_stage = PREPARING_STAND_JUMPING;
                 chassis_mode_change->flag_info.jump_prepare_timer = xTaskGetTickCount();
                 break;
                 
             case PREPARING_STAND_JUMPING:
-                // ¼ì²é×¼±¸Ìõ¼þÊÇ·ñÂú×ã
+                // æ£€æŸ¥å‡†å¤‡æ¡ä»¶æ˜¯å¦æ»¡è¶³
                 if (Check_Jump_Preparation_Complete(chassis_mode_change))
                 {
                     chassis_mode_change->flag_info.jump_prepare_complete = 1;
@@ -571,10 +571,10 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
                 }
                 else
                 {
-                    // ¼ì²éÊÇ·ñ³¬Ê±
+                    // æ£€æŸ¥æ˜¯å¦è¶…æ—¶
                     if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_prepare_timer) > pdMS_TO_TICKS(3000))
                     {
-                        // ×¼±¸³¬Ê±£¬·ÅÆúÌøÔ¾
+                        // å‡†å¤‡è¶…æ—¶ï¼Œæ”¾å¼ƒè·³è·ƒ
                         chassis_mode_change->mode.jumping_stage = FINISHED;
                         chassis_mode_change->mode.sport_mode = NORMAL_MOVING_MODE;
                     }
@@ -582,7 +582,7 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
                 break;
                 
             case EXTENDING_LEGS:
-                // ÍÈÉì³¤½×¶Î
+                // è…¿ä¼¸é•¿é˜¶æ®µ
                 if (chassis_mode_change->chassis_posture_info.leg_length_L >= 0.34f && 
                     chassis_mode_change->chassis_posture_info.leg_length_R >= 0.34f&&
 				(xTaskGetTickCount() - chassis_mode_change->flag_info.jump_extend_timer) > pdMS_TO_TICKS(50))
@@ -592,34 +592,34 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
                 }
                 else if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_extend_timer) > pdMS_TO_TICKS(500))
                 {
-                    // ÉìÍÈ³¬Ê±£¬ÈÏÎªÊ§°Ü
+                    // ä¼¸è…¿è¶…æ—¶ï¼Œè®¤ä¸ºå¤±è´¥
                     chassis_mode_change->mode.jumping_stage = FINISHED;
                     chassis_mode_change->mode.sport_mode = NORMAL_MOVING_MODE;
                 }
                 break;
                 
             case CONSTACTING_LEGS_2:
-                // ÔÙ´ÎÊÕËõÍÈ×¼±¸ÂäµØ
+                // å†æ¬¡æ”¶ç¼©è…¿å‡†å¤‡è½åœ°
                 if (chassis_mode_change->chassis_posture_info.leg_length_L <= 0.11f&&chassis_mode_change->chassis_posture_info.leg_length_R <= 0.11f)
                 {
                     chassis_mode_change->mode.jumping_stage = PREPARING_LANDING;
                 }
                 else if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_contact_timer) > pdMS_TO_TICKS(300))
                 {
-                    // ÊÕËõ³¬Ê±£¬Ç¿ÖÆ½øÈëÂäµØ×¼±¸
+                    // æ”¶ç¼©è¶…æ—¶ï¼Œå¼ºåˆ¶è¿›å…¥è½åœ°å‡†å¤‡
                     chassis_mode_change->mode.jumping_stage = PREPARING_LANDING;
                 }
                 break;
                 
             case PREPARING_LANDING:
-                // µÈ´ýÂäµØ¼ì²â
+                // ç­‰å¾…è½åœ°æ£€æµ‹
                 if (chassis_mode_change->flag_info.suspend_flag_R == ON_GROUND &&
                     chassis_mode_change->flag_info.suspend_flag_L == ON_GROUND&&
 					(xTaskGetTickCount() - chassis_mode_change->flag_info.jump_contact_timer) > pdMS_TO_TICKS(500))
                 {
                     chassis_mode_change->mode.jumping_stage = FINISHED;
                 }
-                // ÂäµØ³¬Ê±±£»¤
+                // è½åœ°è¶…æ—¶ä¿æŠ¤
                 else if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_contact_timer) > pdMS_TO_TICKS(2000))
                 {
                     chassis_mode_change->mode.jumping_stage = FINISHED;
@@ -627,7 +627,7 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
                 break;
                 
             case FINISHED:
-                // ÌøÔ¾Íê³É£¬ÖØÖÃ×´Ì¬
+                // è·³è·ƒå®Œæˆï¼Œé‡ç½®çŠ¶æ€
                 chassis_mode_change->mode.jumping_stage = READY_TO_JUMP;
                 chassis_mode_change->mode.sport_mode = NORMAL_MOVING_MODE;
                 chassis_mode_change->flag_info.jump_prepare_complete = 0;
@@ -645,7 +645,7 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
 void Target_Value_Set(chassis_move_t *target_value_set)
 {
 
-	//µ×ÅÌÕý·½ÏòËÙ¶È¿ØÖÆ
+	//åº•ç›˜æ­£æ–¹å‘é€Ÿåº¦æŽ§åˆ¶
 	if (target_value_set->mode.sport_mode != NONE &&
 	target_value_set->flag_info.suspend_flag_L == ON_GROUND &&
 	target_value_set->flag_info.suspend_flag_R == ON_GROUND)
@@ -661,7 +661,7 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 		target_value_set->chassis_posture_info.foot_speed_set=0;
 	}
 
-	//Î»ÖÃ»·¿ØÖÆÆ÷
+	//ä½ç½®çŽ¯æŽ§åˆ¶å™¨
 	if(fabs(target_value_set->chassis_posture_info.foot_speed_set)!=0)
 	{
 		target_value_set->chassis_posture_info.position_lock_flag=0;
@@ -696,12 +696,12 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 		target_value_set->flag_info.suspend_flag_L == OFF_GROUND )
 		target_value_set->chassis_posture_info.foot_distance_set = target_value_set->chassis_posture_info.foot_distance_K;
 	fp32 distance_error = target_value_set->chassis_posture_info.foot_distance_set - target_value_set->chassis_posture_info.foot_distance_K;
-	// Îó²î³¬¹ý30cmÊ±£¬ÖØÖÃÄ¿±êÖµ
+	// è¯¯å·®è¶…è¿‡30cmæ—¶ï¼Œé‡ç½®ç›®æ ‡å€¼
 	if (fabs(distance_error) > 0.3f)
 	{
 		target_value_set->chassis_posture_info.foot_distance_set = target_value_set->chassis_posture_info.foot_distance_K;
 	}
-	// ÏÖÔÚÎó²îÒÑ¾­¹éÁã£¬Õý³£¼ÆËã
+	// çŽ°åœ¨è¯¯å·®å·²ç»å½’é›¶ï¼Œæ­£å¸¸è®¡ç®—
 	distance_error = target_value_set->chassis_posture_info.foot_distance_set - target_value_set->chassis_posture_info.foot_distance_K;  // = 0
 		
 	// --------- yaw_gyro_set ---------
@@ -723,20 +723,20 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 					float target_relative_angle = target_value_set->gimbal_yaw_motor.relative_angle_init;
 					float angle_diff = current_relative_angle - target_relative_angle;
 					
-					// ½«½Ç¶È²î¹æ·¶»¯µ½[-180, 180]Çø¼ä
+					// å°†è§’åº¦å·®è§„èŒƒåŒ–åˆ°[-180, 180]åŒºé—´
 					if (angle_diff > 180.0f) {
 						angle_diff -= 360.0f;
 					} else if (angle_diff < -180.0f) {
 						angle_diff += 360.0f;
 					}
 					
-					// Ê¹ÓÃ¹æ·¶»¯ºóµÄ½Ç¶È²î×÷ÎªPIDÊäÈë
+					// ä½¿ç”¨è§„èŒƒåŒ–åŽçš„è§’åº¦å·®ä½œä¸ºPIDè¾“å…¥
 					target_value_set->gimbal_yaw_motor.relative_limit = angle_diff;
 					
 					target_value_set->chassis_posture_info.yaw_angle_sett -= 
 						PID_calc(&target_value_set->chassis_yaw_pid, 
-								angle_diff,  // Ê¹ÓÃ¹æ·¶»¯ºóµÄ½Ç¶È²î
-								0.0f) * 0.004f;  // Ä¿±êÖµÊÇ0£¨½Ç¶È²îÎª0£©
+								angle_diff,  // ä½¿ç”¨è§„èŒƒåŒ–åŽçš„è§’åº¦å·®
+								0.0f) * 0.004f;  // ç›®æ ‡å€¼æ˜¯0ï¼ˆè§’åº¦å·®ä¸º0ï¼‰
 					
 					target_value_set->chassis_posture_info.yaw_gyro_set = 0.0f;	
 					target_value_set->chassis_posture_info.foot_speed_set = 0.60f * target_value_set->chassis_posture_info.foot_speed_set;
@@ -760,7 +760,7 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 						if(target_value_set->chassis_posture_info.yaw_lock_flag==1)
 						{
 							target_value_set->chassis_posture_info.yaw_angle_sett = target_value_set->chassis_posture_info.yaw_angle_total;
-							target_value_set->chassis_posture_info.yaw_gyro_set *= 0.85f;  // Ö¸ÊýË¥¼õ£¬Ã¿´ÎÑ­»·Ë¥¼õ8%
+							target_value_set->chassis_posture_info.yaw_gyro_set *= 0.85f;  // æŒ‡æ•°è¡°å‡ï¼Œæ¯æ¬¡å¾ªçŽ¯è¡°å‡8%
 							if(fabs(target_value_set->chassis_posture_info.yaw_gyro) < 0.02f)
 							{
 								target_value_set->chassis_posture_info.yaw_gyro_set = 0;
@@ -822,38 +822,38 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 		}
 		target_value_set->chassis_posture_info.ideal_high = reduce_high;
 	}
-	// ============= ÐÂÔö£ºÌøÔ¾½×¶ÎÍÈ³¤Éè¶¨ =============
-	// ÌøÔ¾½×¶ÎÓÅÏÈÓÚÆäËûÄ£Ê½Éè¶¨ÍÈ³¤
+	// ============= æ–°å¢žï¼šè·³è·ƒé˜¶æ®µè…¿é•¿è®¾å®š =============
+	// è·³è·ƒé˜¶æ®µä¼˜å…ˆäºŽå…¶ä»–æ¨¡å¼è®¾å®šè…¿é•¿
 	if (target_value_set->mode.sport_mode == JUMPING_MODE)
 	{
 		switch(target_value_set->mode.jumping_stage)
 		{
 			case PREPARING_STAND_JUMPING:
-				// ÌøÔ¾×¼±¸½×¶Î£ºÉè¶¨½ÏµÍµÄÍÈ³¤ÓÃÓÚÐîÁ¦
+				// è·³è·ƒå‡†å¤‡é˜¶æ®µï¼šè®¾å®šè¾ƒä½Žçš„è…¿é•¿ç”¨äºŽè“„åŠ›
 				target_value_set->chassis_posture_info.leg_length_L_set = 0.13f;
 				target_value_set->chassis_posture_info.leg_length_R_set = 0.13f;
 				break;
 				
 			case EXTENDING_LEGS:
-				// ÆðÌø½×¶Î£º¿ìËÙÉìÍÈ  
+				// èµ·è·³é˜¶æ®µï¼šå¿«é€Ÿä¼¸è…¿  
 				target_value_set->chassis_posture_info.leg_length_L_set = 0.34f;
 				target_value_set->chassis_posture_info.leg_length_R_set = 0.34f;
 				break;
 				
 			case CONSTACTING_LEGS_2:
-				// ¿ÕÖÐÊÕËõ½×¶Î£º×¼±¸ÂäµØ
+				// ç©ºä¸­æ”¶ç¼©é˜¶æ®µï¼šå‡†å¤‡è½åœ°
 				target_value_set->chassis_posture_info.leg_length_L_set = 0.10f;
 				target_value_set->chassis_posture_info.leg_length_R_set = 0.10f;
 				break;
 				
 			case PREPARING_LANDING:
-				// ÂäµØ×¼±¸½×¶Î£º±£³Ö½ÏµÍÍÈ³¤
+				// è½åœ°å‡†å¤‡é˜¶æ®µï¼šä¿æŒè¾ƒä½Žè…¿é•¿
 				target_value_set->chassis_posture_info.leg_length_L_set = 0.15f;
 				target_value_set->chassis_posture_info.leg_length_R_set = 0.15f;
 				break;
 				
 			default:
-				// ÆäËûÌøÔ¾½×¶ÎÊ¹ÓÃÀíÏë¸ß¶È
+				// å…¶ä»–è·³è·ƒé˜¶æ®µä½¿ç”¨ç†æƒ³é«˜åº¦
 				target_value_set->chassis_posture_info.leg_length_L_set = target_value_set->chassis_posture_info.ideal_high;
 				target_value_set->chassis_posture_info.leg_length_R_set = target_value_set->chassis_posture_info.ideal_high;
 				break;
@@ -870,7 +870,7 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 	}
 	else
 	{
-		//Ä¿Ç°±íÏÖÁ¼ºÃ
+		//ç›®å‰è¡¨çŽ°è‰¯å¥½
 		target_value_set->chassis_posture_info.foot_roll_angle =
 			target_value_set->chassis_posture_info.roll_angle;
 		target_value_set->chassis_posture_info.leg_length_L_set =
@@ -902,9 +902,9 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 		bl_ctrl->torque_info.foot_moving_torque_R = 0.0f;
 		return;
 	}
-	//LQRÄâºÏ¾ØÕóÊý¾Ý¸üÐÂ
+	//LQRæ‹ŸåˆçŸ©é˜µæ•°æ®æ›´æ–°
 	LQR_Data_Update(bl_ctrl);
-	//²»Í¬Çé¿öÏÂrollÖá¿ØÖÆ
+	//ä¸åŒæƒ…å†µä¸‹rollè½´æŽ§åˆ¶
 	if (bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1 ||
 		bl_ctrl->mode.chassis_high_mode == SIT_MODE)
 	{
@@ -938,13 +938,13 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 		{
 			rollD = 0.0f;
 		}
-		bl_ctrl->torque_info.joint_roll_torque_R = rollP + rollD ;//¼«ÐÔÎÊÌâ½¨Òé×Ô¼ºÊµ¼Ê³¢ÊÔ
+		bl_ctrl->torque_info.joint_roll_torque_R = rollP + rollD ;//æžæ€§é—®é¢˜å»ºè®®è‡ªå·±å®žé™…å°è¯•
 		bl_ctrl->torque_info.joint_roll_torque_L = -bl_ctrl->torque_info.joint_roll_torque_R;
 	}
 
 	
 
-	//²»Í¬Çé¿öÏÂ´¹Ö±·½ÏòÁ¦¿ØÖÆ
+	//ä¸åŒæƒ…å†µä¸‹åž‚ç›´æ–¹å‘åŠ›æŽ§åˆ¶
 	if( bl_ctrl->mode.jumping_stage == EXTENDING_LEGS )
 	{
 		bl_ctrl->torque_info.joint_stand_torque_L =
@@ -1010,17 +1010,17 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 	}
 	else
 	{
-		//ÆÕÍ¨Çé¿öÏÂ¼ÓÖØÁ¦²¹³¥
+		//æ™®é€šæƒ…å†µä¸‹åŠ é‡åŠ›è¡¥å¿
 		PID_calc(&bl_ctrl->leg_L_length_pid, bl_ctrl->chassis_posture_info.leg_length_L,bl_ctrl->chassis_posture_info.leg_length_L_set);
 		bl_ctrl->torque_info.joint_stand_torque_L = FEED_f+bl_ctrl->leg_L_length_pid.out;
 		PID_calc(&bl_ctrl->leg_R_length_pid, bl_ctrl->chassis_posture_info.leg_length_R,bl_ctrl->chassis_posture_info.leg_length_R_set);
 		bl_ctrl->torque_info.joint_stand_torque_R = FEED_f+bl_ctrl->leg_R_length_pid.out;
 	}
-	//Ìí¼Ó±»¶¯µÄ¼ì²âµ½ÀëµØµÄÏàÓ¦²Ù×÷
+	//æ·»åŠ è¢«åŠ¨çš„æ£€æµ‹åˆ°ç¦»åœ°çš„ç›¸åº”æ“ä½œ
 	if (bl_ctrl->mode.jumping_stage == CONSTACTING_LEGS_2)
 	{
-		//´ËÊ±´¦ÓÚ¿ÕÖÐ£¬ÏëÒª´ïµ½µÄÐ§¹ûÊÇÍÈµÄ¶È¸úµØÃæÊÇ±£³Ö´¹Ö±£¬
-		//²»ÔÚ¿ØÖÆ»úÉí½Ç¶ÈÒòÎª»úÉí±£³ÖÆ½ºâµÄÁ¦¾ØÆäÊµÓëÍÈ²¿±£³ÖÊúÖ±Á¦¾ØÏà³åÍ»£¬ÔÚÃ»ÓÐµØÃæÖ§³ÖÁ¦µÄÇé¿öÏÂÃ»ÓÐÒâÒå
+		//æ­¤æ—¶å¤„äºŽç©ºä¸­ï¼Œæƒ³è¦è¾¾åˆ°çš„æ•ˆæžœæ˜¯è…¿çš„åº¦è·Ÿåœ°é¢æ˜¯ä¿æŒåž‚ç›´ï¼Œ
+		//ä¸åœ¨æŽ§åˆ¶æœºèº«è§’åº¦å› ä¸ºæœºèº«ä¿æŒå¹³è¡¡çš„åŠ›çŸ©å…¶å®žä¸Žè…¿éƒ¨ä¿æŒç«–ç›´åŠ›çŸ©ç›¸å†²çªï¼Œåœ¨æ²¡æœ‰åœ°é¢æ”¯æŒåŠ›çš„æƒ…å†µä¸‹æ²¡æœ‰æ„ä¹‰
 		bl_ctrl->torque_info.joint_balancing_torque_L = (
 			+ LQR[2][4] * (bl_ctrl->chassis_posture_info.leg_angle_L_set - bl_ctrl->chassis_posture_info.leg_angle_L)
 			+ LQR[2][5] * (0.0f - bl_ctrl->chassis_posture_info.leg_gyro_L) 
@@ -1075,7 +1075,7 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 				);
 		}
 	}
-	//ÂÖì±¿ØÖÆ
+	//è½®æ¯‚æŽ§åˆ¶
 	bl_ctrl->torque_info.foot_balancing_torque_L = (
 		+ LQR[0][4] * (bl_ctrl->chassis_posture_info.leg_angle_L_set - bl_ctrl->chassis_posture_info.leg_angle_L) 
 		+ LQR[0][5] * (0.0f - bl_ctrl->chassis_posture_info.leg_gyro_L) 
@@ -1101,10 +1101,10 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 		+ LQR[1][3]*( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
 	) *TORQ_K;
 
-	// Í³Ò»µÄÀëµØ´¦Àíº¯Êý
+	// ç»Ÿä¸€çš„ç¦»åœ°å¤„ç†å‡½æ•°
 	if (bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1)
 	{
-		// ÀëµØ×´Ì¬Í³Ò»´¦Àí
+		// ç¦»åœ°çŠ¶æ€ç»Ÿä¸€å¤„ç†
 		handle_airborne_state(bl_ctrl);
 	}
 	else
@@ -1116,7 +1116,7 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 }
 void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 {
-	/* ---------J1 J2 ¶ÔÓ¦Ö§³ÖÁ¦·Ö½â³É¹Ø½ÚÅ¤¾Ø     J3 J4 ¶ÔÓ¦Æ½ºâÅ¤¾Ø·Ö½â³É¹Ø½ÚÅ¤¾Ø------------------------------ */
+	/* ---------J1 J2 å¯¹åº”æ”¯æŒåŠ›åˆ†è§£æˆå…³èŠ‚æ‰­çŸ©     J3 J4 å¯¹åº”å¹³è¡¡æ‰­çŸ©åˆ†è§£æˆå…³èŠ‚æ‰­çŸ©------------------------------ */
 	bl_ctrl->mapping_info.invJ1_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L, 1); // N11
 	bl_ctrl->mapping_info.invJ2_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L, 3); // N21
 	bl_ctrl->mapping_info.invJ3_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L, 2); // N12
@@ -1129,7 +1129,7 @@ void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 	bl_ctrl->torque_info.foot_horizontal_torque_L =
 		bl_ctrl->torque_info.foot_balancing_torque_L + bl_ctrl->torque_info.foot_moving_torque_L;
 	bl_ctrl->torque_info.foot_horizontal_torque_R =
-		bl_ctrl->torque_info.foot_balancing_torque_R + bl_ctrl->torque_info.foot_moving_torque_R; // ×ã¶ËÂÖ×ÓË®Æ½Á¦¾Ø
+		bl_ctrl->torque_info.foot_balancing_torque_R + bl_ctrl->torque_info.foot_moving_torque_R; // è¶³ç«¯è½®å­æ°´å¹³åŠ›çŸ©
 
 	bl_ctrl->foot_motor_L.torque_out = bl_ctrl->torque_info.foot_horizontal_torque_L;
 	bl_ctrl->foot_motor_R.torque_out = bl_ctrl->torque_info.foot_horizontal_torque_R;
@@ -1163,7 +1163,7 @@ void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 	}
 	LimitMax(bl_ctrl->foot_motor_L.torque_out, MAX_FOOT_OUTPUT);
 	LimitMax(bl_ctrl->foot_motor_R.torque_out, MAX_FOOT_OUTPUT);
-	/* -----------------------Ê×ÏÈ³¢ÊÔÆ½ºâÁ¦¾Øµ÷ÊÔ-------------------------	 */
+	/* -----------------------é¦–å…ˆå°è¯•å¹³è¡¡åŠ›çŸ©è°ƒè¯•-------------------------	 */
 	bl_ctrl->torque_info.joint_horizontal_torque_L = 
 		bl_ctrl->torque_info.joint_balancing_torque_L+bl_ctrl->torque_info.joint_moving_torque_L;
 	bl_ctrl->torque_info.joint_horizontal_torque_R =
@@ -1174,7 +1174,7 @@ void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 	bl_ctrl->torque_info.joint_vertical_torque_R = 
 		bl_ctrl->torque_info.joint_stand_torque_R + bl_ctrl->torque_info.joint_roll_torque_R;
 
-	/* ×óÊÓÍ¼£º¼ÙÉè´ËÊ±ÐèÒªÒ»¸öÄæÊ±ÕëÅ¤¾ØÄÇÃ´£º1 2 ºÅµç»úË³Ê±Õë   ÓÒÊÓÍ¼£º¸ù¾ÝÉÏÎÄ´ËÊ±¼ÆËã³öÐèÒªË³Ê±ÕëÅ¤¾ØÄÇÃ´£º 3 4 ºÅµç»ú ÄæÊ±Õë ÏÂÎÄÓÖ½«3 4 ºÅµç»úÅ¤¾Ø·´Ïò£¬ËùÒÔÊÇË³Ê±Õë */
+	/* å·¦è§†å›¾ï¼šå‡è®¾æ­¤æ—¶éœ€è¦ä¸€ä¸ªé€†æ—¶é’ˆæ‰­çŸ©é‚£ä¹ˆï¼š1 2 å·ç”µæœºé¡ºæ—¶é’ˆ   å³è§†å›¾ï¼šæ ¹æ®ä¸Šæ–‡æ­¤æ—¶è®¡ç®—å‡ºéœ€è¦é¡ºæ—¶é’ˆæ‰­çŸ©é‚£ä¹ˆï¼š 3 4 å·ç”µæœº é€†æ—¶é’ˆ ä¸‹æ–‡åˆå°†3 4 å·ç”µæœºæ‰­çŸ©åå‘ï¼Œæ‰€ä»¥æ˜¯é¡ºæ—¶é’ˆ */
 	bl_ctrl->torque_info.joint_horizontal_torque_temp1_L =
 		(bl_ctrl->torque_info.joint_horizontal_torque_L) * (-bl_ctrl->mapping_info.invJ3_L);
 	bl_ctrl->torque_info.joint_horizontal_torque_temp2_L =
@@ -1184,7 +1184,7 @@ void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 	bl_ctrl->torque_info.joint_horizontal_torque_temp2_R =
 		(bl_ctrl->torque_info.joint_horizontal_torque_R) * (bl_ctrl->mapping_info.invJ4_R);
 
-	/* ÒÔ1 2 ºÅµç»ú¾ÙÀý£ºÏòÏÂÖ§³ÖÁ¦1ºÅµç»úÄæÊ±Õë£¬2ºÅµç»úË³Ê±Õë    3 4 ºÅµç»ú£º3ºÅµç»úË³Ê±Õë 4ºÅµç»úÄæÊ±Õë */
+	/* ä»¥1 2 å·ç”µæœºä¸¾ä¾‹ï¼šå‘ä¸‹æ”¯æŒåŠ›1å·ç”µæœºé€†æ—¶é’ˆï¼Œ2å·ç”µæœºé¡ºæ—¶é’ˆ    3 4 å·ç”µæœºï¼š3å·ç”µæœºé¡ºæ—¶é’ˆ 4å·ç”µæœºé€†æ—¶é’ˆ */
 	bl_ctrl->torque_info.joint_vertical_torque_temp1_L =
 		(bl_ctrl->torque_info.joint_vertical_torque_L) * (bl_ctrl->mapping_info.invJ1_L);
 	bl_ctrl->torque_info.joint_vertical_torque_temp2_L =
@@ -1207,7 +1207,7 @@ void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 	LimitOutput(bl_ctrl->joint_motor_3.torque_out, T_MIN, T_MAX);
 	LimitOutput(bl_ctrl->joint_motor_4.torque_out, T_MIN, T_MAX);
 }
-fp32 ground_stable_timer = 0;  // Ìí¼ÓÕâÐÐ
+fp32 ground_stable_timer = 0;  // æ·»åŠ è¿™è¡Œ
 void Chassis_Status_Detect(chassis_move_t *detect)
 {
 	/*--------------------------- Off Ground Detect --------------------------*/
@@ -1226,7 +1226,7 @@ void Chassis_Status_Detect(chassis_move_t *detect)
 	if((detect->flag_info.last_suspend_flag_L ==OFF_GROUND&&detect->flag_info.suspend_flag_L ==ON_GROUND) ||
 		(detect->flag_info.last_suspend_flag_R ==OFF_GROUND&&detect->flag_info.suspend_flag_R ==ON_GROUND))
 	{
-		ground_stable_timer = pdMS_TO_TICKS(450);  // ¼ì²âµ½ÂäµØ£¬Æô¶¯200ms¼ÆÊ±Æ÷
+		ground_stable_timer = pdMS_TO_TICKS(450);  // æ£€æµ‹åˆ°è½åœ°ï¼Œå¯åŠ¨200msè®¡æ—¶å™¨
 	}
 	if(ground_stable_timer > 0)
 	{
@@ -1246,7 +1246,7 @@ void Chassis_Status_Detect(chassis_move_t *detect)
 					detect->flag_info.suspend_flag_L = OFF_GROUND;	
 				}
 			else if (detect->torque_info.supportive_force_L > LOWER_SUPPORT_FORCE + 5.0f)  
-			// Ìí¼ÓÖÍ»ØÇø¼ä£¬ÀýÈç+10NµÄãÐÖµ²î
+			// æ·»åŠ æ»žå›žåŒºé—´ï¼Œä¾‹å¦‚+10Nçš„é˜ˆå€¼å·®
 			{
 				detect->flag_info.suspend_flag_L = ON_GROUND;
 			}
@@ -1256,7 +1256,7 @@ void Chassis_Status_Detect(chassis_move_t *detect)
 					detect->flag_info.suspend_flag_R = OFF_GROUND;			
 				}
 			else if (detect->torque_info.supportive_force_R > LOWER_SUPPORT_FORCE + 5.0f)  
-			// Ìí¼ÓÖÍ»ØÇø¼ä£¬ÀýÈç+10NµÄãÐÖµ²î
+			// æ·»åŠ æ»žå›žåŒºé—´ï¼Œä¾‹å¦‚+10Nçš„é˜ˆå€¼å·®
 			{
 				detect->flag_info.suspend_flag_R = ON_GROUND;
 			}
@@ -1287,7 +1287,7 @@ void Chassis_Status_Detect(chassis_move_t *detect)
 void Motor_CMD_Send(chassis_move_t *CMD_Send)
 {
 
-	//Îª±£Ö¤ÂÖì±µç»ú¸ßÏàÓ¦ËÙ¶ÈµÄÒªÇó£¬µ¥¶À¿ªÈÎÎñ¸ºÔð¸øµç»ú·¢Á¦¾ØÖ¸Áî
+	//ä¸ºä¿è¯è½®æ¯‚ç”µæœºé«˜ç›¸åº”é€Ÿåº¦çš„è¦æ±‚ï¼Œå•ç‹¬å¼€ä»»åŠ¡è´Ÿè´£ç»™ç”µæœºå‘åŠ›çŸ©æŒ‡ä»¤
 	if (CMD_Send->foot_motor_R.motor_mode != MOTOR_FORCE)
 		CMD_Send->foot_motor_R.torque_out = 0.0f;
 	if (CMD_Send->foot_motor_L.motor_mode != MOTOR_FORCE)
@@ -1369,7 +1369,7 @@ void Motor_Zero_CMD_Send(void)
 	CAN_HT_CMD(0x04, 0.0);
 	vTaskDelay(1);
 }
-/* -----------------¼ÆËãÍÈ²¿Ö§³ÖÁ¦----------------- */
+/* -----------------è®¡ç®—è…¿éƒ¨æ”¯æŒåŠ›----------------- */
 void calculate_wheel_vertical_acceleration(chassis_move_t * detect)
 {
 	detect->chassis_posture_info.chassis_accel = detect->chassis_posture_info.z_accel-g*cos(detect->chassis_posture_info.pitch_angle);
@@ -1392,7 +1392,7 @@ void calculate_wheel_vertical_acceleration(chassis_move_t * detect)
 //F_N = P + M_w*a + M_w*g 
 void Supportive_Force_Cal(chassis_move_t * detect)
 {
-	//¼ÆËãÍÈ²¿Ö§³ÖÁ¦
+	//è®¡ç®—è…¿éƒ¨æ”¯æŒåŠ›
 	detect->torque_info.forque_L=
 	detect->torque_info.joint_vertical_torque_L*cos(detect->chassis_posture_info.leg_angle_L)
 	+detect->torque_info.joint_horizontal_torque_L*sin(detect->chassis_posture_info.leg_angle_L)/detect->chassis_posture_info.leg_length_L;
@@ -1401,9 +1401,9 @@ void Supportive_Force_Cal(chassis_move_t * detect)
 	+detect->torque_info.joint_horizontal_torque_R*sin(detect->chassis_posture_info.leg_angle_R)/detect->chassis_posture_info.leg_length_R;
 	fp32 temp_L = fp32_constrain(detect->torque_info.forque_L, -100.0f, 100.0f);
 	fp32 temp_R = fp32_constrain(detect->torque_info.forque_R, -100.0f, 100.0f);
-	//¼ÆËã¼ÓËÙ¶È»·½Ú
+	//è®¡ç®—åŠ é€Ÿåº¦çŽ¯èŠ‚
 	calculate_wheel_vertical_acceleration(detect);
-	//Ö§³ÖÁ¦¼ÆËã»·½Ú
+	//æ”¯æŒåŠ›è®¡ç®—çŽ¯èŠ‚
 	detect->torque_info.supportive_force_L=temp_L+m_w*g+m_w*detect->chassis_posture_info.foot_accel_L;
 	detect->torque_info.supportive_force_R=temp_R+m_w*g+m_w*detect->chassis_posture_info.foot_accel_R;
 	detect->torque_info.supportive_force_L = 0.7f*detect->torque_info.supportive_force_L + 0.3f * detect->torque_info.last_supportive_force_L;
@@ -1416,14 +1416,14 @@ uint8_t Check_Jump_Preparation_Complete(chassis_move_t *chassis)
 {
 	if (chassis == NULL) return 0;
     
-    // ×ÛºÏÅÐ¶Ï
+    // ç»¼åˆåˆ¤æ–­
     prepare_complete = 1;    
     return prepare_complete;
 }
 
 void handle_airborne_state(chassis_move_t *bl_ctrl)
 {
-	// 2. ´¦Àí joint_balancing_torque£¨Æ½ºâÁ¦¾Ø£©
+	// 2. å¤„ç† joint_balancing_torqueï¼ˆå¹³è¡¡åŠ›çŸ©ï¼‰
     if (bl_ctrl->flag_info.suspend_flag_R == 1)
     {
 		bl_ctrl->torque_info.joint_balancing_torque_R = -(
@@ -1442,7 +1442,7 @@ void handle_airborne_state(chassis_move_t *bl_ctrl)
         bl_ctrl->torque_info.joint_moving_torque_L = 0.0f;
     }
     
-    // 3. ´¦Àí foot Ïà¹ØÁ¦¾Ø
+    // 3. å¤„ç† foot ç›¸å…³åŠ›çŸ©
     if (bl_ctrl->flag_info.suspend_flag_R == 1)
     {
 		bl_ctrl->torque_info.foot_balancing_torque_R = 0.0f;
@@ -1539,7 +1539,7 @@ void Forward_kinematic_solution(chassis_move_t *feedback_update,
 	}
 }
 
-// ¼ÆËã¶àÏîÊ½Öµ
+// è®¡ç®—å¤šé¡¹å¼å€¼
 float evaluate_polynomial(float L0, float Q0, PolynomialCoefficients coeffs)
 {
 	return coeffs.c0 +
@@ -1550,7 +1550,7 @@ float evaluate_polynomial(float L0, float Q0, PolynomialCoefficients coeffs)
 		   coeffs.c5 * Q0 * Q0;
 }
 
-// ¼ÆËãÑÅ¿É±È¾ØÕó
+// è®¡ç®—é›…å¯æ¯”çŸ©é˜µ
 float get_jacobian_element(chassis_move_t *VMCJ, float L0, float Q0, uint8_t element_type)
 {
 	switch (element_type)
@@ -1564,6 +1564,6 @@ float get_jacobian_element(chassis_move_t *VMCJ, float L0, float Q0, uint8_t ele
 	case 4: // N22
 		return evaluate_polynomial(L0, Q0, VMCJ->InverseJacobianCoefficient.N22);
 	default:
-		return 0.0f; // »òÕß·µ»Ø´íÎóÖµ
+		return 0.0f; // æˆ–è€…è¿”å›žé”™è¯¯å€¼
 	}
 }

@@ -42,7 +42,7 @@ uint16_t servo_pwm[4] = {SERVO_MIN_PWM, SERVO_MIN_PWM, SERVO_MIN_PWM, SERVO_MIN_
   * @retval         none
   */
 /**
-  * @brief          舵机任务
+  * @brief          鑸垫満浠诲姟
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
@@ -65,7 +65,7 @@ void servo_task(void const * argument)
             }
 
             //limit the pwm
-           //限制pwm
+           //闄愬埗pwm
             if(servo_pwm[i] < SERVO_MIN_PWM)
             {
                 servo_pwm[i] = SERVO_MIN_PWM;

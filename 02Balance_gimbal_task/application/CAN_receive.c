@@ -3,7 +3,7 @@
   * @file       can_receive.c/h
   * @brief      there is CAN interrupt function  to receive motor data,
   *             and CAN send function to send motor current to control motor.
-  *             ÕâÀïÊÇCANÖĞ¶Ï½ÓÊÕº¯Êı£¬½ÓÊÕµç»úÊı¾İ,CAN·¢ËÍº¯Êı·¢ËÍµç»úµçÁ÷¿ØÖÆµç»ú.
+  *             è¿™é‡Œæ˜¯CANä¸­æ–­æ¥æ”¶å‡½æ•°ï¼Œæ¥æ”¶ç”µæœºæ•°æ®,CANå‘é€å‡½æ•°å‘é€ç”µæœºç”µæµæ§åˆ¶ç”µæœº.
   * @note
   * @history
   *  Version    Date            Author          Modification
@@ -53,8 +53,8 @@ extern CAN_HandleTypeDef hcan2;
 /*
 motor data,  0:chassis motor1 3508;1:chassis motor3 3508;2:chassis motor3 3508;3:chassis motor4 3508;
 4:yaw gimbal motor 6020;5:pitch gimbal motor 6020;6:trigger motor 2006;
-µç»úÊı¾İ, 0:µ×ÅÌµç»ú1 3508µç»ú,  1:µ×ÅÌµç»ú2 3508µç»ú,2:µ×ÅÌµç»ú3 3508µç»ú,3:µ×ÅÌµç»ú4 3508µç»ú;
-4:yawÔÆÌ¨µç»ú 6020µç»ú; 5:pitchÔÆÌ¨µç»ú 6020µç»ú; 6:²¦µ¯µç»ú 2006µç»ú*/
+ç”µæœºæ•°æ®, 0:åº•ç›˜ç”µæœº1 3508ç”µæœº,  1:åº•ç›˜ç”µæœº2 3508ç”µæœº,2:åº•ç›˜ç”µæœº3 3508ç”µæœº,3:åº•ç›˜ç”µæœº4 3508ç”µæœº;
+4:yawäº‘å°ç”µæœº 6020ç”µæœº; 5:pitchäº‘å°ç”µæœº 6020ç”µæœº; 6:æ‹¨å¼¹ç”µæœº 2006ç”µæœº*/
 motor_measure_t motor_chassis[7];
 
 
@@ -70,8 +70,8 @@ void CAN_receive_referee_data(uint8_t rxdata[]);
  * @retval         none
  */
 /**
- * @brief          hal¿âCAN»Øµ÷º¯Êı,½ÓÊÕµç»úÊı¾İ
- * @param[in]      hcan:CAN¾ä±úÖ¸Õë
+ * @brief          halåº“CANå›è°ƒå‡½æ•°,æ¥æ”¶ç”µæœºæ•°æ®
+ * @param[in]      hcan:CANå¥æŸ„æŒ‡é’ˆ
  * @retval         none
  */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
@@ -131,11 +131,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
  * @retval         none
  */
 /**
- * @brief          ·¢ËÍµç»ú¿ØÖÆµçÁ÷(0x205,0x206,0x207,0x208)
- * @param[in]      yaw: (0x205) 6020µç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-30000,30000]
- * @param[in]      pitch: (0x206) 6020µç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-30000,30000]
- * @param[in]      shootL: (0x207) 3508×óÄ¦²ÁÂÖµç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-16384,16384]
- * @param[in]      shootR: (0x208) 3508×óÄ¦²ÁÂÖµç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-16384,16384]
+ * @brief          å‘é€ç”µæœºæ§åˆ¶ç”µæµ(0x205,0x206,0x207,0x208)
+ * @param[in]      yaw: (0x205) 6020ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-30000,30000]
+ * @param[in]      pitch: (0x206) 6020ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-30000,30000]
+ * @param[in]      shootL: (0x207) 3508å·¦æ‘©æ“¦è½®ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-16384,16384]
+ * @param[in]      shootR: (0x208) 3508å·¦æ‘©æ“¦è½®ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-16384,16384]
  * @retval         none
  */
 void CAN_cmd_gimbal(int16_t yaw, int16_t pitch, int16_t shootL, int16_t shootR)
@@ -156,9 +156,9 @@ void CAN_cmd_gimbal(int16_t yaw, int16_t pitch, int16_t shootL, int16_t shootR)
   HAL_CAN_AddTxMessage(&hcan1, &gimbal_tx_message, gimbal_can_send_data, &send_mail_box);
 }
 /**
- * @brief          ·¢ËÍ½ÇËÙ¶È¿ØÖÆê²¿Øµç»ú
- * @param[in]      iqControl ¿ØÖÆµçÁ÷£¬ÊıÖµ·¶Î§Î§[-2048, 2048]
- * @param[in]      speedControl¿ØÖÆ½ÇËÙ¶È£¬¶ÔÓ¦Êµ¼Ê×ªËÙÎª 0.01dps/LSB
+ * @brief          å‘é€è§’é€Ÿåº¦æ§åˆ¶ç“´æ§ç”µæœº
+ * @param[in]      iqControl æ§åˆ¶ç”µæµï¼Œæ•°å€¼èŒƒå›´å›´[-2048, 2048]
+ * @param[in]      speedControlæ§åˆ¶è§’é€Ÿåº¦ï¼Œå¯¹åº”å®é™…è½¬é€Ÿä¸º 0.01dps/LSB
  * @retval         none
 
 /**
@@ -167,7 +167,7 @@ void CAN_cmd_gimbal(int16_t yaw, int16_t pitch, int16_t shootL, int16_t shootR)
  * @retval         none
  */
 /**
- * @brief          ·¢ËÍIDÎª0x700µÄCAN°ü,Ëü»áÉèÖÃ3508µç»ú½øÈë¿ìËÙÉèÖÃID
+ * @brief          å‘é€IDä¸º0x700çš„CANåŒ…,å®ƒä¼šè®¾ç½®3508ç”µæœºè¿›å…¥å¿«é€Ÿè®¾ç½®ID
  * @param[in]      none
  * @retval         none
  */
@@ -199,11 +199,11 @@ void CAN_cmd_chassis_reset_ID(void)
  * @retval         none
  */
 /**
- * @brief          ·¢ËÍµç»ú¿ØÖÆµçÁ÷(0x201,0x202,0x203,0x204)
- * @param[in]      motor1: (0x201) 3508µç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-16384,16384]
- * @param[in]      motor2: (0x202) 3508µç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-16384,16384]
- * @param[in]      motor3: (0x203) 3508µç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-16384,16384]
- * @param[in]      motor4: (0x204) 3508µç»ú¿ØÖÆµçÁ÷, ·¶Î§ [-16384,16384]
+ * @brief          å‘é€ç”µæœºæ§åˆ¶ç”µæµ(0x201,0x202,0x203,0x204)
+ * @param[in]      motor1: (0x201) 3508ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-16384,16384]
+ * @param[in]      motor2: (0x202) 3508ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-16384,16384]
+ * @param[in]      motor3: (0x203) 3508ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-16384,16384]
+ * @param[in]      motor4: (0x204) 3508ç”µæœºæ§åˆ¶ç”µæµ, èŒƒå›´ [-16384,16384]
  * @retval         none
  */
 void CAN_cmd_chassis(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4)
@@ -308,9 +308,9 @@ void can_gimbal_chassis_data4(chassis_data_t *chassis_data)
  * @retval         motor data point
  */
 /**
- * @brief          ·µ»Øyaw 6020µç»úÊı¾İÖ¸Õë
+ * @brief          è¿”å›yaw 6020ç”µæœºæ•°æ®æŒ‡é’ˆ
  * @param[in]      none
- * @retval         µç»úÊı¾İÖ¸Õë
+ * @retval         ç”µæœºæ•°æ®æŒ‡é’ˆ
  */
 const motor_measure_t *get_yaw_gimbal_motor_measure_point(void)
 {
@@ -323,9 +323,9 @@ const motor_measure_t *get_yaw_gimbal_motor_measure_point(void)
  * @retval         motor data point
  */
 /**
- * @brief          ·µ»Øpitch 6020µç»úÊı¾İÖ¸Õë
+ * @brief          è¿”å›pitch 6020ç”µæœºæ•°æ®æŒ‡é’ˆ
  * @param[in]      none
- * @retval         µç»úÊı¾İÖ¸Õë
+ * @retval         ç”µæœºæ•°æ®æŒ‡é’ˆ
  */
 const motor_measure_t *get_pitch_gimbal_motor_measure_point(void)
 {
@@ -333,9 +333,9 @@ const motor_measure_t *get_pitch_gimbal_motor_measure_point(void)
 }
 
 /**
- * @brief          ·µ»Ø×óÄ¦²ÁÂÖµç»úÊı¾İÖ¸Õë
+ * @brief          è¿”å›å·¦æ‘©æ“¦è½®ç”µæœºæ•°æ®æŒ‡é’ˆ
  * @param[in]      none
- * @retval         µç»úÊı¾İÖ¸Õë
+ * @retval         ç”µæœºæ•°æ®æŒ‡é’ˆ
  */
 const motor_measure_t *get_left_friction_motor_measure_point(void)
 {
@@ -343,9 +343,9 @@ const motor_measure_t *get_left_friction_motor_measure_point(void)
 }
 
 /**
- * @brief          ·µ»ØÓÒÄ¦²ÁÂÖµç»úÊı¾İÖ¸Õë
+ * @brief          è¿”å›å³æ‘©æ“¦è½®ç”µæœºæ•°æ®æŒ‡é’ˆ
  * @param[in]      none
- * @retval         µç»úÊı¾İÖ¸Õë
+ * @retval         ç”µæœºæ•°æ®æŒ‡é’ˆ
  */
 const motor_measure_t *get_right_friction_motor_measure_point(void)
 {
@@ -358,9 +358,9 @@ const motor_measure_t *get_right_friction_motor_measure_point(void)
  * @retval         motor data point
  */
 /**
- * @brief          ·µ»Øµ×ÅÌµç»ú 3508µç»úÊı¾İÖ¸Õë
- * @param[in]      i: µç»ú±àºÅ,·¶Î§[0,3]
- * @retval         µç»úÊı¾İÖ¸Õë
+ * @brief          è¿”å›åº•ç›˜ç”µæœº 3508ç”µæœºæ•°æ®æŒ‡é’ˆ
+ * @param[in]      i: ç”µæœºç¼–å·,èŒƒå›´[0,3]
+ * @retval         ç”µæœºæ•°æ®æŒ‡é’ˆ
  */
 const motor_measure_t *get_chassis_motor_measure_point(uint8_t i)
 {

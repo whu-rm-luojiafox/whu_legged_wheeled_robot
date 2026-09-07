@@ -1,4 +1,6 @@
 {
+    "files.encoding": "utf8",
+    "files.autoGuessEncoding": false,
     "files.associations": {
         "crc8_crc16.h": "c",
         "remote_control.h": "c",

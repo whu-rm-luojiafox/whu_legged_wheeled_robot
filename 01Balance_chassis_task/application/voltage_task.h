@@ -2,9 +2,9 @@
   ****************************(C) COPYRIGHT 2019 DJI****************************
   * @file       voltage_task.c/h
   * @brief      24v power voltage ADC task, get voltage and calculate electricity
-  *             percentage.24µçÔ´µçÑ¹ADCÈÎÎñ,»ñÈ¡µçÑ¹²¢ÇÒ¼ÆËãµçÁ¿°Ù·Ö±È.
+  *             percentage.24ç”µæºç”µå‹ADCä»»åŠ¡,è·å–ç”µå‹å¹¶ä¸”è®¡ç®—ç”µé‡ç™¾åˆ†æ¯”.
   * @note       when power is not derectly link to delelopment, please change VOLTAGE_DROP
-  *             µ±µçÔ´²»Ö±Á¬¿ª·¢°å,ÇëĞŞ¸ÄVOLTAGE_DROP
+  *             å½“ç”µæºä¸ç›´è¿å¼€å‘æ¿,è¯·ä¿®æ”¹VOLTAGE_DROP
   * @history
   *  Version    Date            Author          Modification
   *  V1.0.0     Nov-11-2019     RM              1. done
@@ -28,7 +28,7 @@
   * @retval         none
   */
 /**
-  * @brief          µçÔ´²ÉÑùºÍ¼ÆËãµçÔ´°Ù·Ö±È
+  * @brief          ç”µæºé‡‡æ ·å’Œè®¡ç®—ç”µæºç™¾åˆ†æ¯”
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
@@ -40,9 +40,9 @@ extern void battery_voltage_task(void const * argument);
   * @retval         electricity percentage, unit 1, 1 = 1%
   */
 /**
-  * @brief          »ñÈ¡µçÁ¿
+  * @brief          è·å–ç”µé‡
   * @param[in]      void
-  * @retval         µçÁ¿, µ¥Î» 1, 1 = 1%
+  * @retval         ç”µé‡, å•ä½ 1, 1 = 1%
   */
 extern uint16_t get_battery_percentage(void);
 float Get_battery_voltage(void);

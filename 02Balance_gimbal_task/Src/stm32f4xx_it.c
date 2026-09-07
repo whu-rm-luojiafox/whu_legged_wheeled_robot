@@ -287,65 +287,65 @@ void USART1_IRQHandler(void)
 //       // __HAL_DMA_DISABLE(&hdma_usart1_rx);
 
 //   
-//    uint16_t dma_pos = 700 - __HAL_DMA_GET_COUNTER(huart1.hdmarx); // »ñÈ¡ DMA µ±Ç°½ÓÊÕÎ»ÖÃ
+//    uint16_t dma_pos = 700 - __HAL_DMA_GET_COUNTER(huart1.hdmarx); // è·å– DMA å½“å‰æ¥æ”¶ä½ç½®
 //    while (rx_write_pos != dma_pos)
 //    {
 //        uint8_t received_byte = rx_buffer[rx_write_pos];
 //        rx_write_pos = (rx_write_pos + 1) % 700;
 
-//        // ´¦Àí½ÓÊÕµ½µÄ×Ö½Ú
+//        // å¤„ç†æ¥æ”¶åˆ°çš„å­—èŠ‚
 //        if (Count == 0)
 //        {
 //            if (received_byte == FRAME_HEADER_SOF)  
 //            {
-//                buffer1[received++] = received_byte;  // ´æ´¢Ö¡Í·ÆğÊ¼±êÖ¾
-//                Count = 1;  // ½øÈëÖ¡Í·½ÓÊÕ½×¶Î
+//                buffer1[received++] = received_byte;  // å­˜å‚¨å¸§å¤´èµ·å§‹æ ‡å¿—
+//                Count = 1;  // è¿›å…¥å¸§å¤´æ¥æ”¶é˜¶æ®µ
 //            }
 //            else
 //            {
-//                received = 0;  // ²»ÊÇÖ¡Í·±êÖ¾Ôò¶ªÆúÊı¾İ
+//                received = 0;  // ä¸æ˜¯å¸§å¤´æ ‡å¿—åˆ™ä¸¢å¼ƒæ•°æ®
 //            }
 //        }
-//			else if (Count == 1)  // ½ÓÊÕÖ¡Í·µÄcrc8×Ö¶Î
+//			else if (Count == 1)  // æ¥æ”¶å¸§å¤´çš„crc8å­—æ®µ
 //        {
 //            buffer1[received++] = received_byte;
 
-//            // ¼ì²éÖ¡Í·ÊÇ·ñ½ÓÊÕÍê³É
+//            // æ£€æŸ¥å¸§å¤´æ˜¯å¦æ¥æ”¶å®Œæˆ
 //            if (received == sizeof(FrameHeader))
 //            {
 //                FrameHeader *header = (FrameHeader *)buffer1;
 
-//                // ¼ì²ésofºÍcrc8ÊÇ·ñ·ûºÏ¹Ì¶¨Öµ
+//                // æ£€æŸ¥sofå’Œcrc8æ˜¯å¦ç¬¦åˆå›ºå®šå€¼
 //                if (header->sof == FRAME_HEADER_SOF && header->crc8 == 0x00)
 //                {
-//                    Count = 2;  // Ö¡Í·Ğ£ÑéÍ¨¹ı£¬×¼±¸½ÓÊÕÊı¾İ²¿·Ö
+//                    Count = 2;  // å¸§å¤´æ ¡éªŒé€šè¿‡ï¼Œå‡†å¤‡æ¥æ”¶æ•°æ®éƒ¨åˆ†
 //                }
 //                else
 //                {
-//                    received = 0;  // Ö¡Í·²»Æ¥Åä£¬ÖØÖÃ½ÓÊÕ
+//                    received = 0;  // å¸§å¤´ä¸åŒ¹é…ï¼Œé‡ç½®æ¥æ”¶
 //                    Count = 0;
 //                }
 //            }
 //        }
-//				 else if (Count == 2)  // ½ÓÊÕÊı¾İ²¿·ÖÒÔ¼°Ö¡Î²
+//				 else if (Count == 2)  // æ¥æ”¶æ•°æ®éƒ¨åˆ†ä»¥åŠå¸§å°¾
 //        {
 //            buffer1[received++] = received_byte;
 
-//            // ¼ì²éÊı¾İ°üÊÇ·ñ½ÓÊÕÍêÕû
+//            // æ£€æŸ¥æ•°æ®åŒ…æ˜¯å¦æ¥æ”¶å®Œæ•´
 //            if (received == sizeof(FrameHeader) + sizeof(InputData) + sizeof(FrameTailer))
 //            {
 //                //FrameTailer *tail = (FrameTailer *)(buffer + sizeof(FrameHeader) + sizeof(InputData));
 
-//                // ¼ì²éÖ¡Î²
+//                // æ£€æŸ¥å¸§å°¾
 //                //if (verify_CRC16_check_sum((uint8_t*)buffer, sizeof(RECEIVE_DATA)))
 //                //{
 //									
-//                    //Êı¾İ°ü¼ìÑé³É¹¦£¬½âÎöÊı¾İ²¿·Ö
+//                    //æ•°æ®åŒ…æ£€éªŒæˆåŠŸï¼Œè§£ææ•°æ®éƒ¨åˆ†
 //                    memcpy(&inputdata, buffer1 + sizeof(FrameHeader), sizeof(InputData));
 //							      //memset(buffer, 0, sizeof(RECEIVE_DATA));
 //                //}
 
-//                //ÎŞÂÛÊÇ·ñĞ£Ñé³É¹¦£¬¶¼ÖØÖÃ½ÓÊÕ×´Ì¬
+//                //æ— è®ºæ˜¯å¦æ ¡éªŒæˆåŠŸï¼Œéƒ½é‡ç½®æ¥æ”¶çŠ¶æ€
 //                received = 0;
 //                Count = 0;
 //            }

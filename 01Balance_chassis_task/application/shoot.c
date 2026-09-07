@@ -11,8 +11,8 @@
 shoot_control_t shoot_control;
 const chassis_data_t *shoot_enable;
 
-uint8_t single_shoot_state = 0;         // µ¥·¢Ä£Ê½×´Ì¬Î»
-uint8_t single_shoot_cnt = 0;           // 1±íÊ¾±¾´Îµ¥·¢¶¯×÷Íê³É£¬·ÀÖ¹Á¬Ğøµ¥·¢
+uint8_t single_shoot_state = 0;         // å•å‘æ¨¡å¼çŠ¶æ€ä½
+uint8_t single_shoot_cnt = 0;           // 1è¡¨ç¤ºæœ¬æ¬¡å•å‘åŠ¨ä½œå®Œæˆï¼Œé˜²æ­¢è¿ç»­å•å‘
 
 uint16_t shoot_state;
 uint8_t process_state = 0;
@@ -27,19 +27,19 @@ extern power_heat_data_t power_heat_data;
 float real_time_heat = 0;
 
 
-/* ========================= ·À¶Â×ª / ÍËµ¯²ÎÊı =========================
- * ËµÃ÷£º
- * 1) ÓÃ HAL_GetTick() ¼ÆÊ±£¬ËùÒÔ²»ÒÀÀµÈÎÎñÖÜÆÚ¡£
- * 2) ÅĞ¾İ£ºµ±Ç°´¦ÓÚ²¦µ¯¹¤×÷×´Ì¬£¬ÇÒ PID Êä³öµçÁ÷½Ï´ó£¬µ«µç»ú×ªËÙ³ÖĞøºÜµÍ¡£
- * 3) ¶¯×÷£º·´×ª¹Ì¶¨Ê±³¤ -> »Ö¸´Õı×ª¡£
- * 4) ²ÎÊıĞèÒªÄãÉÏ³µºóÔÙÎ¢µ÷¡£
+/* ========================= é˜²å µè½¬ / é€€å¼¹å‚æ•° =========================
+ * è¯´æ˜ï¼š
+ * 1) ç”¨ HAL_GetTick() è®¡æ—¶ï¼Œæ‰€ä»¥ä¸ä¾èµ–ä»»åŠ¡å‘¨æœŸã€‚
+ * 2) åˆ¤æ®ï¼šå½“å‰å¤„äºæ‹¨å¼¹å·¥ä½œçŠ¶æ€ï¼Œä¸” PID è¾“å‡ºç”µæµè¾ƒå¤§ï¼Œä½†ç”µæœºè½¬é€ŸæŒç»­å¾ˆä½ã€‚
+ * 3) åŠ¨ä½œï¼šåè½¬å›ºå®šæ—¶é•¿ -> æ¢å¤æ­£è½¬ã€‚
+ * 4) å‚æ•°éœ€è¦ä½ ä¸Šè½¦åå†å¾®è°ƒã€‚
  */
-#define TRIGGER_JAM_MIN_CMD_CURRENT      4000      // ÅĞ¶¨¶Â×ªËùĞèµÄ×îĞ¡µçÁ÷Êä³ö
-#define TRIGGER_JAM_SPEED_RPM_THRES      400.0f     // µÍËÙãĞÖµ£¬µÍÓÚ´ËÖµ³ÖĞøÒ»¶ÎÊ±¼äÈÏÎª¶Â×ª
-#define TRIGGER_JAM_DETECT_MS            300U      // ¶Â×ª³ÖĞøÅĞ¶¨Ê±¼ä
-#define TRIGGER_REVERSE_SPEED_RPM        2200.0f   // ÍËµ¯·´×ªËÙ¶È
-#define TRIGGER_REVERSE_MS               180U      // ÍËµ¯·´×ªÊ±³¤
-#define TRIGGER_REVERSE_COOLDOWN_MS      100U      // ÍËµ¯Íê³ÉºóÀäÈ´Ê±¼ä£¬±ÜÃâÁ¢¿ÌÔÙ´ÎÎóÅĞ
+#define TRIGGER_JAM_MIN_CMD_CURRENT      4000      // åˆ¤å®šå µè½¬æ‰€éœ€çš„æœ€å°ç”µæµè¾“å‡º
+#define TRIGGER_JAM_SPEED_RPM_THRES      400.0f     // ä½é€Ÿé˜ˆå€¼ï¼Œä½äºæ­¤å€¼æŒç»­ä¸€æ®µæ—¶é—´è®¤ä¸ºå µè½¬
+#define TRIGGER_JAM_DETECT_MS            300U      // å µè½¬æŒç»­åˆ¤å®šæ—¶é—´
+#define TRIGGER_REVERSE_SPEED_RPM        2200.0f   // é€€å¼¹åè½¬é€Ÿåº¦
+#define TRIGGER_REVERSE_MS               180U      // é€€å¼¹åè½¬æ—¶é•¿
+#define TRIGGER_REVERSE_COOLDOWN_MS      100U      // é€€å¼¹å®Œæˆåå†·å´æ—¶é—´ï¼Œé¿å…ç«‹åˆ»å†æ¬¡è¯¯åˆ¤
 
 typedef enum
 {
@@ -55,17 +55,17 @@ static uint32_t trigger_reverse_cooldown_tick = 0;
 
 void real_heat_calc(void)
 {
-    if(shoot_control.shoot_heat_value != shoot_control.last_shoot_heat_value)	//ÈÏÎª¸üĞÂÁË
+    if(shoot_control.shoot_heat_value != shoot_control.last_shoot_heat_value)	//è®¤ä¸ºæ›´æ–°äº†
 	{
 		real_time_heat = shoot_control.shoot_heat_value;
 	}
 	else 
 	{
-		real_time_heat = real_time_heat + shoot_speed*0.002f*10 - shoot_control.shoot_cooling_rate*0.002f;		//ÎÒµÄÈÎÎñ¼ä¸ôÊÇ0.002s
+		real_time_heat = real_time_heat + shoot_speed*0.002f*10 - shoot_control.shoot_cooling_rate*0.002f;		//æˆ‘çš„ä»»åŠ¡é—´éš”æ˜¯0.002s
 		if(real_time_heat <= 0)		
         {real_time_heat = 0;}
 	}
-	//ÒÔÉÏ±£Ö¤¸üĞÂÃ»ÎÊÌâ
+	//ä»¥ä¸Šä¿è¯æ›´æ–°æ²¡é—®é¢˜
 }
 
 static void trigger_anti_jam_reset(void)
@@ -128,7 +128,7 @@ static uint8_t trigger_need_anti_jam(fp32 actual_speed_rpm, int16_t given_curren
     return 0;
 }
 
-/* ·µ»Ø1±íÊ¾±¾ÖÜÆÚÒÑ±»¡°ÍËµ¯Âß¼­¡±½Ó¹Ü£¬Íâ²¿²»Ó¦ÔÙ¸²¸Ç given_current */
+/* è¿”å›1è¡¨ç¤ºæœ¬å‘¨æœŸå·²è¢«â€œé€€å¼¹é€»è¾‘â€æ¥ç®¡ï¼Œå¤–éƒ¨ä¸åº”å†è¦†ç›– given_current */
 static uint8_t trigger_anti_jam_control(void)
 {
     uint32_t now = HAL_GetTick();
@@ -154,7 +154,7 @@ static uint8_t trigger_anti_jam_control(void)
     return 0;
 }
 
-/* ========================= Ô­Âß¼­ ========================= */
+/* ========================= åŸé€»è¾‘ ========================= */
 
 // void shoot_speed_calc(void)
 // {
@@ -194,17 +194,17 @@ static uint8_t trigger_anti_jam_control(void)
 void shoot_speed_calc(void)
 {
     shoot_speed = 32;
-	if(real_time_heat >= (float)shoot_control.shoot_heat_limit /2.0f)		//ÈÈÁ¿Öµ´ïµ½×î´óµÄ1/3¿ªÊ¼¼õËÙ
+	if(real_time_heat >= (float)shoot_control.shoot_heat_limit /2.0f)		//çƒ­é‡å€¼è¾¾åˆ°æœ€å¤§çš„1/3å¼€å§‹å‡é€Ÿ
 	{
 		shoot_speed = (float)(shoot_control.shoot_heat_limit - real_time_heat)/(float)shoot_control.shoot_heat_limit*20.0f;
 	}
-	if((float)shoot_control.shoot_heat_limit - real_time_heat <= 18.0f)	//Ö±½ÓÍ£
+	if((float)shoot_control.shoot_heat_limit - real_time_heat <= 18.0f)	//ç›´æ¥åœ
 	{
 		shoot_speed = shoot_control.shoot_cooling_rate/10;
 	}
 	else 
 	{
-		shoot_speed = 32.0f;		//Î¬³ÖÀíÏëµ¯Æµ
+		shoot_speed = 32.0f;		//ç»´æŒç†æƒ³å¼¹é¢‘
 	}
 }
 
@@ -225,7 +225,7 @@ uint16_t shoot_single_control(void)
     {
         if (fabs(shoot_control.set_angle - shoot_control.angle) > 2.0f)
         {
-            /* Î»ÖÃ»· PID */
+            /* ä½ç½®ç¯ PID */
             PID_calc(&shoot_control.trigger_motor_angle_pid,
                      shoot_control.angle,
                      shoot_control.set_angle);
@@ -236,7 +236,7 @@ uint16_t shoot_single_control(void)
 
             shoot_control.given_current = (int16_t)(shoot_control.trigger_position_mode_speed_pid.out);
 
-            /* µ¥·¢¹ı³ÌÖĞÒ²ÔÊĞí´¥·¢ÍËµ¯ */
+            /* å•å‘è¿‡ç¨‹ä¸­ä¹Ÿå…è®¸è§¦å‘é€€å¼¹ */
             if (trigger_need_anti_jam(shoot_control.shoot_motor_measure->speed_rpm,
                                       shoot_control.given_current,
                                       1))
@@ -369,7 +369,7 @@ void shoot_control_set(void)
                  shoot_control.speed_set);
         shoot_control.given_current = (int16_t)(shoot_control.trigger_speed_mode_speed_pid.out);
 
-        /* Á¬·¢·À¶Â×ªÅĞ¶¨ */
+        /* è¿å‘é˜²å µè½¬åˆ¤å®š */
         if (trigger_need_anti_jam(shoot_control.shoot_motor_measure->speed_rpm,
                                   shoot_control.given_current,
                                   1))
@@ -379,7 +379,7 @@ void shoot_control_set(void)
             return;
         }
 
-        /* ÈôÕıÔÚÍËµ¯£¬±¾ÖÜÆÚÓÉÍËµ¯Âß¼­½Ó¹Ü */
+        /* è‹¥æ­£åœ¨é€€å¼¹ï¼Œæœ¬å‘¨æœŸç”±é€€å¼¹é€»è¾‘æ¥ç®¡ */
         if (trigger_anti_jam_control())
         {
             return;
@@ -398,7 +398,7 @@ void shoot_control_set(void)
         (shoot_control.shoot_mode != SHOOT_SINGLE) &&
         shoot_state == SHOOT_FINISH)
     {
-        /* Í£²¦µ¯ÅÌ */
+        /* åœæ‹¨å¼¹ç›˜ */
         shoot_control.speed_set = 0;
         PID_calc(&shoot_control.trigger_speed_mode_speed_pid,
                  shoot_control.shoot_motor_measure->speed_rpm,

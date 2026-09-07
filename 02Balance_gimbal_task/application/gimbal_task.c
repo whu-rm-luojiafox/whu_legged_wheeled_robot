@@ -7,17 +7,17 @@
   *             gyro mode: use euler angle to control, encond mode: use enconde
   *             angle to control. and has some special mode:cali mode, motionless
   *             mode.
-  *             Íê³ÉÔÆÌ¨¿ØÖÆÈÎÎñ£¬ÓÉÓÚÔÆÌ¨Ê¹ÓÃÍÓÂİÒÇ½âËã³öµÄ½Ç¶È£¬Æä·¶Î§ÔÚ£¨-pi,pi£©
-  *             ¹Ê¶øÉèÖÃÄ¿±ê½Ç¶È¾ùÎª·¶Î§£¬´æÔÚĞí¶à¶Ô½Ç¶È¼ÆËãµÄº¯Êı¡£ÔÆÌ¨Ö÷Òª·ÖÎª2ÖÖ
-  *             ×´Ì¬£¬ÍÓÂİÒÇ¿ØÖÆ×´Ì¬ÊÇÀûÓÃ°åÔØÍÓÂİÒÇ½âËãµÄ×ËÌ¬½Ç½øĞĞ¿ØÖÆ£¬±àÂëÆ÷¿ØÖÆ
-  *             ×´Ì¬ÊÇÍ¨¹ıµç»ú·´À¡µÄ±àÂëÖµ¿ØÖÆµÄĞ£×¼£¬´ËÍâ»¹ÓĞĞ£×¼×´Ì¬£¬Í£Ö¹×´Ì¬µÈ¡£
+  *             å®Œæˆäº‘å°æ§åˆ¶ä»»åŠ¡ï¼Œç”±äºäº‘å°ä½¿ç”¨é™€èºä»ªè§£ç®—å‡ºçš„è§’åº¦ï¼Œå…¶èŒƒå›´åœ¨ï¼ˆ-pi,piï¼‰
+  *             æ•…è€Œè®¾ç½®ç›®æ ‡è§’åº¦å‡ä¸ºèŒƒå›´ï¼Œå­˜åœ¨è®¸å¤šå¯¹è§’åº¦è®¡ç®—çš„å‡½æ•°ã€‚äº‘å°ä¸»è¦åˆ†ä¸º2ç§
+  *             çŠ¶æ€ï¼Œé™€èºä»ªæ§åˆ¶çŠ¶æ€æ˜¯åˆ©ç”¨æ¿è½½é™€èºä»ªè§£ç®—çš„å§¿æ€è§’è¿›è¡Œæ§åˆ¶ï¼Œç¼–ç å™¨æ§åˆ¶
+  *             çŠ¶æ€æ˜¯é€šè¿‡ç”µæœºåé¦ˆçš„ç¼–ç å€¼æ§åˆ¶çš„æ ¡å‡†ï¼Œæ­¤å¤–è¿˜æœ‰æ ¡å‡†çŠ¶æ€ï¼Œåœæ­¢çŠ¶æ€ç­‰ã€‚
   * @note
   * @history
   *  Version    Date            Author          Modification
   *  V1.0.0     Dec-26-2018     RM              1. done
   *  V1.1.0     Nov-11-2019     RM              1. add some annotation
   *
-  *  V2.0.0     Nov-16-2025     xzicr           Ôö¼Ó¿ØÖÆÄ£¿é
+  *  V2.0.0     Nov-16-2025     xzicr           å¢åŠ æ§åˆ¶æ¨¡å—
   @verbatim
   ==============================================================================
 
@@ -76,18 +76,18 @@ uint32_t gimbal_high_water;
 float yaw_buffer[WINDOW_SIZE];
 
 
-/*--------------ÔÆÌ¨¿ØÖÆËùÓĞÏà¹ØÊı¾İ----------------*/
-// ÔÆÌ¨Êı¾İ½á¹¹Ìå
+/*--------------äº‘å°æ§åˆ¶æ‰€æœ‰ç›¸å…³æ•°æ®----------------*/
+// äº‘å°æ•°æ®ç»“æ„ä½“
 gimbal_control_t gimbal_control;
 
-//±êÖ¾Î»
+//æ ‡å¿—ä½
 uint8_t aimflag = 0;
 uint8_t key_mode_flag = 1;
-// PID²ÎÊı
+// PIDå‚æ•°
 static const fp32 Pitch_angle_pid[3] = {PITCH_ANGLE_PID_KP, PITCH_ANGLE_PID_KI, PITCH_ANGLE_PID_KD};
 static const fp32 Pitch_gyro_pid[3] = {PITCH_GYRO_PID_KP, PITCH_GYRO_PID_KI, PITCH_ANGLE_PID_KD};
 
-/*------------µ×ÅÌÊı¾İ------------------*/
+/*------------åº•ç›˜æ•°æ®------------------*/
 chassis_data_t chassis_data;
 InputData *Self_aim_data;
 first_order_filter_type_t chassis_self_aim_yaw;
@@ -110,33 +110,33 @@ void gimbal_task(void const *pvParameters)
 {
   vTaskDelay(GIMBAL_TASK_INIT_TIME);
 
-  // ÔÆÌ¨³õÊ¼»¯
+  // äº‘å°åˆå§‹åŒ–
   gimbal_init(&gimbal_control);
 
-  // ÍÈ²¿¿ØÖÆ³õÊ¼»¯
+  // è…¿éƒ¨æ§åˆ¶åˆå§‹åŒ–
   leg_control_init(&chassis_data);
 
-  // Éä»÷³õÊ¼»¯
+  // å°„å‡»åˆå§‹åŒ–
   shoot_Init();
 
   while (1)
   {
-    // Éä»÷¿ØÖÆ
+    // å°„å‡»æ§åˆ¶
     gimbal_control.shoot = shoot_control_loop();
 
-    // ÉèÖÃµ×ÅÌ¿ØÖÆÁ¿
+    // è®¾ç½®åº•ç›˜æ§åˆ¶é‡
     chassis_rc_to_control_vector(&gimbal_control, &chassis_data);
 
-    // ÉèÖÃÔÆÌ¨¿ØÖÆÄ£Ê½
+    // è®¾ç½®äº‘å°æ§åˆ¶æ¨¡å¼
     gimbal_set_mode(&gimbal_control);
 
-    // ÔÆÌ¨Êı¾İ·´À¡
+    // äº‘å°æ•°æ®åé¦ˆ
     gimbal_feedback_update(&gimbal_control);
 
-    // ÉèÖÃÔÆÌ¨PITCHÖáÄ¿±ê½Ç¶È
+    // è®¾ç½®äº‘å°PITCHè½´ç›®æ ‡è§’åº¦
     gimbal_set_control(&gimbal_control);
 
-    // ÔÆÌ¨¿ØÖÆPID¼ÆËã
+    // äº‘å°æ§åˆ¶PIDè®¡ç®—
     gimbal_control_loop(&gimbal_control);
 
     gimbal_control.shoot = shoot_control_loop();
@@ -150,14 +150,14 @@ void gimbal_task(void const *pvParameters)
 
 static void gimbal_init(gimbal_control_t *init)
 {
-  // ³õÊ¼»¯ÍÓÂİÒÇ Ò£¿ØÆ÷  ×ÔÃéÊı¾İ
+  // åˆå§‹åŒ–é™€èºä»ª é¥æ§å™¨  è‡ªç„æ•°æ®
   init->INS = get_INS();
   init->gimbal_INT_angle_point = get_INS_angle_point();
   init->gimbal_INT_gyro_point = get_gyro_data_point();
   init->gimbal_rc_ctrl = get_remote_control_point();
   Self_aim_data = get_selfaim_data();
 
-  // Ä£Ê½³õÊ¼»¯
+  // æ¨¡å¼åˆå§‹åŒ–
   init->gimbal_pitch_motor.gimbal_motor_mode = init->gimbal_yaw_motor.last_gimbal_motor_mode = GIMBAL_MOTOR_OFF;
   chassis_data.shoot_mode = 0;
   chassis_data.chassis_mode = 0;
@@ -165,7 +165,7 @@ static void gimbal_init(gimbal_control_t *init)
   init->gimbal_pitch_motor.motor_gyro_set = init->gimbal_pitch_motor.motor_gyro;
   chassis_data.yaw_angle_set = init->gimbal_yaw_motor.absolute_angle;
 
-  // PID³õÊ¼»¯
+  // PIDåˆå§‹åŒ–
   PID_init(&init->gimbal_pitch_motor.gimbal_motor_angle_pid, PID_POSITION, Pitch_angle_pid,
            PITCH_ANGLE_PID_MAX_OUT, PITCH_ANGLE_PID_MAX_IOUT);
   PID_init(&init->gimbal_pitch_motor.gimbal_motor_gyro_pid, PID_POSITION, Pitch_gyro_pid,
@@ -179,18 +179,18 @@ void leg_control_init(chassis_data_t *leg_contorl)
 }
 void chassis_rc_to_control_vector(gimbal_control_t *gimbal_control_set, chassis_data_t *chassis_data)
 {
-  /* --------------½øÈëº¯ÊıÇ°ÌáÌõ¼ş------------------ */
+  /* --------------è¿›å…¥å‡½æ•°å‰ææ¡ä»¶------------------ */
   if (gimbal_control_set == NULL)
   {
     return;
   }
-  // Ò£¿Ø¿ØÖÆ
+  // é¥æ§æ§åˆ¶
   rc_control(gimbal_control_set, chassis_data);
 
-  // ¼üÅÌ¿ØÖÆ
+  // é”®ç›˜æ§åˆ¶
   key_control(gimbal_control_set, chassis_data);
 
-  // yawÖáÉèÖÃ¸üĞÂ
+  // yawè½´è®¾ç½®æ›´æ–°
   yaw_set(gimbal_control_set, chassis_data);
 
   chassis_data->yaw_angle = gimbal_control_set->gimbal_yaw_motor.absolute_angle;
@@ -199,7 +199,7 @@ void chassis_rc_to_control_vector(gimbal_control_t *gimbal_control_set, chassis_
 }
 void rc_control(gimbal_control_t *gimbal_control_set, chassis_data_t *chassis_data)
 {
-  // Ä£Ê½ÉèÖÃ
+  // æ¨¡å¼è®¾ç½®
   #ifdef RC_MODE
   if (gimbal_control_set->gimbal_rc_ctrl->rc.s[0] == 0)
   {
@@ -235,7 +235,7 @@ void rc_control(gimbal_control_t *gimbal_control_set, chassis_data_t *chassis_da
 }
 uint32_t timer;
 /**
- * @brief ¼üÅÌ¿ØÖÆÊäÈë
+ * @brief é”®ç›˜æ§åˆ¶è¾“å…¥
  * @param[in] gimbal_control_set
  * @param[in] chassis_data
  * @retval
@@ -280,7 +280,7 @@ void key_control(gimbal_control_t *gimbal_control_set, chassis_data_t *chassis_d
   {
     chassis_data->wz_set = -13;
   }
-    //Ôö¼Ó¼üÅÌÆôÍ£
+    //å¢åŠ é”®ç›˜å¯åœ
   if(gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_CTRL&&!(gimbal_control_set->lastkeyboard & KEY_PRESSED_OFFSET_CTRL))
   {
     key_mode_flag++;
@@ -396,17 +396,17 @@ else if ((chassis_data->chassis_mode != CHASSIS_MODE_OFF) && aimflag == 1)
     {
         new_yaw_angle = gimbal_control_set->gimbal_yaw_motor.self_aim_yaw_angle;
         
-        // ? ĞÂÔö£º¼ÆËã½Ç¶ÈÌø±ä²¢²¹³¥
+        // ? æ–°å¢ï¼šè®¡ç®—è§’åº¦è·³å˜å¹¶è¡¥å¿
         float angle_diff = new_yaw_angle - chassis_data->yaw_angle_set;
         
-        // ¹æ·¶µ½ [-180, 180] ·¶Î§
+        // è§„èŒƒåˆ° [-180, 180] èŒƒå›´
         while (angle_diff > 180.0f) {
             angle_diff -= 360.0f;
         } 
         while (angle_diff < -180.0f) {
             angle_diff += 360.0f;
         }
-        // ÀÛ¼Ó²¹³¥µ½ yaw_angle_set
+        // ç´¯åŠ è¡¥å¿åˆ° yaw_angle_set
         new_yaw_angle = chassis_data->yaw_angle_set + angle_diff;
         chassis_data->yaw_angle_set = new_yaw_angle;
     }
@@ -441,7 +441,7 @@ static void gimbal_set_mode(gimbal_control_t *set_mode)
       }
     }
 
-    // ³¬¹ı³õÊ¼»¯×î´óÊ±¼ä£¬»òÕßÒÑ¾­ÎÈ¶¨µ½ÖĞÖµÒ»¶ÎÊ±¼ä£¬ÍË³ö³õÊ¼»¯×´Ì¬¿ª¹Ø´òÏÂµµ£¬»òÕßµôÏß
+    // è¶…è¿‡åˆå§‹åŒ–æœ€å¤§æ—¶é—´ï¼Œæˆ–è€…å·²ç»ç¨³å®šåˆ°ä¸­å€¼ä¸€æ®µæ—¶é—´ï¼Œé€€å‡ºåˆå§‹åŒ–çŠ¶æ€å¼€å…³æ‰“ä¸‹æ¡£ï¼Œæˆ–è€…æ‰çº¿
     if (init_time < GIMBAL_INIT_TIME && init_stop_time < GIMBAL_INIT_STOP_TIME &&
         !switch_is_down(set_mode->gimbal_rc_ctrl->rc.s[GIMBAL_MODE_CHANNEL]) && !toe_is_error(DBUS_TOE))
     {
@@ -469,7 +469,7 @@ static void gimbal_set_mode(gimbal_control_t *set_mode)
     }
   }
 
-  // ÅĞ¶Ï½øÈëinit×´Ì¬»ú
+  // åˆ¤æ–­è¿›å…¥initçŠ¶æ€æœº
   if (set_mode->gimbal_pitch_motor.last_gimbal_motor_mode == GIMBAL_MOTOR_OFF && set_mode->gimbal_pitch_motor.gimbal_motor_mode != GIMBAL_MOTOR_OFF)
   {
     set_mode->gimbal_pitch_motor.gimbal_motor_mode = GIMBAL_INIT;
@@ -483,7 +483,7 @@ static void gimbal_feedback_update(gimbal_control_t *feedback_update)
   {
     return;
   }
-  // ÔÆÌ¨Êı¾İ¸üĞÂ
+  // äº‘å°æ•°æ®æ›´æ–°
   feedback_update->gimbal_pitch_motor.relative_angle = 0;//feedback_update->gimbal_pitch_motor.gimbal_motor_measure->last_ecd;
   feedback_update->gimbal_pitch_motor.absolute_angle = *(feedback_update->gimbal_INT_angle_point + INS_PITCH_ADDRESS_OFFSET);
   feedback_update->gimbal_pitch_motor.motor_gyro = *(feedback_update->gimbal_INT_gyro_point + INS_GYRO_Y_ADDRESS_OFFSET);
@@ -491,7 +491,7 @@ static void gimbal_feedback_update(gimbal_control_t *feedback_update)
   feedback_update->gimbal_yaw_motor.absolute_angle = INS.YawTotalAngle;
   feedback_update->gimbal_yaw_motor.motor_gyro = arm_cos_f32(feedback_update->gimbal_pitch_motor.relative_angle) * (*(feedback_update->gimbal_INT_gyro_point + INS_GYRO_Z_ADDRESS_OFFSET)) - 
   arm_sin_f32(feedback_update->gimbal_pitch_motor.relative_angle) * (*(feedback_update->gimbal_INT_gyro_point + INS_GYRO_X_ADDRESS_OFFSET));
-  // ¼üÊóÊı¾İ»ñÈ¡
+  // é”®é¼ æ•°æ®è·å–
   feedback_update->last_press_l = feedback_update->press_l;
   feedback_update->press_l = feedback_update->gimbal_rc_ctrl->mouse.press_l;
   feedback_update->last_press_r = feedback_update->press_r;
@@ -500,12 +500,12 @@ static void gimbal_feedback_update(gimbal_control_t *feedback_update)
   feedback_update->keyboard = feedback_update->gimbal_rc_ctrl->key.v;
   feedback_update->aim_last_press = feedback_update->aim_press;
   feedback_update->aim_press = feedback_update->gimbal_rc_ctrl->rc.s[1];
-  // ×ÔÃéÊı¾İ»ñÈ¡
+  // è‡ªç„æ•°æ®è·å–
   feedback_update->gimbal_pitch_motor.last_self_aim_pitch_angle = feedback_update->gimbal_pitch_motor.self_aim_pitch_angle;
   feedback_update->gimbal_pitch_motor.self_aim_pitch_angle = Self_aim_data->pitch / PI * 180;
   feedback_update->gimbal_yaw_motor.last_self_aim_yaw_angle = feedback_update->gimbal_yaw_motor.self_aim_yaw_angle;
   feedback_update->gimbal_yaw_motor.self_aim_yaw_angle = Self_aim_data->yaw / PI * 180;
-  //Ä£Ê½¸üĞÂ
+  //æ¨¡å¼æ›´æ–°
 
 }
 
@@ -554,7 +554,7 @@ static void gimbal_set_control(gimbal_control_t *set_control)
       set_control->gimbal_pitch_motor.absolute_angle_set = set_control->gimbal_pitch_motor.absolute_angle_set;
     }
   }
-  /* ³õÊ¼»¯ÔÆÌ¨pitchÖá½Ç¶È */
+  /* åˆå§‹åŒ–äº‘å°pitchè½´è§’åº¦ */
   else if (set_control->gimbal_pitch_motor.gimbal_motor_mode == GIMBAL_INIT)
   {
     set_control->gimbal_pitch_motor.absolute_angle_set = INIT_PITCH_SET;

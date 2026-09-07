@@ -1,8 +1,8 @@
 /*************************************************************
 
-RM×Ô¶¨ÒåUIĞ­Òé       »ùÓÚRM2020Ñ§Éú´®¿ÚÍ¨ĞÅĞ­ÒéV1.1
+RMè‡ªå®šä¹‰UIåè®®       åŸºäºRM2020å­¦ç”Ÿä¸²å£é€šä¿¡åè®®V1.1
 
-É½¶«Àí¹¤´óÑ§ ÆëÆæÕ½¶Ó ¶«¶«@Rjgawuie
+å±±ä¸œç†å·¥å¤§å­¦ é½å¥‡æˆ˜é˜Ÿ ä¸œä¸œ@Rjgawuie
 
 **************************************************************/
 
@@ -10,9 +10,9 @@ RM×Ô¶¨ÒåUIĞ­Òé       »ùÓÚRM2020Ñ§Éú´®¿ÚÍ¨ĞÅĞ­ÒéV1.1
 #include "RM_Cilent_UI.h"
 #include "usart.h"
 
-unsigned char UI_Seq;                      //°üĞòºÅ
+unsigned char UI_Seq;                      //åŒ…åºå·
 
-/****************************************´®¿ÚÇı¶¯Ó³Éä************************************/
+/****************************************ä¸²å£é©±åŠ¨æ˜ å°„************************************/
 void UI_SendByte(unsigned char ch)
 {
 	HAL_UART_Transmit(&huart6,&ch,sizeof(ch),100);
@@ -21,17 +21,17 @@ void UI_SendByte(unsigned char ch)
   // while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET);	
 }
 
-/********************************************É¾³ı²Ù×÷*************************************
-**²ÎÊı£ºDel_Operate  ¶ÔÓ¦Í·ÎÄ¼şÉ¾³ı²Ù×÷
-        Del_Layer    ÒªÉ¾³ıµÄ²ã È¡Öµ0-9
+/********************************************åˆ é™¤æ“ä½œ*************************************
+**å‚æ•°ï¼šDel_Operate  å¯¹åº”å¤´æ–‡ä»¶åˆ é™¤æ“ä½œ
+        Del_Layer    è¦åˆ é™¤çš„å±‚ å–å€¼0-9
 *****************************************************************************************/
 
 void UI_Delete(uint8_t Del_Operate,uint8_t Del_Layer)
 {
 
-   unsigned char *framepoint;                      //¶ÁĞ´Ö¸Õë
-   uint16_t frametail=0xFFFF;                        //CRC16Ğ£ÑéÖµ
-   int loop_control;                       //Forº¯ÊıÑ­»·¿ØÖÆ
+   unsigned char *framepoint;                      //è¯»å†™æŒ‡é’ˆ
+   uint16_t frametail=0xFFFF;                        //CRC16æ ¡éªŒå€¼
+   int loop_control;                       //Forå‡½æ•°å¾ªç¯æ§åˆ¶
    
    UI_Packhead framehead;
    UI_Data_Operate datahead;
@@ -43,20 +43,20 @@ void UI_Delete(uint8_t Del_Operate,uint8_t Del_Layer)
    framehead.Data_Length=8;
    framehead.Seq=UI_Seq;
    framehead.CRC8=Get_CRC8_Check_Sum_UI(framepoint,4,0xFF);
-   framehead.CMD_ID=UI_CMD_Robo_Exchange;                   //Ìî³ä°üÍ·Êı¾İ
+   framehead.CMD_ID=UI_CMD_Robo_Exchange;                   //å¡«å……åŒ…å¤´æ•°æ®
    
    datahead.Data_ID=UI_Data_ID_Draw1;
    datahead.Sender_ID=Robot_ID;
-   datahead.Receiver_ID=Cilent_ID;                          //Ìî³ä²Ù×÷Êı¾İ
+   datahead.Receiver_ID=Cilent_ID;                          //å¡«å……æ“ä½œæ•°æ®
    
    del.Delete_Operate=Del_Operate;
-   del.Layer=Del_Layer;                                     //¿ØÖÆĞÅÏ¢
+   del.Layer=Del_Layer;                                     //æ§åˆ¶ä¿¡æ¯
    
    frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(framehead),frametail);
    framepoint=(unsigned char *)&datahead;
    frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(datahead),frametail);
    framepoint=(unsigned char *)&del;
-   frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(del),frametail);  //CRC16Ğ£ÑéÖµ¼ÆËã
+   frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(del),frametail);  //CRC16æ ¡éªŒå€¼è®¡ç®—
    
    framepoint=(unsigned char *)&framehead;
    for(loop_control=0;loop_control<sizeof(framehead);loop_control++)
@@ -75,25 +75,25 @@ void UI_Delete(uint8_t Del_Operate,uint8_t Del_Layer)
    {
       UI_SendByte(*framepoint);
       framepoint++;
-   }                                                                 //·¢ËÍËùÓĞÖ¡
+   }                                                                 //å‘é€æ‰€æœ‰å¸§
    framepoint=(unsigned char *)&frametail;
    for(loop_control=0;loop_control<sizeof(frametail);loop_control++)
    {
       UI_SendByte(*framepoint);
-      framepoint++;                                                  //·¢ËÍCRC16Ğ£ÑéÖµ
+      framepoint++;                                                  //å‘é€CRC16æ ¡éªŒå€¼
    }
    
-   UI_Seq++;                                                         //°üĞòºÅ+1
+   UI_Seq++;                                                         //åŒ…åºå·+1
 }
-/************************************************»æÖÆÖ±Ïß*************************************************
-**²ÎÊı£º*image Graph_DataÀàĞÍ±äÁ¿Ö¸Õë£¬ÓÃÓÚ´æ·ÅÍ¼ĞÎÊı¾İ
-        imagename[3]   Í¼Æ¬Ãû³Æ£¬ÓÃÓÚ±êÊ¶¸ü¸Ä
-        Graph_Operate   Í¼Æ¬²Ù×÷£¬¼ûÍ·ÎÄ¼ş
-        Graph_Layer    Í¼²ã0-9
-        Graph_Color    Í¼ĞÎÑÕÉ«
-        Graph_Width    Í¼ĞÎÏß¿í
-        Start_x¡¢Start_x    ¿ªÊ¼×ø±ê
-        End_x¡¢End_y   ½áÊø×ø±ê
+/************************************************ç»˜åˆ¶ç›´çº¿*************************************************
+**å‚æ•°ï¼š*image Graph_Dataç±»å‹å˜é‡æŒ‡é’ˆï¼Œç”¨äºå­˜æ”¾å›¾å½¢æ•°æ®
+        imagename[3]   å›¾ç‰‡åç§°ï¼Œç”¨äºæ ‡è¯†æ›´æ”¹
+        Graph_Operate   å›¾ç‰‡æ“ä½œï¼Œè§å¤´æ–‡ä»¶
+        Graph_Layer    å›¾å±‚0-9
+        Graph_Color    å›¾å½¢é¢œè‰²
+        Graph_Width    å›¾å½¢çº¿å®½
+        Start_xã€Start_x    å¼€å§‹åæ ‡
+        End_xã€End_y   ç»“æŸåæ ‡
 **********************************************************************************************************/
         
 void Line_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,uint32_t Graph_Layer,uint32_t Graph_Color,uint32_t Graph_Width,uint32_t Start_x,uint32_t Start_y,uint32_t End_x,uint32_t End_y)
@@ -111,15 +111,15 @@ void Line_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,uint32
    image->end_y = End_y;
 }
 
-/************************************************»æÖÆ¾ØĞÎ*************************************************
-**²ÎÊı£º*image Graph_DataÀàĞÍ±äÁ¿Ö¸Õë£¬ÓÃÓÚ´æ·ÅÍ¼ĞÎÊı¾İ
-        imagename[3]   Í¼Æ¬Ãû³Æ£¬ÓÃÓÚ±êÊ¶¸ü¸Ä
-        Graph_Operate   Í¼Æ¬²Ù×÷£¬¼ûÍ·ÎÄ¼ş
-        Graph_Layer    Í¼²ã0-9
-        Graph_Color    Í¼ĞÎÑÕÉ«
-        Graph_Width    Í¼ĞÎÏß¿í
-        Start_x¡¢Start_x    ¿ªÊ¼×ø±ê
-        End_x¡¢End_y   ½áÊø×ø±ê£¨¶Ô¶¥½Ç×ø±ê£©
+/************************************************ç»˜åˆ¶çŸ©å½¢*************************************************
+**å‚æ•°ï¼š*image Graph_Dataç±»å‹å˜é‡æŒ‡é’ˆï¼Œç”¨äºå­˜æ”¾å›¾å½¢æ•°æ®
+        imagename[3]   å›¾ç‰‡åç§°ï¼Œç”¨äºæ ‡è¯†æ›´æ”¹
+        Graph_Operate   å›¾ç‰‡æ“ä½œï¼Œè§å¤´æ–‡ä»¶
+        Graph_Layer    å›¾å±‚0-9
+        Graph_Color    å›¾å½¢é¢œè‰²
+        Graph_Width    å›¾å½¢çº¿å®½
+        Start_xã€Start_x    å¼€å§‹åæ ‡
+        End_xã€End_y   ç»“æŸåæ ‡ï¼ˆå¯¹é¡¶è§’åæ ‡ï¼‰
 **********************************************************************************************************/
         
 void Rectangle_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,uint32_t Graph_Layer,uint32_t Graph_Color,uint32_t Graph_Width,uint32_t Start_x,uint32_t Start_y,uint32_t End_x,uint32_t End_y)
@@ -138,15 +138,15 @@ void Rectangle_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,u
    image->end_y = End_y;
 }
 
-/************************************************»æÖÆÕûÔ²*************************************************
-**²ÎÊı£º*image Graph_DataÀàĞÍ±äÁ¿Ö¸Õë£¬ÓÃÓÚ´æ·ÅÍ¼ĞÎÊı¾İ
-        imagename[3]   Í¼Æ¬Ãû³Æ£¬ÓÃÓÚ±êÊ¶¸ü¸Ä
-        Graph_Operate   Í¼Æ¬²Ù×÷£¬¼ûÍ·ÎÄ¼ş
-        Graph_Layer    Í¼²ã0-9
-        Graph_Color    Í¼ĞÎÑÕÉ«
-        Graph_Width    Í¼ĞÎÏß¿í
-        Start_x¡¢Start_x    Ô²ĞÄ×ø±ê
-        Graph_Radius  Í¼ĞÎ°ë¾¶
+/************************************************ç»˜åˆ¶æ•´åœ†*************************************************
+**å‚æ•°ï¼š*image Graph_Dataç±»å‹å˜é‡æŒ‡é’ˆï¼Œç”¨äºå­˜æ”¾å›¾å½¢æ•°æ®
+        imagename[3]   å›¾ç‰‡åç§°ï¼Œç”¨äºæ ‡è¯†æ›´æ”¹
+        Graph_Operate   å›¾ç‰‡æ“ä½œï¼Œè§å¤´æ–‡ä»¶
+        Graph_Layer    å›¾å±‚0-9
+        Graph_Color    å›¾å½¢é¢œè‰²
+        Graph_Width    å›¾å½¢çº¿å®½
+        Start_xã€Start_x    åœ†å¿ƒåæ ‡
+        Graph_Radius  å›¾å½¢åŠå¾„
 **********************************************************************************************************/
         
 void Circle_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,uint32_t Graph_Layer,uint32_t Graph_Color,uint32_t Graph_Width,uint32_t Start_x,uint32_t Start_y,uint32_t Graph_Radius)
@@ -164,16 +164,16 @@ void Circle_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,uint
    image->radius = Graph_Radius;
 }
 
-/************************************************»æÖÆÔ²»¡*************************************************
-**²ÎÊı£º*image Graph_DataÀàĞÍ±äÁ¿Ö¸Õë£¬ÓÃÓÚ´æ·ÅÍ¼ĞÎÊı¾İ
-        imagename[3]   Í¼Æ¬Ãû³Æ£¬ÓÃÓÚ±êÊ¶¸ü¸Ä
-        Graph_Operate   Í¼Æ¬²Ù×÷£¬¼ûÍ·ÎÄ¼ş
-        Graph_Layer    Í¼²ã0-9
-        Graph_Color    Í¼ĞÎÑÕÉ«
-        Graph_Width    Í¼ĞÎÏß¿í
-        Graph_StartAngle,Graph_EndAngle    ¿ªÊ¼£¬ÖÕÖ¹½Ç¶È
-        Start_y,Start_y    Ô²ĞÄ×ø±ê
-        x_Length,y_Length   x,y·½ÏòÉÏÖá³¤£¬²Î¿¼ÍÖÔ²
+/************************************************ç»˜åˆ¶åœ†å¼§*************************************************
+**å‚æ•°ï¼š*image Graph_Dataç±»å‹å˜é‡æŒ‡é’ˆï¼Œç”¨äºå­˜æ”¾å›¾å½¢æ•°æ®
+        imagename[3]   å›¾ç‰‡åç§°ï¼Œç”¨äºæ ‡è¯†æ›´æ”¹
+        Graph_Operate   å›¾ç‰‡æ“ä½œï¼Œè§å¤´æ–‡ä»¶
+        Graph_Layer    å›¾å±‚0-9
+        Graph_Color    å›¾å½¢é¢œè‰²
+        Graph_Width    å›¾å½¢çº¿å®½
+        Graph_StartAngle,Graph_EndAngle    å¼€å§‹ï¼Œç»ˆæ­¢è§’åº¦
+        Start_y,Start_y    åœ†å¿ƒåæ ‡
+        x_Length,y_Length   x,yæ–¹å‘ä¸Šè½´é•¿ï¼Œå‚è€ƒæ¤­åœ†
 **********************************************************************************************************/
         
 void Arc_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,uint32_t Graph_Layer,uint32_t Graph_Color,uint32_t Graph_StartAngle,uint32_t Graph_EndAngle,uint32_t Graph_Width,uint32_t Start_x,uint32_t Start_y,uint32_t x_Length,uint32_t y_Length)
@@ -197,17 +197,17 @@ void Arc_Draw(Graph_Data *image,char imagename[3],uint32_t Graph_Operate,uint32_
 
 
 
-/************************************************»æÖÆ¸¡µãĞÍÊı¾İ*************************************************
-**²ÎÊı£º*image Graph_DataÀàĞÍ±äÁ¿Ö¸Õë£¬ÓÃÓÚ´æ·ÅÍ¼ĞÎÊı¾İ
-        imagename[3]   Í¼Æ¬Ãû³Æ£¬ÓÃÓÚ±êÊ¶¸ü¸Ä
-        Graph_Operate   Í¼Æ¬²Ù×÷£¬¼ûÍ·ÎÄ¼ş
-        Graph_Layer    Í¼²ã0-9
-        Graph_Color    Í¼ĞÎÑÕÉ«
-        Graph_Width    Í¼ĞÎÏß¿í
-        Graph_Size     ×ÖºÅ
-        Graph_Digit    Ğ¡ÊıÎ»Êı
-        Start_x¡¢Start_x    ¿ªÊ¼×ø±ê
-        Graph_Float   ÒªÏÔÊ¾µÄ±äÁ¿
+/************************************************ç»˜åˆ¶æµ®ç‚¹å‹æ•°æ®*************************************************
+**å‚æ•°ï¼š*image Graph_Dataç±»å‹å˜é‡æŒ‡é’ˆï¼Œç”¨äºå­˜æ”¾å›¾å½¢æ•°æ®
+        imagename[3]   å›¾ç‰‡åç§°ï¼Œç”¨äºæ ‡è¯†æ›´æ”¹
+        Graph_Operate   å›¾ç‰‡æ“ä½œï¼Œè§å¤´æ–‡ä»¶
+        Graph_Layer    å›¾å±‚0-9
+        Graph_Color    å›¾å½¢é¢œè‰²
+        Graph_Width    å›¾å½¢çº¿å®½
+        Graph_Size     å­—å·
+        Graph_Digit    å°æ•°ä½æ•°
+        Start_xã€Start_x    å¼€å§‹åæ ‡
+        Graph_Float   è¦æ˜¾ç¤ºçš„å˜é‡
 **********************************************************************************************************/
         
 void Float_Draw(Float_Data *image,char imagename[3],uint32_t Graph_Operate,uint32_t Graph_Layer,uint32_t Graph_Color,uint32_t Graph_Size,uint32_t Graph_Digit,uint32_t Graph_Width,uint32_t Start_x,uint32_t Start_y,float Graph_Float)
@@ -230,17 +230,17 @@ void Float_Draw(Float_Data *image,char imagename[3],uint32_t Graph_Operate,uint3
 
 
 
-/************************************************»æÖÆ×Ö·ûĞÍÊı¾İ*************************************************
-**²ÎÊı£º*image Graph_DataÀàĞÍ±äÁ¿Ö¸Õë£¬ÓÃÓÚ´æ·ÅÍ¼ĞÎÊı¾İ
-        imagename[3]   Í¼Æ¬Ãû³Æ£¬ÓÃÓÚ±êÊ¶¸ü¸Ä
-        Graph_Operate   Í¼Æ¬²Ù×÷£¬¼ûÍ·ÎÄ¼ş
-        Graph_Layer    Í¼²ã0-9
-        Graph_Color    Í¼ĞÎÑÕÉ«
-        Graph_Width    Í¼ĞÎÏß¿í
-        Graph_Size     ×ÖºÅ
-        Graph_Digit    ×Ö·û¸öÊı
-        Start_x¡¢Start_x    ¿ªÊ¼×ø±ê
-        *Char_Data          ´ı·¢ËÍ×Ö·û´®¿ªÊ¼µØÖ·
+/************************************************ç»˜åˆ¶å­—ç¬¦å‹æ•°æ®*************************************************
+**å‚æ•°ï¼š*image Graph_Dataç±»å‹å˜é‡æŒ‡é’ˆï¼Œç”¨äºå­˜æ”¾å›¾å½¢æ•°æ®
+        imagename[3]   å›¾ç‰‡åç§°ï¼Œç”¨äºæ ‡è¯†æ›´æ”¹
+        Graph_Operate   å›¾ç‰‡æ“ä½œï¼Œè§å¤´æ–‡ä»¶
+        Graph_Layer    å›¾å±‚0-9
+        Graph_Color    å›¾å½¢é¢œè‰²
+        Graph_Width    å›¾å½¢çº¿å®½
+        Graph_Size     å­—å·
+        Graph_Digit    å­—ç¬¦ä¸ªæ•°
+        Start_xã€Start_x    å¼€å§‹åæ ‡
+        *Char_Data          å¾…å‘é€å­—ç¬¦ä¸²å¼€å§‹åœ°å€
 **********************************************************************************************************/
         
 void Char_Draw(String_Data *image,char imagename[3],uint32_t Graph_Operate,uint32_t Graph_Layer,uint32_t Graph_Color,uint32_t Graph_Size,uint32_t Graph_Digit,uint32_t Graph_Width,uint32_t Start_x,uint32_t Start_y,char *Char_Data)
@@ -266,19 +266,19 @@ void Char_Draw(String_Data *image,char imagename[3],uint32_t Graph_Operate,uint3
    }
 }
 
-/************************************************UIÍÆËÍº¯Êı£¨Ê¹¸ü¸ÄÉúĞ§£©*********************************
-**²ÎÊı£º cnt   Í¼ĞÎ¸öÊı
-         ...   Í¼ĞÎ±äÁ¿²ÎÊı
+/************************************************UIæ¨é€å‡½æ•°ï¼ˆä½¿æ›´æ”¹ç”Ÿæ•ˆï¼‰*********************************
+**å‚æ•°ï¼š cnt   å›¾å½¢ä¸ªæ•°
+         ...   å›¾å½¢å˜é‡å‚æ•°
 
 
-Tips£º£º¸Ãº¯ÊıÖ»ÄÜÍÆËÍ1£¬2£¬5£¬7¸öÍ¼ĞÎ£¬ÆäËûÊıÄ¿Ğ­ÒéÎ´Éæ¼°
+Tipsï¼šï¼šè¯¥å‡½æ•°åªèƒ½æ¨é€1ï¼Œ2ï¼Œ5ï¼Œ7ä¸ªå›¾å½¢ï¼Œå…¶ä»–æ•°ç›®åè®®æœªæ¶‰åŠ
 **********************************************************************************************************/
 int UI_ReFresh(int cnt,...)
 {
    int i,n;
    Graph_Data imageData;
-   unsigned char *framepoint;                      //¶ÁĞ´Ö¸Õë
-   uint16_t frametail=0xFFFF;                        //CRC16Ğ£ÑéÖµ
+   unsigned char *framepoint;                      //è¯»å†™æŒ‡é’ˆ
+   uint16_t frametail=0xFFFF;                        //CRC16æ ¡éªŒå€¼
    
    UI_Packhead framehead;
    UI_Data_Operate datahead;
@@ -291,7 +291,7 @@ int UI_ReFresh(int cnt,...)
    framehead.Data_Length=6+cnt*15;
    framehead.Seq=UI_Seq;
    framehead.CRC8=Get_CRC8_Check_Sum_UI(framepoint,4,0xFF);
-   framehead.CMD_ID=UI_CMD_Robo_Exchange;                   //Ìî³ä°üÍ·Êı¾İ
+   framehead.CMD_ID=UI_CMD_Robo_Exchange;                   //å¡«å……åŒ…å¤´æ•°æ®
    
    switch(cnt)
    {
@@ -311,12 +311,12 @@ int UI_ReFresh(int cnt,...)
          return (-1);
    }
    datahead.Sender_ID=Robot_ID;
-   datahead.Receiver_ID=Cilent_ID;                          //Ìî³ä²Ù×÷Êı¾İ
+   datahead.Receiver_ID=Cilent_ID;                          //å¡«å……æ“ä½œæ•°æ®
    
    framepoint=(unsigned char *)&framehead;
    frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(framehead),frametail);
    framepoint=(unsigned char *)&datahead;
-   frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(datahead),frametail);          //CRC16Ğ£ÑéÖµ¼ÆËã£¨²¿·Ö£©
+   frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(datahead),frametail);          //CRC16æ ¡éªŒå€¼è®¡ç®—ï¼ˆéƒ¨åˆ†ï¼‰
    
    framepoint=(unsigned char *)&framehead;
    for(i=0;i<sizeof(framehead);i++)
@@ -336,41 +336,41 @@ int UI_ReFresh(int cnt,...)
       imageData=va_arg(ap,Graph_Data);
       
       framepoint=(unsigned char *)&imageData;
-      frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(imageData),frametail);             //CRC16Ğ£Ñé
+      frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(imageData),frametail);             //CRC16æ ¡éªŒ
       
       for(n=0;n<sizeof(imageData);n++)
       {
          UI_SendByte(*framepoint);
          framepoint++;             
-      }                                               //·¢ËÍÍ¼Æ¬Ö¡
+      }                                               //å‘é€å›¾ç‰‡å¸§
    }
    framepoint=(unsigned char *)&frametail;
    for(i=0;i<sizeof(frametail);i++)
    {
       UI_SendByte(*framepoint);
-      framepoint++;                                                  //·¢ËÍCRC16Ğ£ÑéÖµ
+      framepoint++;                                                  //å‘é€CRC16æ ¡éªŒå€¼
    }
    
    va_end(ap);
    
-   UI_Seq++;                                                         //°üĞòºÅ+1
+   UI_Seq++;                                                         //åŒ…åºå·+1
    return 0;
 }
 
 
-/************************************************UIÍÆËÍ×Ö·û£¨Ê¹¸ü¸ÄÉúĞ§£©*********************************
-**²ÎÊı£º cnt   Í¼ĞÎ¸öÊı
-         ...   Í¼ĞÎ±äÁ¿²ÎÊı
+/************************************************UIæ¨é€å­—ç¬¦ï¼ˆä½¿æ›´æ”¹ç”Ÿæ•ˆï¼‰*********************************
+**å‚æ•°ï¼š cnt   å›¾å½¢ä¸ªæ•°
+         ...   å›¾å½¢å˜é‡å‚æ•°
 
 
-Tips£º£º¸Ãº¯ÊıÖ»ÄÜÍÆËÍ1£¬2£¬5£¬7¸öÍ¼ĞÎ£¬ÆäËûÊıÄ¿Ğ­ÒéÎ´Éæ¼°
+Tipsï¼šï¼šè¯¥å‡½æ•°åªèƒ½æ¨é€1ï¼Œ2ï¼Œ5ï¼Œ7ä¸ªå›¾å½¢ï¼Œå…¶ä»–æ•°ç›®åè®®æœªæ¶‰åŠ
 **********************************************************************************************************/
 int Char_ReFresh(String_Data string_Data)
 {
    int i;
    String_Data imageData;
-   unsigned char *framepoint;                      //¶ÁĞ´Ö¸Õë
-   uint16_t frametail=0xFFFF;                        //CRC16Ğ£ÑéÖµ
+   unsigned char *framepoint;                      //è¯»å†™æŒ‡é’ˆ
+   uint16_t frametail=0xFFFF;                        //CRC16æ ¡éªŒå€¼
    
    UI_Packhead framehead;
    UI_Data_Operate datahead;
@@ -382,20 +382,20 @@ int Char_ReFresh(String_Data string_Data)
    framehead.Data_Length=6+45;
    framehead.Seq=UI_Seq;
    framehead.CRC8=Get_CRC8_Check_Sum_UI(framepoint,4,0xFF);
-   framehead.CMD_ID=UI_CMD_Robo_Exchange;                   //Ìî³ä°üÍ·Êı¾İ
+   framehead.CMD_ID=UI_CMD_Robo_Exchange;                   //å¡«å……åŒ…å¤´æ•°æ®
    
 
    datahead.Data_ID=UI_Data_ID_Draw1;
 
    datahead.Sender_ID=Robot_ID;
-   datahead.Receiver_ID=Cilent_ID;                          //Ìî³ä²Ù×÷Êı¾İ
+   datahead.Receiver_ID=Cilent_ID;                          //å¡«å……æ“ä½œæ•°æ®
    
    framepoint=(unsigned char *)&framehead;
    frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(framehead),frametail);
    framepoint=(unsigned char *)&datahead;
    frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(datahead),frametail);
    framepoint=(unsigned char *)&imageData;
-   frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(imageData),frametail);             //CRC16Ğ£Ñé   //CRC16Ğ£ÑéÖµ¼ÆËã£¨²¿·Ö£©
+   frametail=Get_CRC16_Check_Sum_UI(framepoint,sizeof(imageData),frametail);             //CRC16æ ¡éªŒ   //CRC16æ ¡éªŒå€¼è®¡ç®—ï¼ˆéƒ¨åˆ†ï¼‰
    
    framepoint=(unsigned char *)&framehead;
    for(i=0;i<sizeof(framehead);i++)
@@ -408,13 +408,13 @@ int Char_ReFresh(String_Data string_Data)
    {
       UI_SendByte(*framepoint);
       framepoint++;
-   }                                                   //·¢ËÍ²Ù×÷Êı¾İ  
+   }                                                   //å‘é€æ“ä½œæ•°æ®  
    framepoint=(unsigned char *)&imageData;
    for(i=0;i<sizeof(imageData);i++)
    {
       UI_SendByte(*framepoint);
       framepoint++;             
-   }                                               //·¢ËÍÍ¼Æ¬Ö¡
+   }                                               //å‘é€å›¾ç‰‡å¸§
    
    
    
@@ -422,16 +422,16 @@ int Char_ReFresh(String_Data string_Data)
    for(i=0;i<sizeof(frametail);i++)
    {
       UI_SendByte(*framepoint);
-      framepoint++;                                                  //·¢ËÍCRC16Ğ£ÑéÖµ
+      framepoint++;                                                  //å‘é€CRC16æ ¡éªŒå€¼
    }
    
    
-   UI_Seq++;                                                         //°üĞòºÅ+1
+   UI_Seq++;                                                         //åŒ…åºå·+1
    return 0;
 }
 
 
-/*****************************************************CRC8Ğ£ÑéÖµ¼ÆËã**********************************************/
+/*****************************************************CRC8æ ¡éªŒå€¼è®¡ç®—**********************************************/
 const unsigned char CRC8_INIT_UI = 0xff; 
 const unsigned char CRC8_TAB_UI[256] = 
 { 

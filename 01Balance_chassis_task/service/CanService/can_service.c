@@ -12,15 +12,15 @@ static CAN_TxHeaderTypeDef chassis_tx_message;
 static uint8_t chassis_can_send_data[8];
 static CAN_TxHeaderTypeDef referee_tx_message;
 static uint8_t referee_can_send_data[1];
-
 static CAN_TxHeaderTypeDef  dm_tx_message;
 static uint8_t  			dm_can_send_data[8];
 static uint8_t  			dm_speed_ctrl_data[4];
-dm_motor_measure_t dm_motor[4];
+
 
 motor_measure_t motor_chassis[7];
 lkmotor_measure_t lkmotor_data[2];
 HTmotor_measure_t htmotor_data[4];
+dm_motor_measure_t dm_motor[4];
 super_power_receive_t super_power_data;
 
 
@@ -199,7 +199,7 @@ void CAN_INIT_STATUS(uint8_t status)
   referee_can_send_data[0] = status;
   HAL_CAN_AddTxMessage(&REFEREE_CAN, &referee_tx_message, referee_can_send_data, &send_mail_box);
 }
-/*------------------------6020��̨���---------------------*/
+/*------------------------6020电机---------------------*/
 void CAN_cmd_gimbal(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4)
 {
   uint32_t send_mail_box;
@@ -218,7 +218,7 @@ void CAN_cmd_gimbal(int16_t motor1, int16_t motor2, int16_t motor3, int16_t moto
 
   HAL_CAN_AddTxMessage(&hcan2, &gimbal_tx_message, gimbal_can_send_data, &send_mail_box);
 }
-/* ------------------------��̩���------------------------- */
+/* ------------------------海泰电机------------------------- */
 void CAN_HT_CMD(uint8_t id, fp32 f_t)
 {
   float t1,t2,t3,t4;
@@ -290,7 +290,7 @@ void CAN_CMD_HT_Enable(uint8_t id, uint8_t unterleib_motor_send_data[8])
   HAL_CAN_AddTxMessage(
       &hcan1, &chassis_tx_message, unterleib_motor_send_data, &can_tx_mailbox);
 }
-/* ------------------------겿ص��------------------------- */
+/* ------------------------LK 电机控制------------------------- */
 void CAN_LK_START_control(uint16_t id)
 {
   uint32_t send_mail_box;
@@ -410,66 +410,7 @@ void CAN_LK_Boradcast_Control(int16_t iqControl_1,int16_t iqControl_2,int16_t iq
   chassis_can_send_data[7] = *((uint8_t *)(&iqControl_4)+1);
   HAL_CAN_AddTxMessage(&hcan2, &chassis_tx_message, chassis_can_send_data, &send_mail_box);
 }
-/* -----------------�������ݹ��ʿ���----------------- */
-void CAN_SuperPower_Control(super_power_t super_power_data)
-{
-  uint32_t send_mail_box;
-  uint8_t *p_data = (uint8_t *)&super_power_data;
-  uint8_t i;
-
-  chassis_tx_message.StdId = 0x61;
-  chassis_tx_message.IDE = CAN_ID_STD;
-  chassis_tx_message.RTR = CAN_RTR_DATA;
-  chassis_tx_message.DLC = 0x08;
-  // ֱ�Ӹ��������ṹ��
-  for (i = 0; i < 8U; i++)
-  {
-    chassis_can_send_data[i] = p_data[i];
-  }
-  HAL_CAN_AddTxMessage(&CHASSIS_CAN, &chassis_tx_message, chassis_can_send_data, &send_mail_box);
-}
-
-//==============以下函数作为返回指针 返回数据=================
-const motor_measure_t *get_yaw_gimbal_motor_measure_point(void)
-{
-  return &motor_chassis[4];
-}
-
-const motor_measure_t *get_pitch_gimbal_motor_measure_point(void)
-{
-  return &motor_chassis[5];
-}
-
-const motor_measure_t *get_trigger_motor_measure_point(void)
-{
-  return &motor_chassis[6];
-}
-
-const motor_measure_t *get_chassis_motor_measure_point(uint8_t i)
-{
-  return &motor_chassis[(i & 0x03)];
-}
-
-HTmotor_measure_t *get_HT_motor_measure_point(uint8_t i)
-{
-  return &htmotor_data[i & 0x03U];
-}
-
-lkmotor_measure_t *get_LK_motor_measure_point(uint8_t i)
-{
-  return &lkmotor_data[i & 0x01U];
-}
-
-
-
-float get_wheel_velocity_point(uint8_t index)
-{
-  return  (float)motor_chassis[index].speed_rpm*2*PI/60.0f;  //rad/s
-}
-
-
-/* -----------------以下为dm电机所有的函数----------------- */
-
+/* -----------------以下为 DM 电机控制函数----------------- */
 void CAN_clear_dm_error()
 {
     uint32_t send_mail_box;
@@ -543,10 +484,10 @@ void CAN_dm_save_0_point(uint16_t motor_ID)
 
 
 /**
-  * @brief:      	pos_speed_ctrl: 位置速度控制函数
-  * @param[in]:     hcan:指向CAN_HandleTypeDef结构的指针，用于指定CAN总线
-  * @param[in]:     motor_id:电机ID，指定目标电机
-  * @param[in]:     vel:速度给定值
+  * @brief:         位置速度控制函数
+  * @param[in]:     p_des: 目标位置
+  * @param[in]:     v_limit: 速度限制
+  * @param[in]:     motor_ID: 电机标识，发送 CAN ID 为 motor_ID - 0x100
   * @retval:     	void
   */
 void pos_sped_ctrl(float p_des,float v_limit,uint16_t motor_ID)
@@ -598,19 +539,80 @@ void speed_ctrl(float vel,uint16_t motor_ID)
   * @param[in]      _vel: expecteed velocity
   * @param[in]      _KP:  propotional argument for p
   * @param[in]      _KD:  propotional argument for p
-  * @param[in]      _torq: 前馈力矩（重力+摩擦.etc）
+  * @param[in]      _torq: 前馈力矩
   * @retval         none
   */
 void MIT_CtrlMotor(float _pos, float _vel,float _KP, float _KD, float _torq,uint16_t motor_ID)
+/* -----------------超级电容控制数据发送----------------- */
+void CAN_SuperPower_Control(super_power_t super_power_data)
+{
+  uint32_t send_mail_box;
+  uint8_t *p_data = (uint8_t *)&super_power_data;
+  uint8_t i;
+
+  chassis_tx_message.StdId = 0x61;
+  chassis_tx_message.IDE = CAN_ID_STD;
+  chassis_tx_message.RTR = CAN_RTR_DATA;
+  chassis_tx_message.DLC = 0x08;
+  // 将结构体的前 8 个字节复制到 CAN 发送缓冲区
+  for (i = 0; i < 8U; i++)
+  {
+    chassis_can_send_data[i] = p_data[i];
+  }
+  HAL_CAN_AddTxMessage(&CHASSIS_CAN, &chassis_tx_message, chassis_can_send_data, &send_mail_box);
+}
+
+//==============以下函数返回电机反馈数据指针或速度数据=================
+const motor_measure_t *get_yaw_gimbal_motor_measure_point(void)
+{
+  return &motor_chassis[4];
+}
+
+const motor_measure_t *get_pitch_gimbal_motor_measure_point(void)
+{
+  return &motor_chassis[5];
+}
+
+const motor_measure_t *get_trigger_motor_measure_point(void)
+{
+  return &motor_chassis[6];
+}
+
+const motor_measure_t *get_chassis_motor_measure_point(uint8_t i)
+{
+  return &motor_chassis[(i & 0x03)];
+}
+
+HTmotor_measure_t *get_HT_motor_measure_point(uint8_t i)
+{
+  return &htmotor_data[i & 0x03U];
+}
+lkmotor_measure_t *get_LK_motor_measure_point(uint8_t i)
+{
+  return &lkmotor_data[i & 0x01U];
+}
+dm_motor_measure_t *get_DM_motor_measure_point(uint8_t i)
+{
+  return &dm_motor[i & 0x01U];
+}
+
+//轮毂电机数据返回
+float get_wheel_velocity_point(uint8_t index)
+{
+  return  (float)motor_chassis[index].speed_rpm*2*PI/60.0f;  //rad/s
+}
+
+
+
 {
     uint32_t send_mail_box;
     uint16_t pos_tmp,vel_tmp,kp_tmp,kd_tmp,tor_tmp;
    
-    pos_tmp = float_to_uint(_pos, -12.5, 12.5, 16); //位置最大最小值
+    pos_tmp = float_to_uint(_pos, -12.5, 12.5, 16); // 将目标位置映射为 16 位无符号整数
     vel_tmp = float_to_uint(_vel, -45, 45, 12); //velocity
     kp_tmp = float_to_uint(_KP, 0, 500, 12); //kp
     kd_tmp = float_to_uint(_KD, 0, 5, 12); //kd
-    tor_tmp = float_to_uint(_torq, -18, 18, 12);//转矩最大最小值
+    tor_tmp = float_to_uint(_torq, -18, 18, 12);// 将前馈力矩映射为 12 位无符号整数
 	
 	dm_tx_message.StdId = motor_ID-0x200;
     dm_tx_message.IDE = CAN_ID_STD;

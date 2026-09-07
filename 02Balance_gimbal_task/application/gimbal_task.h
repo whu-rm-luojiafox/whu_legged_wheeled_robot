@@ -7,10 +7,10 @@
   *             gyro mode: use euler angle to control, encond mode: use enconde
   *             angle to control. and has some special mode:cali mode, motionless
   *             mode.
-  *             Íê³ÉÔÆÌ¨¿ØÖÆÈÎÎñ£¬ÓÉÓÚÔÆÌ¨Ê¹ÓÃÍÓÂİÒÇ½âËã³öµÄ½Ç¶È£¬Æä·¶Î§ÔÚ£¨-pi,pi£©
-  *             ¹Ê¶øÉèÖÃÄ¿±ê½Ç¶È¾ùÎª·¶Î§£¬´æÔÚĞí¶à¶Ô½Ç¶È¼ÆËãµÄº¯Êı¡£ÔÆÌ¨Ö÷Òª·ÖÎª2ÖÖ
-  *             ×´Ì¬£¬ÍÓÂİÒÇ¿ØÖÆ×´Ì¬ÊÇÀûÓÃ°åÔØÍÓÂİÒÇ½âËãµÄ×ËÌ¬½Ç½øĞĞ¿ØÖÆ£¬±àÂëÆ÷¿ØÖÆ
-  *             ×´Ì¬ÊÇÍ¨¹ıµç»ú·´À¡µÄ±àÂëÖµ¿ØÖÆµÄĞ£×¼£¬´ËÍâ»¹ÓĞĞ£×¼×´Ì¬£¬Í£Ö¹×´Ì¬µÈ¡£
+  *             å®Œæˆäº‘å°æ§åˆ¶ä»»åŠ¡ï¼Œç”±äºäº‘å°ä½¿ç”¨é™€èºä»ªè§£ç®—å‡ºçš„è§’åº¦ï¼Œå…¶èŒƒå›´åœ¨ï¼ˆ-pi,piï¼‰
+  *             æ•…è€Œè®¾ç½®ç›®æ ‡è§’åº¦å‡ä¸ºèŒƒå›´ï¼Œå­˜åœ¨è®¸å¤šå¯¹è§’åº¦è®¡ç®—çš„å‡½æ•°ã€‚äº‘å°ä¸»è¦åˆ†ä¸º2ç§
+  *             çŠ¶æ€ï¼Œé™€èºä»ªæ§åˆ¶çŠ¶æ€æ˜¯åˆ©ç”¨æ¿è½½é™€èºä»ªè§£ç®—çš„å§¿æ€è§’è¿›è¡Œæ§åˆ¶ï¼Œç¼–ç å™¨æ§åˆ¶
+  *             çŠ¶æ€æ˜¯é€šè¿‡ç”µæœºåé¦ˆçš„ç¼–ç å€¼æ§åˆ¶çš„æ ¡å‡†ï¼Œæ­¤å¤–è¿˜æœ‰æ ¡å‡†çŠ¶æ€ï¼Œåœæ­¢çŠ¶æ€ç­‰ã€‚
   * @note       
   * @history
   *  Version    Date            Author          Modification
@@ -34,7 +34,7 @@
 #include "shoot.h"
 #include "INS_task.h"
 // pitch speed close-loop PID params, max out and max iout
-// pitch ËÙ¶È»· PID²ÎÊıÒÔ¼° PID×î´óÊä³ö£¬»ı·ÖÊä³ö
+// pitch é€Ÿåº¦ç¯ PIDå‚æ•°ä»¥åŠ PIDæœ€å¤§è¾“å‡ºï¼Œç§¯åˆ†è¾“å‡º
 #define PITCH_GYRO_PID_KP 3800.0f//5000.0f
 #define PITCH_GYRO_PID_KI 12.0f//10.0f
 #define PITCH_GYRO_PID_KD 0.0f
@@ -46,23 +46,23 @@
 #define PITCH_ANGLE_PID_MAX_OUT 12.0f//3.0f  
 #define PITCH_ANGLE_PID_MAX_IOUT 3.0f//1.0f 
 
-//ÈÎÎñ³õÊ¼»¯ ¿ÕÏĞÒ»¶ÎÊ±¼ä
+//ä»»åŠ¡åˆå§‹åŒ– ç©ºé—²ä¸€æ®µæ—¶é—´
 #define GIMBAL_TASK_INIT_TIME 201
-//yaw,pitch¿ØÖÆÍ¨µÀÒÔ¼°×´Ì¬¿ª¹ØÍ¨µÀ
+//yaw,pitchæ§åˆ¶é€šé“ä»¥åŠçŠ¶æ€å¼€å…³é€šé“
 #define YAW_CHANNEL   0
 #define PITCH_CHANNEL  1
 #define HEIGHT_CHANNEL 
 #define GIMBAL_MODE_CHANNEL 0
-//turn 180¡ã
-//µôÍ·180 °´¼ü
+//turn 180Â°
+//æ‰å¤´180 æŒ‰é”®
 #define TURN_KEYBOARD KEY_PRESSED_OFFSET_F
 //turn speed
-//µôÍ·ÔÆÌ¨ËÙ¶È
+//æ‰å¤´äº‘å°é€Ÿåº¦
 #define TURN_SPEED    0.04f
-//²âÊÔ°´¼üÉĞÎ´Ê¹ÓÃ
+//æµ‹è¯•æŒ‰é”®å°šæœªä½¿ç”¨
 #define TEST_KEYBOARD KEY_PRESSED_OFFSET_R
 //rocker value deadband
-//Ò£¿ØÆ÷ÊäÈëËÀÇø£¬ÒòÎªÒ£¿ØÆ÷´æÔÚ²îÒì£¬Ò¡¸ËÔÚÖĞ¼ä£¬ÆäÖµ²»Ò»¶¨ÎªÁã
+//é¥æ§å™¨è¾“å…¥æ­»åŒºï¼Œå› ä¸ºé¥æ§å™¨å­˜åœ¨å·®å¼‚ï¼Œæ‘‡æ†åœ¨ä¸­é—´ï¼Œå…¶å€¼ä¸ä¸€å®šä¸ºé›¶
 #define RC_DEADBAND   10
 
 
@@ -80,28 +80,28 @@
 #define GIMBAL_CONTROL_TIME 1
 
 //test mode, 0 close, 1 open
-//ÔÆÌ¨²âÊÔÄ£Ê½ ºê¶¨Òå 0 Îª²»Ê¹ÓÃ²âÊÔÄ£Ê½
+//äº‘å°æµ‹è¯•æ¨¡å¼ å®å®šä¹‰ 0 ä¸ºä¸ä½¿ç”¨æµ‹è¯•æ¨¡å¼
 #define GIMBAL_TEST_MODE 0
 
 #define PITCH_TURN  1
 #define YAW_TURN    0
 
-//µç»úÂëÅÌÖµ×î´óÒÔ¼°ÖĞÖµ
+//ç”µæœºç ç›˜å€¼æœ€å¤§ä»¥åŠä¸­å€¼
 #define HALF_ECD_RANGE  4096
 #define ECD_RANGE       8191
-//ÔÆÌ¨³õÊ¼»¯»ØÖĞÖµ£¬ÔÊĞíµÄÎó²î,²¢ÇÒÔÚÎó²î·¶Î§ÄÚÍ£Ö¹Ò»¶ÎÊ±¼äÒÔ¼°×î´óÊ±¼ä6sºó½â³ı³õÊ¼»¯×´Ì¬£¬
+//äº‘å°åˆå§‹åŒ–å›ä¸­å€¼ï¼Œå…è®¸çš„è¯¯å·®,å¹¶ä¸”åœ¨è¯¯å·®èŒƒå›´å†…åœæ­¢ä¸€æ®µæ—¶é—´ä»¥åŠæœ€å¤§æ—¶é—´6såè§£é™¤åˆå§‹åŒ–çŠ¶æ€ï¼Œ
 #define GIMBAL_INIT_ANGLE_ERROR     0.1f
 #define GIMBAL_INIT_STOP_TIME       100
 #define GIMBAL_INIT_TIME            6000
 #define GIMBAL_CALI_REDUNDANT_ANGLE 0.1f
-//ÔÆÌ¨³õÊ¼»¯»ØÖĞÖµµÄËÙ¶ÈÒÔ¼°¿ØÖÆµ½µÄ½Ç¶È
+//äº‘å°åˆå§‹åŒ–å›ä¸­å€¼çš„é€Ÿåº¦ä»¥åŠæ§åˆ¶åˆ°çš„è§’åº¦
 #define GIMBAL_INIT_PITCH_SPEED     0.004f
 #define GIMBAL_INIT_YAW_SPEED       0.005f
 
 #define INIT_YAW_SET    0.0f
 #define INIT_PITCH_SET  0.0f
 
-//ÔÆÌ¨Ğ£×¼ÖĞÖµµÄÊ±ºò£¬·¢ËÍÔ­Ê¼µçÁ÷Öµ£¬ÒÔ¼°¶Â×ªÊ±¼ä£¬Í¨¹ıÍÓÂİÒÇÅĞ¶Ï¶Â×ª
+//äº‘å°æ ¡å‡†ä¸­å€¼çš„æ—¶å€™ï¼Œå‘é€åŸå§‹ç”µæµå€¼ï¼Œä»¥åŠå µè½¬æ—¶é—´ï¼Œé€šè¿‡é™€èºä»ªåˆ¤æ–­å µè½¬
 #define GIMBAL_CALI_MOTOR_SET   8000
 #define GIMBAL_CALI_STEP_TIME   2000
 #define GIMBAL_CALI_GYRO_LIMIT  0.1f
@@ -114,30 +114,30 @@
 #define GIMBAL_CALI_START_STEP  GIMBAL_CALI_PITCH_MAX_STEP
 #define GIMBAL_CALI_END_STEP    5
 
-//ÅĞ¶ÏÒ£¿ØÆ÷ÎŞÊäÈëµÄÊ±¼äÒÔ¼°Ò£¿ØÆ÷ÎŞÊäÈëÅĞ¶Ï£¬ÉèÖÃÔÆÌ¨yaw»ØÖĞÖµÒÔ·ÀÍÓÂİÒÇÆ¯ÒÆ
+//åˆ¤æ–­é¥æ§å™¨æ— è¾“å…¥çš„æ—¶é—´ä»¥åŠé¥æ§å™¨æ— è¾“å…¥åˆ¤æ–­ï¼Œè®¾ç½®äº‘å°yawå›ä¸­å€¼ä»¥é˜²é™€èºä»ªæ¼‚ç§»
 #define GIMBAL_MOTIONLESS_RC_DEADLINE 10
 #define GIMBAL_MOTIONLESS_TIME_MAX    3000
 
-//µç»ú±àÂëÖµ×ª»¯³É½Ç¶ÈÖµ
+//ç”µæœºç¼–ç å€¼è½¬åŒ–æˆè§’åº¦å€¼
 #ifndef MOTOR_ECD_TO_RAD
 #define MOTOR_ECD_TO_RAD           0.000095873799f                             // 0.000766990394f //      2*  PI  /8192
 #endif
-//ÓĞ¹Øµ×ÅÌµÄ¶¨Òå
+//æœ‰å…³åº•ç›˜çš„å®šä¹‰
 
-//Ò£¿ØÆ÷Ç°½øÒ¡¸Ë£¨max 660£©×ª»¯³É³µÌåÇ°½øËÙ¶È£¨m/s£©µÄ±ÈÀı
+//é¥æ§å™¨å‰è¿›æ‘‡æ†ï¼ˆmax 660ï¼‰è½¬åŒ–æˆè½¦ä½“å‰è¿›é€Ÿåº¦ï¼ˆm/sï¼‰çš„æ¯”ä¾‹
 #define CHASSIS_VX_RC_SEN 0.020f
 // #define CHASSIS_VX_RC_SEN 0.012f
-//Ò£¿ØÆ÷×óÓÒÒ¡¸Ë£¨max 660£©×ª»¯³É³µÌå×óÓÒËÙ¶È£¨m/s£©µÄ±ÈÀı
+//é¥æ§å™¨å·¦å³æ‘‡æ†ï¼ˆmax 660ï¼‰è½¬åŒ–æˆè½¦ä½“å·¦å³é€Ÿåº¦ï¼ˆm/sï¼‰çš„æ¯”ä¾‹
 #define CHASSIS_VY_RC_SEN 0.020f
 #define CHASSIS_RC_DEADLINE 10
 //the channel num of controlling vertial speed 
-//Ç°ºóµÄÒ£¿ØÆ÷Í¨µÀºÅÂë
+//å‰åçš„é¥æ§å™¨é€šé“å·ç 
 #define CHASSIS_X_CHANNEL 2
 //the channel num of controlling horizontal speed
-//×óÓÒµÄÒ£¿ØÆ÷Í¨µÀºÅÂë
+//å·¦å³çš„é¥æ§å™¨é€šé“å·ç 
 #define CHASSIS_Y_CHANNEL 3
 //chassi forward, back, left, right key
-//µ×ÅÌÇ°ºó×óÓÒ¿ØÖÆ°´¼ü
+//åº•ç›˜å‰åå·¦å³æ§åˆ¶æŒ‰é”®
 #define CHASSIS_FRONT_KEY KEY_PRESSED_OFFSET_W
 #define CHASSIS_BACK_KEY KEY_PRESSED_OFFSET_S
 #define CHASSIS_LEFT_KEY KEY_PRESSED_OFFSET_A
@@ -154,10 +154,10 @@
 
 typedef enum
 {
-    GIMBAL_MOTOR_OFF = 0, //µç»úÔ­Ê¼Öµ¿ØÖÆ
-    GIMBAL_MOTOR_GYRO,    //µç»úÍÓÂİÒÇ½Ç¶È¿ØÖÆ
-    GIMBAL_MOTOR_DEBUG,  //×¨ÃÅµ÷ÊÔÔÆÌ¨£¬µ×ÅÌµç»úÊ§ÄÜ
-    GIMBAL_INIT,          //µç»ú³õÊ¼»¯
+    GIMBAL_MOTOR_OFF = 0, //ç”µæœºåŸå§‹å€¼æ§åˆ¶
+    GIMBAL_MOTOR_GYRO,    //ç”µæœºé™€èºä»ªè§’åº¦æ§åˆ¶
+    GIMBAL_MOTOR_DEBUG,  //ä¸“é—¨è°ƒè¯•äº‘å°ï¼Œåº•ç›˜ç”µæœºå¤±èƒ½
+    GIMBAL_INIT,          //ç”µæœºåˆå§‹åŒ–
 } gimbal_motor_mode_e;
 
 typedef struct
@@ -230,16 +230,16 @@ typedef struct
 
 typedef struct
 {
-	float vx_set;//µ×ÅÌxÖá·½ÏòÉè¶¨µÄËÙ¶È¿ØÖÆÁ¿£»
-	float vy_set;//µ×ÅÌyÖá·½ÏòÉè¶¨µÄËÙ¶È¿ØÖÆÁ¿
-	float wz_set;//µ×ÅÌ×ÔĞıÊ± Éè¶¨µÄËÙ¶È¿ØÖÆÁ¿£»
-  float high_set;//±äÍÈ¸ß
-	float yaw_angle_set;//yawÖá½Ç¶ÈÉè¶¨Öµ
-	float yaw_angle;//yawÖá½Ç¶ÈÊµÊ±Öµ
-	float yaw_gyro;//yawÖá½ÇËÙ¶ÈÊµÊ±Öµ
-  float pitch_angle;//pitchÖáÊµÊ±½Ç¶È
-	chassis_mode_e chassis_mode;//µ×ÅÌÄ£Ê½
-	shoot_mode_e shoot_mode;//Éä»÷Ä£Ê½
+	float vx_set;//åº•ç›˜xè½´æ–¹å‘è®¾å®šçš„é€Ÿåº¦æ§åˆ¶é‡ï¼›
+	float vy_set;//åº•ç›˜yè½´æ–¹å‘è®¾å®šçš„é€Ÿåº¦æ§åˆ¶é‡
+	float wz_set;//åº•ç›˜è‡ªæ—‹æ—¶ è®¾å®šçš„é€Ÿåº¦æ§åˆ¶é‡ï¼›
+  float high_set;//å˜è…¿é«˜
+	float yaw_angle_set;//yawè½´è§’åº¦è®¾å®šå€¼
+	float yaw_angle;//yawè½´è§’åº¦å®æ—¶å€¼
+	float yaw_gyro;//yawè½´è§’é€Ÿåº¦å®æ—¶å€¼
+  float pitch_angle;//pitchè½´å®æ—¶è§’åº¦
+	chassis_mode_e chassis_mode;//åº•ç›˜æ¨¡å¼
+	shoot_mode_e shoot_mode;//å°„å‡»æ¨¡å¼
   uint8_t jump_flag,sit_flag,high_flag,fric_flag,auto_flag,ui_init_flag,reset_flag;
   float fric_speed_set;
 }chassis_data_t;
@@ -250,15 +250,15 @@ typedef struct
   * @retval         yaw motor data point
   */
 /**
-  * @brief          ·µ»Øyaw µç»úÊı¾İÖ¸Õë
+  * @brief          è¿”å›yaw ç”µæœºæ•°æ®æŒ‡é’ˆ
   * @param[in]      none
-  * @retval         yawµç»úÖ¸Õë
+  * @retval         yawç”µæœºæŒ‡é’ˆ
   */
 extern const gimbal_motor_t *get_yaw_motor_point(void);
 /**
-  * @brief          ·µ»Øµ×ÅÌ¿ØÖÆÊı¾İÖ¸Õë
+  * @brief          è¿”å›åº•ç›˜æ§åˆ¶æ•°æ®æŒ‡é’ˆ
   * @param[in]      none
-  * @retval         yawµç»úÖ¸Õë
+  * @retval         yawç”µæœºæŒ‡é’ˆ
   */
 extern const gimbal_motor_t *get_yaw_motor_point(void);
 /**
@@ -267,7 +267,7 @@ extern const gimbal_motor_t *get_yaw_motor_point(void);
   * @retval         pitch motor data point
   */
 /**
-  * @brief          ·µ»Øpitch µç»úÊı¾İÖ¸Õë
+  * @brief          è¿”å›pitch ç”µæœºæ•°æ®æŒ‡é’ˆ
   * @param[in]      none
   * @retval         pitch
   */
@@ -279,14 +279,14 @@ extern const gimbal_motor_t *get_pitch_motor_point(void);
   * @retval         none
   */
 /**
-  * @brief          ÔÆÌ¨ÈÎÎñ£¬¼ä¸ô GIMBAL_CONTROL_TIME 1ms
-  * @param[in]      pvParameters: ¿Õ
+  * @brief          äº‘å°ä»»åŠ¡ï¼Œé—´éš” GIMBAL_CONTROL_TIME 1ms
+  * @param[in]      pvParameters: ç©º
   * @retval         none
   */
 
 extern void gimbal_task(void const *pvParameters);
 /**
-  * @brief          ·µ»Øµ×ÅÌÊı¾İÖ¸Õë¹©CAN_taskÈÎÎñÊ¹ÓÃ
+  * @brief          è¿”å›åº•ç›˜æ•°æ®æŒ‡é’ˆä¾›CAN_taskä»»åŠ¡ä½¿ç”¨
   * @param[out]     none
   * @retval         none
   */

@@ -22,7 +22,7 @@ PID_t TempCtrl = {0};
 const float xb[3] = {1, 0, 0};
 const float yb[3] = {0, 1, 0};
 const float zb[3] = {0, 0, 1};
-float INS_angle[3] = {0, 0, 0};      //euler angle, unit rad.Å·À­½Ç µ¥Î» rad
+float INS_angle[3] = {0, 0, 0};      //euler angle, unit rad.æ¬§æ‹‰è§’ å•ä½ rad
 uint32_t INS_DWT_Count = 0;
 static float dt = 0, t = 0;
 uint8_t ins_debug_mode = 0;
@@ -67,33 +67,33 @@ void INS_Task(void)
         INS.Gyro[Y] = -BMI088.Gyro[X];
         INS.Gyro[Z] = BMI088.Gyro[Z];
 
-        // demo function,ÓÃÓÚĞŞÕı°²×°Îó²î,¿ÉÒÔ²»¹Ü,±¾demoÔİÊ±Ã»ÓÃ
+        // demo function,ç”¨äºä¿®æ­£å®‰è£…è¯¯å·®,å¯ä»¥ä¸ç®¡,æœ¬demoæš‚æ—¶æ²¡ç”¨
         IMU_Param_Correction(&IMU_Param, INS.Gyro, INS.Accel);
 
-        // ¼ÆËãÖØÁ¦¼ÓËÙ¶ÈÊ¸Á¿ºÍbÏµµÄXYÁ½ÖáµÄ¼Ğ½Ç,¿ÉÓÃ×÷¹¦ÄÜÀ©Õ¹,±¾demoÔİÊ±Ã»ÓÃ
+        // è®¡ç®—é‡åŠ›åŠ é€Ÿåº¦çŸ¢é‡å’Œbç³»çš„XYä¸¤è½´çš„å¤¹è§’,å¯ç”¨ä½œåŠŸèƒ½æ‰©å±•,æœ¬demoæš‚æ—¶æ²¡ç”¨
         INS.atanxz = -atan2f(INS.Accel[X], INS.Accel[Z]) * 180 / PI;
         INS.atanyz = atan2f(INS.Accel[Y], INS.Accel[Z]) * 180 / PI;
 
-        // ºËĞÄº¯Êı,EKF¸üĞÂËÄÔªÊı
+        // æ ¸å¿ƒå‡½æ•°,EKFæ›´æ–°å››å…ƒæ•°
         IMU_QuaternionEKF_Update(INS.Gyro[X], INS.Gyro[Y], INS.Gyro[Z], INS.Accel[X], INS.Accel[Y], INS.Accel[Z], dt);
 
         memcpy(INS.q, QEKF_INS.q, sizeof(QEKF_INS.q));
 
-        // »úÌåÏµ»ùÏòÁ¿×ª»»µ½µ¼º½×ø±êÏµ£¬±¾ÀıÑ¡È¡¹ßĞÔÏµÎªµ¼º½Ïµ
+        // æœºä½“ç³»åŸºå‘é‡è½¬æ¢åˆ°å¯¼èˆªåæ ‡ç³»ï¼Œæœ¬ä¾‹é€‰å–æƒ¯æ€§ç³»ä¸ºå¯¼èˆªç³»
         BodyFrameToEarthFrame(xb, INS.xn, INS.q);
         BodyFrameToEarthFrame(yb, INS.yn, INS.q);
         BodyFrameToEarthFrame(zb, INS.zn, INS.q);
 
-        // ½«ÖØÁ¦´Óµ¼º½×ø±êÏµn×ª»»µ½»úÌåÏµb,Ëæºó¸ù¾İ¼ÓËÙ¶È¼ÆÊı¾İ¼ÆËãÔË¶¯¼ÓËÙ¶È
+        // å°†é‡åŠ›ä»å¯¼èˆªåæ ‡ç³»nè½¬æ¢åˆ°æœºä½“ç³»b,éšåæ ¹æ®åŠ é€Ÿåº¦è®¡æ•°æ®è®¡ç®—è¿åŠ¨åŠ é€Ÿåº¦
         float gravity_b[3];
         EarthFrameToBodyFrame(gravity, gravity_b, INS.q);
-        for (uint8_t i = 0; i < 3; i++) // Í¬Ñù¹ıÒ»¸öµÍÍ¨ÂË²¨
+        for (uint8_t i = 0; i < 3; i++) // åŒæ ·è¿‡ä¸€ä¸ªä½é€šæ»¤æ³¢
         {
             INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * dt / (INS.AccelLPF + dt) + INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);
         }
-        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // ×ª»»»Øµ¼º½Ïµn
+        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // è½¬æ¢å›å¯¼èˆªç³»n
 
-        // »ñÈ¡×îÖÕÊı¾İ
+        // è·å–æœ€ç»ˆæ•°æ®
         INS.Yaw = QEKF_INS.Yaw;
         INS.Pitch = QEKF_INS.Pitch;
         INS.Roll = QEKF_INS.Roll;
@@ -162,12 +162,12 @@ void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q)
 }
 
 /**
- * @brief reserved.ÓÃÓÚĞŞÕıIMU°²×°Îó²îÓë±ê¶ÈÒòÊıÎó²î,¼´ÍÓÂİÒÇÖáºÍÔÆÌ¨ÖáµÄ°²×°Æ«ÒÆ
+ * @brief reserved.ç”¨äºä¿®æ­£IMUå®‰è£…è¯¯å·®ä¸æ ‡åº¦å› æ•°è¯¯å·®,å³é™€èºä»ªè½´å’Œäº‘å°è½´çš„å®‰è£…åç§»
  *
  *
- * @param param IMU²ÎÊı
- * @param gyro  ½ÇËÙ¶È
- * @param accel ¼ÓËÙ¶È
+ * @param param IMUå‚æ•°
+ * @param gyro  è§’é€Ÿåº¦
+ * @param accel åŠ é€Ÿåº¦
  */
 static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[3])
 {
@@ -232,7 +232,7 @@ static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[
 }
 
 /**
- * @brief ÎÂ¶È¿ØÖÆ
+ * @brief æ¸©åº¦æ§åˆ¶
  * 
  */
 void IMU_Temperature_Ctrl(void)
@@ -297,9 +297,9 @@ void EularAngleToQuaternion(float Yaw, float Pitch, float Roll, float *q)
 }
 
 /**
-  * @brief          »ñÈ¡Å·À­½Ç, 0:yaw, 1:pitch, 2:roll µ¥Î» rad
+  * @brief          è·å–æ¬§æ‹‰è§’, 0:yaw, 1:pitch, 2:roll å•ä½ rad
   * @param[in]      none
-  * @retval         INS_angleµÄÖ¸Õë
+  * @retval         INS_angleçš„æŒ‡é’ˆ
   */
 const float *get_INS_angle_point(void)
 {

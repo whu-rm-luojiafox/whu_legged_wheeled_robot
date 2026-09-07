@@ -2,30 +2,30 @@
 #define __RM_CILENT_UI__
 
 #define Robot_ID UI_Data_RobotID_BStandard3
-#define Cilent_ID UI_Data_CilentID_BStandard3        //»úÆ÷ÈË½ÇÉ«ÉèÖÃ
+#define Cilent_ID UI_Data_CilentID_BStandard3        //æœºå™¨äººè§’è‰²è®¾ç½®
 
 #include "stm32f4xx.h"
 #include "stdarg.h"
 #include "usart.h"
 #include "main.h"
 
-#pragma pack(1)                           //°´1×Ö½Ú¶ÔÆë
+#pragma pack(1)                           //æŒ‰1å­—èŠ‚å¯¹é½
 
 #define NULL 0
 #define __FALSE 100
 
-/****************************¿ªÊ¼±êÖ¾*********************/
+/****************************å¼€å§‹æ ‡å¿—*********************/
 #define UI_SOF 0xA5
-/****************************CMD_IDÊı¾İ********************/
+/****************************CMD_IDæ•°æ®********************/
 #define UI_CMD_Robo_Exchange 0x0301    
-/****************************ÄÚÈİIDÊı¾İ********************/
+/****************************å†…å®¹IDæ•°æ®********************/
 #define UI_Data_ID_Del 0x100 
 #define UI_Data_ID_Draw1 0x101
 #define UI_Data_ID_Draw2 0x102
 #define UI_Data_ID_Draw5 0x103
 #define UI_Data_ID_Draw7 0x104
 #define UI_Data_ID_DrawChar 0x110
-/****************************ºì·½»úÆ÷ÈËID********************/
+/****************************çº¢æ–¹æœºå™¨äººID********************/
 #define UI_Data_RobotID_RHero 1         
 #define UI_Data_RobotID_REngineer 2
 #define UI_Data_RobotID_RStandard1 3
@@ -34,7 +34,7 @@
 #define UI_Data_RobotID_RAerial 6
 #define UI_Data_RobotID_RSentry 7
 #define UI_Data_RobotID_RRadar 9
-/****************************À¶·½»úÆ÷ÈËID********************/
+/****************************è“æ–¹æœºå™¨äººID********************/
 #define UI_Data_RobotID_BHero 101
 #define UI_Data_RobotID_BEngineer 102
 #define UI_Data_RobotID_BStandard1 103
@@ -43,45 +43,45 @@
 #define UI_Data_RobotID_BAerial 106
 #define UI_Data_RobotID_BSentry 107
 #define UI_Data_RobotID_BRadar 109
-/**************************ºì·½²Ù×÷ÊÖID************************/
+/**************************çº¢æ–¹æ“ä½œæ‰‹ID************************/
 #define UI_Data_CilentID_RHero 0x0101
 #define UI_Data_CilentID_REngineer 0x0102
 #define UI_Data_CilentID_RStandard1 0x0103
 #define UI_Data_CilentID_RStandard2 0x0104
 #define UI_Data_CilentID_RStandard3 0x0105
 #define UI_Data_CilentID_RAerial 0x0106
-/***************************À¶·½²Ù×÷ÊÖID***********************/
+/***************************è“æ–¹æ“ä½œæ‰‹ID***********************/
 #define UI_Data_CilentID_BHero 0x0165
 #define UI_Data_CilentID_BEngineer 0x0166
 #define UI_Data_CilentID_BStandard1 0x0167
 #define UI_Data_CilentID_BStandard2 0x0168
 #define UI_Data_CilentID_BStandard3 0x0169
 #define UI_Data_CilentID_BAerial 0x016A
-/***************************É¾³ı²Ù×÷***************************/
+/***************************åˆ é™¤æ“ä½œ***************************/
 #define UI_Data_Del_NoOperate 0
 #define UI_Data_Del_Layer 1
 #define UI_Data_Del_ALL 2
-/***************************Í¼ĞÎÅäÖÃ²ÎÊı__Í¼ĞÎ²Ù×÷********************/
+/***************************å›¾å½¢é…ç½®å‚æ•°__å›¾å½¢æ“ä½œ********************/
 #define UI_Graph_ADD 1
 #define UI_Graph_Change 2
 #define UI_Graph_Del 3
-/***************************Í¼ĞÎÅäÖÃ²ÎÊı__Í¼ĞÎÀàĞÍ********************/
-#define UI_Graph_Line 0         //Ö±Ïß
-#define UI_Graph_Rectangle 1    //¾ØĞÎ
-#define UI_Graph_Circle 2       //ÕûÔ²
-#define UI_Graph_Ellipse 3      //ÍÖÔ²
-#define UI_Graph_Arc 4          //Ô²»¡
-#define UI_Graph_Float 5        //¸¡µãĞÍ
-#define UI_Graph_Int 6          //ÕûĞÎ
-#define UI_Graph_Char 7         //×Ö·ûĞÍ
-/***************************Í¼ĞÎÅäÖÃ²ÎÊı__Í¼ĞÎÑÕÉ«********************/
-#define UI_Color_Main 0         //ºìÀ¶Ö÷É«
+/***************************å›¾å½¢é…ç½®å‚æ•°__å›¾å½¢ç±»å‹********************/
+#define UI_Graph_Line 0         //ç›´çº¿
+#define UI_Graph_Rectangle 1    //çŸ©å½¢
+#define UI_Graph_Circle 2       //æ•´åœ†
+#define UI_Graph_Ellipse 3      //æ¤­åœ†
+#define UI_Graph_Arc 4          //åœ†å¼§
+#define UI_Graph_Float 5        //æµ®ç‚¹å‹
+#define UI_Graph_Int 6          //æ•´å½¢
+#define UI_Graph_Char 7         //å­—ç¬¦å‹
+/***************************å›¾å½¢é…ç½®å‚æ•°__å›¾å½¢é¢œè‰²********************/
+#define UI_Color_Main 0         //çº¢è“ä¸»è‰²
 #define UI_Color_Yellow 1
 #define UI_Color_Green 2
 #define UI_Color_Orange 3
-#define UI_Color_Purplish_red 4 //×ÏºìÉ«
+#define UI_Color_Purplish_red 4 //ç´«çº¢è‰²
 #define UI_Color_Pink 5
-#define UI_Color_Cyan 6         //ÇàÉ«
+#define UI_Color_Cyan 6         //é’è‰²
 #define UI_Color_Black 7
 #define UI_Color_White 8
 
@@ -95,25 +95,25 @@ typedef unsigned char U8;
 
 typedef struct
 {
-   uint8_t SOF;                    //ÆğÊ¼×Ö½Ú,¹Ì¶¨0xA5
-   uint16_t Data_Length;           //Ö¡Êı¾İ³¤¶È
-   uint8_t Seq;                    //°üĞòºÅ
-   uint8_t CRC8;                   //CRC8Ğ£ÑéÖµ
-   uint16_t CMD_ID;                //ÃüÁîID
-} UI_Packhead;             //Ö¡Í·
+   uint8_t SOF;                    //èµ·å§‹å­—èŠ‚,å›ºå®š0xA5
+   uint16_t Data_Length;           //å¸§æ•°æ®é•¿åº¦
+   uint8_t Seq;                    //åŒ…åºå·
+   uint8_t CRC8;                   //CRC8æ ¡éªŒå€¼
+   uint16_t CMD_ID;                //å‘½ä»¤ID
+} UI_Packhead;             //å¸§å¤´
 
 typedef struct
 {
-   uint16_t Data_ID;               //ÄÚÈİID
-   uint16_t Sender_ID;             //·¢ËÍÕßID
-   uint16_t Receiver_ID;           //½ÓÊÕÕßID
-} UI_Data_Operate;         //²Ù×÷¶¨ÒåÖ¡
+   uint16_t Data_ID;               //å†…å®¹ID
+   uint16_t Sender_ID;             //å‘é€è€…ID
+   uint16_t Receiver_ID;           //æ¥æ”¶è€…ID
+} UI_Data_Operate;         //æ“ä½œå®šä¹‰å¸§
 
 typedef struct
 {
-   uint8_t Delete_Operate;         //É¾³ı²Ù×÷
-   uint8_t Layer;                  //É¾³ıÍ¼²ã
-} UI_Data_Delete;          //É¾³ıÍ¼²ãÖ¡
+   uint8_t Delete_Operate;         //åˆ é™¤æ“ä½œ
+   uint8_t Layer;                  //åˆ é™¤å›¾å±‚
+} UI_Data_Delete;          //åˆ é™¤å›¾å±‚å¸§
 
 
 typedef struct
@@ -128,7 +128,7 @@ typedef struct
    uint32_t width:10; 
    uint32_t start_x:11; 
    uint32_t start_y:11;
-   float graph_Float;              //¸¡µãÊı¾İ
+   float graph_Float;              //æµ®ç‚¹æ•°æ®
 } Float_Data;
 
 
@@ -146,7 +146,7 @@ uint32_t start_x:11;
 uint32_t start_y:11;
 uint32_t radius:10; 
 uint32_t end_x:11; 
-uint32_t end_y:11;              //Í¼ĞÎÊı¾İ
+uint32_t end_y:11;              //å›¾å½¢æ•°æ®
 } Graph_Data;
 
 
@@ -154,7 +154,7 @@ typedef struct
 {
    Graph_Data Graph_Control;
    uint8_t show_Data[30];
-} String_Data;                  //´òÓ¡×Ö·û´®Êı¾İ
+} String_Data;                  //æ‰“å°å­—ç¬¦ä¸²æ•°æ®
 
 
 

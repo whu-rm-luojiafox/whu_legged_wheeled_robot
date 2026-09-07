@@ -8,7 +8,7 @@
 
 #define CHASSIS_CAN hcan1
 #define REFEREE_CAN hcan2
-
+/* -----------------------dji_func------------------------ */
 extern void CAN_cmd_chassis_reset_ID(void);
 extern void CAN_cmd_chassis(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
 extern void CAN_cmd_gimbal(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
@@ -35,14 +35,15 @@ extern void CAN_dm_save_0_point(uint16_t motor_ID);
 extern void CAN_dm_disable(uint16_t motor_ID);
 /* -----------------------Setpower------------------------ */
 extern void CAN_SuperPower_Control(super_power_t super_power_data);
-//==========���ݷ�������ָ��=============
+
+/*------------------函数指针返回电机数据地址--------------------*/
 extern const motor_measure_t *get_yaw_gimbal_motor_measure_point(void);
 extern const motor_measure_t *get_pitch_gimbal_motor_measure_point(void);
 extern const motor_measure_t *get_trigger_motor_measure_point(void);
 extern const motor_measure_t *get_chassis_motor_measure_point(uint8_t i);
-
 HTmotor_measure_t *get_HT_motor_measure_point(uint8_t i);
 lkmotor_measure_t *get_LK_motor_measure_point(uint8_t i);
+dm_motor_measure_t *get_DM_motor_measure_point(uint8_t i);
 
 
 float get_wheel_velocity_point(uint8_t index);

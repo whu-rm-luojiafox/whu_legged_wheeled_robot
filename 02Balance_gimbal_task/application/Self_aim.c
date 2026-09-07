@@ -9,10 +9,10 @@
 #include "usbd_cdc_if.h"
 #include "CAN_receive.h"
 #include "UART_task.h"
-uint8_t buffer[sizeof(RECEIVE_DATA)];//ÓÃÓÚ´æ´¢ÍêÕûµÄÊı¾İ°ü
-uint8_t Usart_Receive[40]; //ÓÃÓÚ½ÓÊÕµ¥¸ö×Ö½ÚµÄÊı¾İ
-uint16_t received = 0;//µ±Ç°½ÓÊÕµ½µÄÊı¾İ³¤¶È
-uint8_t Count=0;//½ÓÊÕ×´Ì¬±êÇ©
+uint8_t buffer[sizeof(RECEIVE_DATA)];//ç”¨äºå­˜å‚¨å®Œæ•´çš„æ•°æ®åŒ…
+uint8_t Usart_Receive[40]; //ç”¨äºæ¥æ”¶å•ä¸ªå­—èŠ‚çš„æ•°æ®
+uint16_t received = 0;//å½“å‰æ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦
+uint8_t Count=0;//æ¥æ”¶çŠ¶æ€æ ‡ç­¾
 InputData inputdata;
 SEND_DATA Send_Data;
 extern __IO uint32_t uwTick;
@@ -31,43 +31,43 @@ void process_usb_data_packet(uint8_t* data, uint16_t length)
     for (uint16_t i = 0; i < length; i++) {
         uint8_t byte = data[i];
         
-        // Ê¹ÓÃ×´Ì¬»ú½âÎöÊı¾İ°ü
+        // ä½¿ç”¨çŠ¶æ€æœºè§£ææ•°æ®åŒ…
         if (temp_received == 0) {
-            // Ñ°ÕÒÖ¡Í·
+            // å¯»æ‰¾å¸§å¤´
             if (byte == FRAME_HEADER_S) {
                 temp_buffer[temp_received++] = byte;
             }
         } else if (temp_received == 1) {
-            // ¼ì²éµÚ¶ş¸öÖ¡Í·×Ö½Ú
+            // æ£€æŸ¥ç¬¬äºŒä¸ªå¸§å¤´å­—èŠ‚
             temp_buffer[temp_received++] = byte;
             if (temp_received == sizeof(FrameHeader)) {
                 FrameHeader *header = (FrameHeader *)temp_buffer;
                 if (!(header->s == FRAME_HEADER_S && header->p == FRAME_HEADER_P)) {
-                    temp_received = 0; // Ö¡Í·²»Æ¥Åä
+                    temp_received = 0; // å¸§å¤´ä¸åŒ¹é…
                 }
             }
         } else if (temp_received >= sizeof(FrameHeader) && 
                    temp_received < sizeof(RECEIVE_DATA)) {
-            // ½ÓÊÕÊı¾İ²¿·Ö
+            // æ¥æ”¶æ•°æ®éƒ¨åˆ†
             temp_buffer[temp_received++] = byte;
             
-            // ¼ì²éÊÇ·ñ½ÓÊÕÍêÕûÊı¾İ°ü
+            // æ£€æŸ¥æ˜¯å¦æ¥æ”¶å®Œæ•´æ•°æ®åŒ…
             if (temp_received == sizeof(RECEIVE_DATA)) {
-                // ÑéÖ¤CRC
+                // éªŒè¯CRC
                 if (verify_CRC16_check_sum(temp_buffer, sizeof(RECEIVE_DATA))) {
                     memcpy(&inputdata, temp_buffer + sizeof(FrameHeader), sizeof(InputData));
-                    // Êı¾İ°ü´¦ÀíÍê³É
+                    // æ•°æ®åŒ…å¤„ç†å®Œæˆ
                 }
-                temp_received = 0; // ÖØÖÃ×´Ì¬
+                temp_received = 0; // é‡ç½®çŠ¶æ€
                 return ;
             }
         } else {
-            temp_received = 0; // Òì³£×´Ì¬ÖØÖÃ
+            temp_received = 0; // å¼‚å¸¸çŠ¶æ€é‡ç½®
         }
     }
 }
 
-/*ĞéÄâ´®¿Ú½ÓÊÕÖĞ¶Ï´¦Àíº¯Êı*/ 
+/*è™šæ‹Ÿä¸²å£æ¥æ”¶ä¸­æ–­å¤„ç†å‡½æ•°*/ 
 void usbd_cdc_receive_handle(void)
 {
     process_usb_data_packet(Usart_Receive, 40);
@@ -113,12 +113,12 @@ void USART1_SEND(void)
     sendTick = uwTick;
     uint8_t *data_ptr = (uint8_t *)&Send_Data;
     uint16_t data_length = sizeof(SEND_DATA);
-    CDC_Transmit_FS(data_ptr, data_length);     //Ê¹ÓÃĞéÄâ´®¿Ú·¢ËÍÊı¾İ
+    CDC_Transmit_FS(data_ptr, data_length);     //ä½¿ç”¨è™šæ‹Ÿä¸²å£å‘é€æ•°æ®
 }
 
 void Self_aim_task(void const *pvParameters)
 {
-    //Ê¹ÓÃmicro usbÍ¨ĞÅ£¬ÖĞ¶ÏÔÚusbd_cdc_if.cÖĞ
+    //ä½¿ç”¨micro usbé€šä¿¡ï¼Œä¸­æ–­åœ¨usbd_cdc_if.cä¸­
 	while(1)
 	{
 		USART1_SEND();

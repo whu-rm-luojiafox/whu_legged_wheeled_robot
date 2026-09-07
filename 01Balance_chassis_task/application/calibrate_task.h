@@ -4,53 +4,53 @@
 
 #include "struct_typedef.h"
 #include "can_service.h"
-//when imu is calibrating ,buzzer set frequency and strength. µ±imuÔÚĞ£×¼,·äÃùÆ÷µÄÉèÖÃÆµÂÊºÍÇ¿¶È
+//when imu is calibrating ,buzzer set frequency and strength. å½“imuåœ¨æ ¡å‡†,èœ‚é¸£å™¨çš„è®¾ç½®é¢‘ç‡å’Œå¼ºåº¦
 #define imu_start_buzzer()          buzzer_on(95, 10000)    
-//when gimbal is calibrating ,buzzer set frequency and strength.µ±ÔÆÌ¨ÔÚĞ£×¼,·äÃùÆ÷µÄÉèÖÃÆµÂÊºÍÇ¿¶È
+//when gimbal is calibrating ,buzzer set frequency and strength.å½“äº‘å°åœ¨æ ¡å‡†,èœ‚é¸£å™¨çš„è®¾ç½®é¢‘ç‡å’Œå¼ºåº¦
 #define gimbal_start_buzzer()       buzzer_on(31, 19999)    
-#define cali_buzzer_off()           buzzer_off()            //buzzer off£¬¹Ø±Õ·äÃùÆ÷
+#define cali_buzzer_off()           buzzer_off()            //buzzer offï¼Œå…³é—­èœ‚é¸£å™¨
 
 
-//get stm32 chip temperature, to calc imu control temperature.»ñÈ¡stm32Æ¬ÄÚÎÂ¶È£¬¼ÆËãimuµÄ¿ØÖÆÎÂ¶È
+//get stm32 chip temperature, to calc imu control temperature.è·å–stm32ç‰‡å†…æ¸©åº¦ï¼Œè®¡ç®—imuçš„æ§åˆ¶æ¸©åº¦
 #define cali_get_mcu_temperature()  get_temprate()      
 
 
 
-#define cali_flash_read(address, buf, len)  flash_read((address), (buf), (len))                     //flash read function, flash ¶ÁÈ¡º¯Êı
-#define cali_flash_write(address, buf, len) flash_write_single_address((address), (buf), (len))     //flash write function,flash Ğ´Èëº¯Êı
-#define cali_flash_erase(address, page_num) flash_erase_address((address), (page_num))              //flash erase function,flash²Á³ıº¯Êı
+#define cali_flash_read(address, buf, len)  flash_read((address), (buf), (len))                     //flash read function, flash è¯»å–å‡½æ•°
+#define cali_flash_write(address, buf, len) flash_write_single_address((address), (buf), (len))     //flash write function,flash å†™å…¥å‡½æ•°
+#define cali_flash_erase(address, page_num) flash_erase_address((address), (page_num))              //flash erase function,flashæ“¦é™¤å‡½æ•°
 
 
-#define get_remote_ctrl_point_cali()        get_remote_control_point()  //get the remote control point£¬»ñÈ¡Ò£¿ØÆ÷Ö¸Õë
-#define gyro_cali_disable_control()         RC_unable()                 //when imu is calibrating, disable the remote control.µ±imuÔÚĞ£×¼Ê±ºò,Ê§ÄÜÒ£¿ØÆ÷
+#define get_remote_ctrl_point_cali()        get_remote_control_point()  //get the remote control pointï¼Œè·å–é¥æ§å™¨æŒ‡é’ˆ
+#define gyro_cali_disable_control()         RC_unable()                 //when imu is calibrating, disable the remote control.å½“imuåœ¨æ ¡å‡†æ—¶å€™,å¤±èƒ½é¥æ§å™¨
 #define gyro_cali_enable_control()          RC_restart(SBUS_RX_BUF_NUM)
 
-// calc the zero drift function of gyro, ¼ÆËãÍÓÂİÒÇÁãÆ¯
+// calc the zero drift function of gyro, è®¡ç®—é™€èºä»ªé›¶æ¼‚
 #define gyro_cali_fun(cali_scale, cali_offset, time_count)  INS_cali_gyro((cali_scale), (cali_offset), (time_count))
-//set the zero drift to the INS task, ÉèÖÃÔÚINS taskÄÚµÄÍÓÂİÒÇÁãÆ¯
+//set the zero drift to the INS task, è®¾ç½®åœ¨INS taskå†…çš„é™€èºä»ªé›¶æ¼‚
 #define gyro_set_cali(cali_scale, cali_offset)              INS_set_cali_gyro((cali_scale), (cali_offset))
 
 
 
-#define FLASH_USER_ADDR         ADDR_FLASH_SECTOR_9 //write flash page 9,±£´æµÄflashÒ³µØÖ·
+#define FLASH_USER_ADDR         ADDR_FLASH_SECTOR_9 //write flash page 9,ä¿å­˜çš„flashé¡µåœ°å€
 
-#define GYRO_CONST_MAX_TEMP     45.0f               //max control temperature of gyro,×î´óÍÓÂİÒÇ¿ØÖÆÎÂ¶È
+#define GYRO_CONST_MAX_TEMP     45.0f               //max control temperature of gyro,æœ€å¤§é™€èºä»ªæ§åˆ¶æ¸©åº¦
 
-#define CALI_FUNC_CMD_ON        1                   //need calibrate,ÉèÖÃĞ£×¼
-#define CALI_FUNC_CMD_INIT      0                   //has been calibrated, set value to init.ÒÑ¾­Ğ£×¼¹ı£¬ÉèÖÃĞ£×¼Öµ
+#define CALI_FUNC_CMD_ON        1                   //need calibrate,è®¾ç½®æ ¡å‡†
+#define CALI_FUNC_CMD_INIT      0                   //has been calibrated, set value to init.å·²ç»æ ¡å‡†è¿‡ï¼Œè®¾ç½®æ ¡å‡†å€¼
 
-#define CALIBRATE_CONTROL_TIME  1                   //osDelay time,  means 1ms.1ms ÏµÍ³ÑÓÊ±
+#define CALIBRATE_CONTROL_TIME  1                   //osDelay time,  means 1ms.1ms ç³»ç»Ÿå»¶æ—¶
 
 #define CALI_SENSOR_HEAD_LEGHT  1
 
 #define SELF_ID                 0                   //ID 
 #define FIRMWARE_VERSION        12345               //handware version.
 #define CALIED_FLAG             0x55                // means it has been calibrated
-//you have 20 seconds to calibrate by remote control. ÓĞ20s¿ÉÒÔÓÃÒ£¿ØÆ÷½øĞĞĞ£×¼
+//you have 20 seconds to calibrate by remote control. æœ‰20så¯ä»¥ç”¨é¥æ§å™¨è¿›è¡Œæ ¡å‡†
 #define CALIBRATE_END_TIME          20000
-//when 10 second, buzzer frequency change to high frequency of gimbal calibration.µ±10sµÄÊ±ºò,·äÃùÆ÷ÇĞ³É¸ßÆµÉùÒô
+//when 10 second, buzzer frequency change to high frequency of gimbal calibration.å½“10sçš„æ—¶å€™,èœ‚é¸£å™¨åˆ‡æˆé«˜é¢‘å£°éŸ³
 #define RC_CALI_BUZZER_MIDDLE_TIME  10000
-//in the beginning, buzzer frequency change to low frequency of imu calibration.µ±¿ªÊ¼Ğ£×¼µÄÊ±ºò,·äÃùÆ÷ÇĞ³ÉµÍÆµÉùÒô
+//in the beginning, buzzer frequency change to low frequency of imu calibration.å½“å¼€å§‹æ ¡å‡†çš„æ—¶å€™,èœ‚é¸£å™¨åˆ‡æˆä½é¢‘å£°éŸ³
 #define RC_CALI_BUZZER_START_TIME   0
 
 
@@ -63,7 +63,7 @@
 #define RC_CALI_VALUE_HOLE          600     //remote control threshold, the max value of remote control channel is 660. 
 
 
-#define GYRO_CALIBRATE_TIME         20000   //gyro calibrate time,ÍÓÂİÒÇĞ£×¼Ê±¼ä
+#define GYRO_CALIBRATE_TIME         20000   //gyro calibrate time,é™€èºä»ªæ ¡å‡†æ—¶é—´
 
 //cali device name
 typedef enum
@@ -94,7 +94,7 @@ typedef __packed struct
     uint8_t self_id;            // the "SELF_ID"
     uint16_t firmware_version;  // set to the "FIRMWARE_VERSION"
     //'temperature' and 'latitude' should not be in the head_cali, because don't want to create a new sensor
-    //'temperature' and 'latitude'²»Ó¦¸ÃÔÚhead_cali,ÒòÎª²»Ïë´´½¨Ò»¸öĞÂµÄÉè±¸¾Í·ÅÕâÁË
+    //'temperature' and 'latitude'ä¸åº”è¯¥åœ¨head_cali,å› ä¸ºä¸æƒ³åˆ›å»ºä¸€ä¸ªæ–°çš„è®¾å¤‡å°±æ”¾è¿™äº†
     int8_t temperature;         // imu control temperature
     fp32 latitude;              // latitude
 } head_cali_t;
@@ -122,20 +122,20 @@ typedef struct
   * @retval         none
   */
 /**
-  * @brief          Ê¹ÓÃÒ£¿ØÆ÷¿ªÊ¼Ğ£×¼£¬ÀıÈçÍÓÂİÒÇ£¬ÔÆÌ¨£¬µ×ÅÌ
+  * @brief          ä½¿ç”¨é¥æ§å™¨å¼€å§‹æ ¡å‡†ï¼Œä¾‹å¦‚é™€èºä»ªï¼Œäº‘å°ï¼Œåº•ç›˜
   * @param[in]      none
   * @retval         none
   */
 extern void cali_param_init(void);
 /**
-  * @brief          get imu control temperature, unit ¡æ
+  * @brief          get imu control temperature, unit â„ƒ
   * @param[in]      none
   * @retval         imu control temperature
   */
 /**
-  * @brief          »ñÈ¡imu¿ØÖÆÎÂ¶È, µ¥Î»¡æ
+  * @brief          è·å–imuæ§åˆ¶æ¸©åº¦, å•ä½â„ƒ
   * @param[in]      none
-  * @retval         imu¿ØÖÆÎÂ¶È
+  * @retval         imuæ§åˆ¶æ¸©åº¦
   */
 extern int8_t get_control_temperature(void);
 
@@ -145,8 +145,8 @@ extern int8_t get_control_temperature(void);
   * @retval         none
   */
 /**
-  * @brief          »ñÈ¡Î³¶È,Ä¬ÈÏ22.0f
-  * @param[out]     latitude:fp32Ö¸Õë 
+  * @brief          è·å–çº¬åº¦,é»˜è®¤22.0f
+  * @param[out]     latitude:fp32æŒ‡é’ˆ 
   * @retval         none
   */
 extern void get_flash_latitude(float *latitude);
@@ -157,8 +157,8 @@ extern void get_flash_latitude(float *latitude);
   * @retval         none
   */
 /**
-  * @brief          Ğ£×¼ÈÎÎñ£¬ÓÉmainº¯Êı´´½¨
-  * @param[in]      pvParameters: ¿Õ
+  * @brief          æ ¡å‡†ä»»åŠ¡ï¼Œç”±mainå‡½æ•°åˆ›å»º
+  * @param[in]      pvParameters: ç©º
   * @retval         none
   */
 extern void calibrate_task(void const *pvParameters);
