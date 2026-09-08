@@ -36,7 +36,7 @@
   * @retval         none
   */
 /**
-  * @brief          单字节解包
+  * @brief          单字节解�?
   * @param[in]      void
   * @retval         none
   */
@@ -58,7 +58,7 @@ uint32_t ui_initTick_3;
 extern __IO uint32_t uwTick; // 系统时钟
 
 //裁判系统
-extern robot_status_t robot_state; //机器人状态
+extern robot_status_t robot_state; //机器人状�?
 extern power_heat_data_t power_heat_data;  //机器人功率与发射热量
 extern projectile_allowance_t bullet_remaining;  //剩余弹量
 extern game_status_t game_state;   //比赛信息
@@ -72,11 +72,11 @@ extern shoot_control_t shoot_control;
 // 相机参数
 #define HORIZONTAL_FOV     139.0f    // 水平视角
 #define FOCAL_LENGTH_MM   12.0f      // 等效焦距 mm
-#define CAMERA_HEIGHT      0.6f     // 相机安装高度（米）
+#define CAMERA_HEIGHT      0.6f     // 相机安装高度（米�?
 
 // 像素焦距计算
 // f_像素 = 图像宽度 / (2 * tan(视角/2))
-#define FOCAL_LENGTH      (1920.0f / (2.0f * tanf(HORIZONTAL_FOV * 3.14159f / 360.0f)))  // ≈ 835 像素
+#define FOCAL_LENGTH      (1920.0f / (2.0f * tanf(HORIZONTAL_FOV * 3.14159f / 360.0f)))  // �?835 像素
 #define CX                960.0f     // 光心X
 #define CY                540.0f     // 光心Y
 
@@ -109,7 +109,7 @@ static int32_t calculate_jump_line_position(void)
     if (v > 1080) v = 1080;
 
     
-    return (int32_t)v;  // 返回线的高度像素值
+    return (int32_t)v;  // 返回线的高度像素�?
 }
 // ==================================================
 
@@ -129,7 +129,7 @@ void referee_usart_task(void const * argument)
         ui_self_id =robot_state.robot_id;        
         referee_unpack_fifo_data();
         osDelay(10);
-        //定时初始化防止图形未进行初始化
+        //定时初始化防止图形未进行初始�?
         if(uwTick - ui_initTick_1 >= 2*ui_period)
         {
           ui_initTick_1 =uwTick;
@@ -145,7 +145,7 @@ void referee_usart_task(void const * argument)
           ui_initTick_3 =uwTick;
           ui_init_g_StaticTextGroup();
         }
-        //设置按键触发重新初始化
+        //设置按键触发重新初始�?
         if(uart_data.receive_chassis_data.ui_init_flag==1)
         {
           ui_init_g_DynamicGroup();
@@ -153,7 +153,7 @@ void referee_usart_task(void const * argument)
           ui_init_g_StaticTextGroup();
           osDelay(ui_period);
         }
-        //开始伟大的编程吧
+        //开始伟大的编程�?
         //自瞄和摩擦轮
         if(uart_data.receive_chassis_data.fric_flag==1)
         {
@@ -186,7 +186,7 @@ void referee_usart_task(void const * argument)
           ui_g_DynamicGroup_FricNum->color = UI_Color_Orange;
         }
         ui_g_DynamicGroup_FricNum->number = chassis_move.chassis_data_->fric_speed_set;
-        ui_g_DynamicGroup_HightNum->number = chassis_move.chassis_posture_info.leg_length_L*100;
+        ui_g_DynamicGroup_HightNum->number = chassis_move.chassis_posture_info.chassis_posture_L.leg_length*100;
         ui_g_DynamicGroup_JumpLine->end_y = calculate_jump_line_position();
         ui_g_DynamicGroup_JumpLine->start_y = ui_g_DynamicGroup_JumpLine->end_y;
         ui_update_g_DynamicGroup();
@@ -201,7 +201,7 @@ void referee_usart_task(void const * argument)
   * @retval         none
   */
 /**
-  * @brief          单字节解包
+  * @brief          单字节解�?
   * @param[in]      void
   * @retval         none
   */
