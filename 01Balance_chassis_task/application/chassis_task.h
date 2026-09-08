@@ -267,6 +267,20 @@ typedef struct
 } mode_t;
 typedef struct
 {
+    fp32 leg_length_set;
+    fp32 leg_length, last_leg_length;
+    fp32 leg_dlength, last_leg_dlength, leg_dlength_jacobian, last_leg_dlength_jacobian;
+    fp32 leg_ddlength, last_leg_ddlength;
+    fp32 leg_angle, last_leg_angle, leg_angle_set, leg_angle_kf;
+    fp32 leg_gyro, last_leg_gyro;
+    fp32 leg_gyro_jacobian, last_leg_gyro_jacobian;
+    fp32 leg_accel;
+    fp32 leg_x1, leg_x2, leg_y1, leg_y2;
+    fp32 leg_phi1, leg_phi2;
+} chassis_leg_posture_t;
+
+typedef struct
+{
     const fp32 *chassis_INS_angle_point;
   	const fp32 *chassis_INS_gyro_point;
     const fp32 *chassis_INS_accel_point;
@@ -279,18 +293,9 @@ typedef struct
     fp32 yaw_gyro_set, pitch_gyro_set, roll_gyro_set;
 
     fp32 ideal_high;
-    fp32 leg_length_L_set, leg_length_R_set;
-    fp32 leg_length_L, last_leg_length_L;
-    fp32 leg_length_R, last_leg_length_R;
-    fp32 leg_dlength_L,leg_dlength_R,last_leg_dlength_L,last_leg_dlength_R,leg_dlength_L_jacobian, leg_dlength_R_jacobian,last_leg_dlength_L_jacobian, last_leg_dlength_R_jacobian;
-    fp32 leg_ddlength_L,leg_ddlength_R,last_leg_ddlength_L,last_leg_ddlength_R;
+    chassis_leg_posture_t chassis_posture_L;
+    chassis_leg_posture_t chassis_posture_R;
     fp32 foot_roll_angle;
-    fp32 leg_angle_L, last_leg_angle_L, leg_angle_L_set,leg_angle_L_kf;
-    fp32 leg_angle_R, last_leg_angle_R, leg_angle_R_set,leg_angle_R_kf;
-    fp32 leg_gyro_L, leg_gyro_R, last_leg_gyro_L, last_leg_gyro_R;
-    fp32 leg_gyro_L_jacobian, leg_gyro_R_jacobian,last_leg_gyro_L_jacobian, last_leg_gyro_R_jacobian;
-    fp32 leg_accel_L, leg_accel_R;
-
     /* ----------debug param-------- */
     fp32 xc,yc,xb,yb;
     fp32 Q2;
