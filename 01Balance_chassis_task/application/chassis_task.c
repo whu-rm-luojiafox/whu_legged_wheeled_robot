@@ -1616,6 +1616,6 @@ float get_jacobian_element(chassis_move_t *VMCJ, float L0, float Q0,float Y1,flo
 		}
 		return L0 * ((xe - X2) * cosf(Q0) - (ye - Y2) * sinf(Q0)) / (L4 * denominator_2);
 	default:
-		return 0.0f; // ���߷��ش���ֵ
+		return 0.0f; //无element_type 返回0
 	}
 }
