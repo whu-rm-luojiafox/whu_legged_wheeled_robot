@@ -543,6 +543,34 @@ void speed_ctrl(float vel,uint16_t motor_ID)
   * @retval         none
   */
 void MIT_CtrlMotor(float _pos, float _vel,float _KP, float _KD, float _torq,uint16_t motor_ID)
+{
+    uint32_t send_mail_box;
+    uint16_t pos_tmp,vel_tmp,kp_tmp,kd_tmp,tor_tmp;
+   
+    pos_tmp = float_to_uint(_pos, -12.5, 12.5, 16); // 将目标位置映射为 16 位无符号整数
+    vel_tmp = float_to_uint(_vel, -45, 45, 12); //velocity
+    kp_tmp = float_to_uint(_KP, 0, 500, 12); //kp
+    kd_tmp = float_to_uint(_KD, 0, 5, 12); //kd
+    tor_tmp = float_to_uint(_torq, -18, 18, 12);// 将前馈力矩映射为 12 位无符号整数
+	
+	dm_tx_message.StdId = motor_ID-0x200;
+    dm_tx_message.IDE = CAN_ID_STD;
+    dm_tx_message.RTR = CAN_RTR_DATA;
+    dm_tx_message.DLC = 0x08;
+	
+    dm_can_send_data[0] = (pos_tmp >> 8);
+    dm_can_send_data[1] = pos_tmp;
+    dm_can_send_data[2] = (vel_tmp >> 4);
+    dm_can_send_data[3] = ((vel_tmp&0xF)<<4)|(kp_tmp>>8);
+	
+    dm_can_send_data[4] = kp_tmp;
+    dm_can_send_data[5] = (kd_tmp >> 4);
+    dm_can_send_data[6] = ((kd_tmp&0xF)<<4)|(tor_tmp>>8);
+    dm_can_send_data[7] = tor_tmp;
+	
+    HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_can_send_data, &send_mail_box);
+
+}
 /* -----------------超级电容控制数据发送----------------- */
 void CAN_SuperPower_Control(super_power_t super_power_data)
 {
@@ -604,31 +632,3 @@ float get_wheel_velocity_point(uint8_t index)
 
 
 
-{
-    uint32_t send_mail_box;
-    uint16_t pos_tmp,vel_tmp,kp_tmp,kd_tmp,tor_tmp;
-   
-    pos_tmp = float_to_uint(_pos, -12.5, 12.5, 16); // 将目标位置映射为 16 位无符号整数
-    vel_tmp = float_to_uint(_vel, -45, 45, 12); //velocity
-    kp_tmp = float_to_uint(_KP, 0, 500, 12); //kp
-    kd_tmp = float_to_uint(_KD, 0, 5, 12); //kd
-    tor_tmp = float_to_uint(_torq, -18, 18, 12);// 将前馈力矩映射为 12 位无符号整数
-	
-	dm_tx_message.StdId = motor_ID-0x200;
-    dm_tx_message.IDE = CAN_ID_STD;
-    dm_tx_message.RTR = CAN_RTR_DATA;
-    dm_tx_message.DLC = 0x08;
-	
-    dm_can_send_data[0] = (pos_tmp >> 8);
-    dm_can_send_data[1] = pos_tmp;
-    dm_can_send_data[2] = (vel_tmp >> 4);
-    dm_can_send_data[3] = ((vel_tmp&0xF)<<4)|(kp_tmp>>8);
-	
-    dm_can_send_data[4] = kp_tmp;
-    dm_can_send_data[5] = (kd_tmp >> 4);
-    dm_can_send_data[6] = ((kd_tmp&0xF)<<4)|(tor_tmp>>8);
-    dm_can_send_data[7] = tor_tmp;
-	
-    HAL_CAN_AddTxMessage(&hcan2, &dm_tx_message, dm_can_send_data, &send_mail_box);
-
-}
