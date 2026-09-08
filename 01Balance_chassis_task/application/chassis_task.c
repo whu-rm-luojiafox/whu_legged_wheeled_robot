@@ -131,7 +131,9 @@ void handle_airborne_state(chassis_move_t *bl_ctrl);
 void Chassis_Torque_Combine(chassis_move_t *bl_ctrl);
 void Motor_CMD_Send(chassis_move_t *CMD_Send);
 uint8_t Check_Jump_Preparation_Complete(chassis_move_t *chassis);
-float get_jacobian_element(chassis_move_t *VMCJ, float L0, float Q0, uint8_t element_type);
+float get_jacobian_element(chassis_move_t *VMCJ, float L0, float Q0,
+							float Y1, float Y2, float X1, float X2,
+							float PHI1, float PHI2, uint8_t element_type);
 
 
 
@@ -1117,14 +1119,30 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 {
 	/* ---------J1 J2 对应支持力分解成关节扭矩     J3 J4 对应平衡扭矩分解成关节扭矩------------------------------ */
-	bl_ctrl->mapping_info.invJ1_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L, 1); // N11
-	bl_ctrl->mapping_info.invJ2_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L, 3); // N21
-	bl_ctrl->mapping_info.invJ3_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L, 2); // N12
-	bl_ctrl->mapping_info.invJ4_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L, 4); // N22
-	bl_ctrl->mapping_info.invJ1_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R, 1);
-	bl_ctrl->mapping_info.invJ2_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R, 3);
-	bl_ctrl->mapping_info.invJ3_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R, 2);
-	bl_ctrl->mapping_info.invJ4_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R, 4);
+	bl_ctrl->mapping_info.invJ1_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L,
+		bl_ctrl->chassis_posture_info.leg_y1_L, bl_ctrl->chassis_posture_info.leg_y2_L, bl_ctrl->chassis_posture_info.leg_x1_L, bl_ctrl->chassis_posture_info.leg_x2_L,
+		bl_ctrl->chassis_posture_info.leg_phi1_L, bl_ctrl->chassis_posture_info.leg_phi2_L, 1); // N11
+	bl_ctrl->mapping_info.invJ2_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L,
+		bl_ctrl->chassis_posture_info.leg_y1_L, bl_ctrl->chassis_posture_info.leg_y2_L, bl_ctrl->chassis_posture_info.leg_x1_L, bl_ctrl->chassis_posture_info.leg_x2_L,
+		bl_ctrl->chassis_posture_info.leg_phi1_L, bl_ctrl->chassis_posture_info.leg_phi2_L, 3); // N21
+	bl_ctrl->mapping_info.invJ3_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L,
+		bl_ctrl->chassis_posture_info.leg_y1_L, bl_ctrl->chassis_posture_info.leg_y2_L, bl_ctrl->chassis_posture_info.leg_x1_L, bl_ctrl->chassis_posture_info.leg_x2_L,
+		bl_ctrl->chassis_posture_info.leg_phi1_L, bl_ctrl->chassis_posture_info.leg_phi2_L, 2); // N12
+	bl_ctrl->mapping_info.invJ4_L = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_L, bl_ctrl->chassis_posture_info.leg_angle_L,
+		bl_ctrl->chassis_posture_info.leg_y1_L, bl_ctrl->chassis_posture_info.leg_y2_L, bl_ctrl->chassis_posture_info.leg_x1_L, bl_ctrl->chassis_posture_info.leg_x2_L,
+		bl_ctrl->chassis_posture_info.leg_phi1_L, bl_ctrl->chassis_posture_info.leg_phi2_L, 4); // N22
+	bl_ctrl->mapping_info.invJ1_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R,
+		bl_ctrl->chassis_posture_info.leg_y1_R, bl_ctrl->chassis_posture_info.leg_y2_R, bl_ctrl->chassis_posture_info.leg_x1_R, bl_ctrl->chassis_posture_info.leg_x2_R,
+		bl_ctrl->chassis_posture_info.leg_phi1_R, bl_ctrl->chassis_posture_info.leg_phi2_R, 1);
+	bl_ctrl->mapping_info.invJ2_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R,
+		bl_ctrl->chassis_posture_info.leg_y1_R, bl_ctrl->chassis_posture_info.leg_y2_R, bl_ctrl->chassis_posture_info.leg_x1_R, bl_ctrl->chassis_posture_info.leg_x2_R,
+		bl_ctrl->chassis_posture_info.leg_phi1_R, bl_ctrl->chassis_posture_info.leg_phi2_R, 3);
+	bl_ctrl->mapping_info.invJ3_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R,
+		bl_ctrl->chassis_posture_info.leg_y1_R, bl_ctrl->chassis_posture_info.leg_y2_R, bl_ctrl->chassis_posture_info.leg_x1_R, bl_ctrl->chassis_posture_info.leg_x2_R,
+		bl_ctrl->chassis_posture_info.leg_phi1_R, bl_ctrl->chassis_posture_info.leg_phi2_R, 2);
+	bl_ctrl->mapping_info.invJ4_R = get_jacobian_element(bl_ctrl, bl_ctrl->chassis_posture_info.leg_length_R, bl_ctrl->chassis_posture_info.leg_angle_R,
+		bl_ctrl->chassis_posture_info.leg_y1_R, bl_ctrl->chassis_posture_info.leg_y2_R, bl_ctrl->chassis_posture_info.leg_x1_R, bl_ctrl->chassis_posture_info.leg_x2_R,
+		bl_ctrl->chassis_posture_info.leg_phi1_R, bl_ctrl->chassis_posture_info.leg_phi2_R, 4);
 
 	bl_ctrl->torque_info.foot_horizontal_torque_L =
 		bl_ctrl->torque_info.foot_balancing_torque_L + bl_ctrl->torque_info.foot_moving_torque_L;
@@ -1519,7 +1537,7 @@ void Forward_kinematic_solution(chassis_move_t *feedback_update,
 	}
 
 
-	if (ce)
+		if (ce)
 	{
 		feedback_update->chassis_posture_info.last_leg_length_L = feedback_update->chassis_posture_info.leg_length_L;
 		feedback_update->chassis_posture_info.leg_length_L = 0.9f*L0+0.1f*feedback_update->chassis_posture_info.last_leg_length_L;
@@ -1527,6 +1545,12 @@ void Forward_kinematic_solution(chassis_move_t *feedback_update,
 		feedback_update->chassis_posture_info.leg_gyro_L = S0;
 		feedback_update->chassis_posture_info.leg_dlength_L = dL0;
 		feedback_update->chassis_posture_info.leg_dlength_L_jacobian = dL0;
+		feedback_update->chassis_posture_info.leg_x1_L = -xb;
+		feedback_update->chassis_posture_info.leg_x2_L = xd;
+		feedback_update->chassis_posture_info.leg_y1_L = yb;
+		feedback_update->chassis_posture_info.leg_y2_L = yd;
+		feedback_update->chassis_posture_info.leg_phi1_L = Q1;
+		feedback_update->chassis_posture_info.leg_phi2_L = Q4;
 	}
 	else
 	{
@@ -1536,6 +1560,12 @@ void Forward_kinematic_solution(chassis_move_t *feedback_update,
 		feedback_update->chassis_posture_info.leg_gyro_R = -S0;
 		feedback_update->chassis_posture_info.leg_dlength_R = dL0;
 		feedback_update->chassis_posture_info.leg_dlength_R_jacobian = dL0;
+		feedback_update->chassis_posture_info.leg_x1_R = -xb;
+		feedback_update->chassis_posture_info.leg_x2_R = xd;
+		feedback_update->chassis_posture_info.leg_y1_R = yb;
+		feedback_update->chassis_posture_info.leg_y2_R = yd;
+		feedback_update->chassis_posture_info.leg_phi1_R = Q1;
+		feedback_update->chassis_posture_info.leg_phi2_R = Q4;
 	}
 }
 
@@ -1551,19 +1581,41 @@ float evaluate_polynomial(float L0, float Q0, PolynomialCoefficients coeffs)
 }
 
 // 计算雅可比矩阵
-float get_jacobian_element(chassis_move_t *VMCJ, float L0, float Q0, uint8_t element_type)
+float get_jacobian_element(chassis_move_t *VMCJ, float L0, float Q0,float Y1,float Y2, float X1,float X2,float PHI1,float PHI2,uint8_t element_type)
 {
+	float xe = L0 * cosf(Q0);
+	float ye = L0 * sinf(Q0);
+	float denominator_1 = (xe + X1) * sinf(PHI1) + (ye - Y1) * cosf(PHI1);
+	float denominator_2 = (xe - X2) * sinf(PHI2) + (ye - Y2) * cosf(PHI2);
+
+	(void)VMCJ;
 	switch (element_type)
 	{
 	case 1: // N11
-		return evaluate_polynomial(L0, Q0, VMCJ->InverseJacobianCoefficient.N11);
+		if (fabsf(denominator_1) < 1.0e-6f)
+		{
+			return 0.0f;
+		}
+		return ((xe + X1) * sinf(Q0) + (ye - Y1) * cosf(Q0)) / (L1 * denominator_1);
 	case 2: // N12
-		return evaluate_polynomial(L0, Q0, VMCJ->InverseJacobianCoefficient.N12);
+		if (fabsf(denominator_1) < 1.0e-6f)
+		{
+			return 0.0f;
+		}
+		return L0 * ((xe + X1) * cosf(Q0) - (ye - Y1) * sinf(Q0)) / (L1 * denominator_1);
 	case 3: // N21
-		return evaluate_polynomial(L0, Q0, VMCJ->InverseJacobianCoefficient.N21);
+		if (fabsf(denominator_2) < 1.0e-6f)
+		{
+			return 0.0f;
+		}
+		return ((xe - X2) * sinf(Q0) + (ye - Y2) * cosf(Q0)) / (L4 * denominator_2);
 	case 4: // N22
-		return evaluate_polynomial(L0, Q0, VMCJ->InverseJacobianCoefficient.N22);
+		if (fabsf(denominator_2) < 1.0e-6f)
+		{
+			return 0.0f;
+		}
+		return L0 * ((xe - X2) * cosf(Q0) - (ye - Y2) * sinf(Q0)) / (L4 * denominator_2);
 	default:
-		return 0.0f; // 或者返回错误值
+		return 0.0f; // ���߷��ش���ֵ
 	}
 }

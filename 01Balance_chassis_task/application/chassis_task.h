@@ -290,7 +290,8 @@ typedef struct
     fp32 leg_gyro_L, leg_gyro_R, last_leg_gyro_L, last_leg_gyro_R;
     fp32 leg_gyro_L_jacobian, leg_gyro_R_jacobian,last_leg_gyro_L_jacobian, last_leg_gyro_R_jacobian;
     fp32 leg_accel_L, leg_accel_R;
-
+    fp32 leg_x1_L,leg_x2_L,leg_y1_L,leg_y2_L;fp32 leg_x1_R,leg_x2_R,leg_y1_R,leg_y2_R;
+    fp32 leg_phi1_L, leg_phi2_L, leg_phi1_R, leg_phi2_R;
     /* ----------debug param-------- */
     fp32 xc,yc,xb,yb;
     fp32 Q2;
