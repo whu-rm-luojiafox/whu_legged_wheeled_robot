@@ -162,7 +162,7 @@
   
 #define WHEEL_PERIMETER  0.446106f                        //0.56547
 #define WHEEL_RADIUS 0.071f
-#define LEG_OFFSET       30.0f// 水平位置到上限位的夹角
+#define LEG_OFFSET       30.0f// 标定姿态相对主动杆朝外水平的软件角偏置（轴侧逆时针为正）
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
 #define LOWER_SUPPORT_FORCE 0.0f
 #define MOVE_LOWER_BOUND 0.5f
@@ -269,10 +269,13 @@ typedef struct
 {
     fp32 leg_length_set;
     fp32 leg_length, last_leg_length;
+    fp32 leg_length_raw;     // 当前五连杆几何长度，雅可比使用（未滤波）
     fp32 leg_dlength, last_leg_dlength, leg_dlength_jacobian, last_leg_dlength_jacobian;
     fp32 leg_ddlength, last_leg_ddlength;
     fp32 leg_angle, last_leg_angle, leg_angle_set, leg_angle_kf;
+    fp32 leg_angle_local;    // 相对机身向下轴的局部角 Q0，五连杆雅可比使用
     fp32 leg_gyro, last_leg_gyro;
+    fp32 leg_gyro_local;     // Q0 对时间的导数；右腿统一腿角速度为其相反数
     fp32 leg_gyro_jacobian, last_leg_gyro_jacobian;
     fp32 leg_accel;
     fp32 leg_x1, leg_x2, leg_y1, leg_y2;

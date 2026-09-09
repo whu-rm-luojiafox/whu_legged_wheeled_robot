@@ -310,6 +310,9 @@ void chassis_feedback_update(chassis_move_t *fdb)
 	fdb->foot_motor_R.last_motor_mode = fdb->foot_motor_R.motor_mode;
 
 	/*------------------------------- Update HT Motor info ------------------------------ */
+	/* 1~4 号髋关节电机统一约定：从各自电机轴侧观察，逆时针位置、
+	 * 速度和输出力矩为正。下式保留驱动反馈的原始正方向。
+	 */
 	fdb->joint_motor_1.position = (fdb->joint_motor_1.motor_measure->ecd - fdb->joint_motor_1.position_offset) +LEG_OFFSET;
 	fdb->joint_motor_2.position = (fdb->joint_motor_2.motor_measure->ecd - fdb->joint_motor_2.position_offset) -LEG_OFFSET;
 	fdb->joint_motor_3.position = (fdb->joint_motor_3.motor_measure->ecd - fdb->joint_motor_3.position_offset) - LEG_OFFSET;
@@ -1027,7 +1030,7 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 			+ LQR[2][4] * (bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle_set - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle)
 			+ LQR[2][5] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_gyro) 
 		);		
-		bl_ctrl->torque_info.joint_balancing_torque_R = -(
+		bl_ctrl->torque_info.joint_balancing_torque_R = (
 			+ LQR[3][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle) 
 			+ LQR[3][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
 		);
@@ -1063,13 +1066,13 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 				// + LQR[2][3] * ( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
 				);
 
-			bl_ctrl->torque_info.joint_balancing_torque_R = -(
+			bl_ctrl->torque_info.joint_balancing_torque_R = (
 				+ LQR[3][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle) 
 				+ LQR[3][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
 				+ LQR[3][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set - bl_ctrl->chassis_posture_info.pitch_angle) 
 				+ LQR[3][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
 			);
-			bl_ctrl->torque_info.joint_moving_torque_R    = -(
+			bl_ctrl->torque_info.joint_moving_torque_R    = (
 				+ LQR[3][0] * ( bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
 				+ LQR[3][1] * ( bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED    - bl_ctrl->chassis_posture_info.foot_speed_KF )
 				// + LQR[3][2] * ( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total )
@@ -1118,7 +1121,10 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 }
 void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 {
-	/* ---------J1 J2 对应支持力分解成关节扭矩     J3 J4 对应平衡扭矩分解成关节扭矩------------------------------ */
+	/* N=d(phi1,phi2)/d(length,Q0) 是逆运动学雅可比。
+	 * 电机力矩必须使用 J^T=N^(-T)。左腿正解电机顺序为 (1,2)，
+	 * 右腿为 (4,3)。所有关节电机从各自轴侧观察均以逆时针为正。
+	 */
 	bl_ctrl->mapping_info.invJ1_L = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_L, 1);
 	bl_ctrl->mapping_info.invJ2_L = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_L, 3);
 	bl_ctrl->mapping_info.invJ3_L = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_L, 2);
@@ -1176,32 +1182,46 @@ void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 	bl_ctrl->torque_info.joint_vertical_torque_R = 
 		bl_ctrl->torque_info.joint_stand_torque_R + bl_ctrl->torque_info.joint_roll_torque_R;
 
-	/* 左视图：假设此时需要一个逆时针扭矩那么：1 2 号电机顺时针   右视图：根据上文此时计算出需要顺时针扭矩那么： 3 4 号电机 逆时针 下文又将3 4 号电机扭矩反向，所以是顺时针 */
-	bl_ctrl->torque_info.joint_horizontal_torque_temp1_L =
-		(bl_ctrl->torque_info.joint_horizontal_torque_L) * (-bl_ctrl->mapping_info.invJ3_L);
-	bl_ctrl->torque_info.joint_horizontal_torque_temp2_L =
-		(bl_ctrl->torque_info.joint_horizontal_torque_L) * (bl_ctrl->mapping_info.invJ4_L);
-	bl_ctrl->torque_info.joint_horizontal_torque_temp1_R =
-		(bl_ctrl->torque_info.joint_horizontal_torque_R) * (-bl_ctrl->mapping_info.invJ3_R);
-	bl_ctrl->torque_info.joint_horizontal_torque_temp2_R =
-		(bl_ctrl->torque_info.joint_horizontal_torque_R) * (bl_ctrl->mapping_info.invJ4_R);
+	{
+		const fp32 n11_l = bl_ctrl->mapping_info.invJ1_L;
+		const fp32 n12_l = bl_ctrl->mapping_info.invJ3_L;
+		const fp32 n21_l = bl_ctrl->mapping_info.invJ2_L;
+		const fp32 n22_l = bl_ctrl->mapping_info.invJ4_L;
+		const fp32 n11_r = bl_ctrl->mapping_info.invJ1_R;
+		const fp32 n12_r = bl_ctrl->mapping_info.invJ3_R;
+		const fp32 n21_r = bl_ctrl->mapping_info.invJ2_R;
+		const fp32 n22_r = bl_ctrl->mapping_info.invJ4_R;
+		const fp32 det_l = n11_l * n22_l - n12_l * n21_l;
+		const fp32 det_r = n11_r * n22_r - n12_r * n21_r;
+		const fp32 force_l = bl_ctrl->torque_info.joint_vertical_torque_L;
+		const fp32 force_r = bl_ctrl->torque_info.joint_vertical_torque_R;
+		const fp32 torque_l = bl_ctrl->torque_info.joint_horizontal_torque_L;
+		const fp32 torque_r = bl_ctrl->torque_info.joint_horizontal_torque_R;
 
-	/* 以1 2 号电机举例：向下支持力1号电机逆时针，2号电机顺时针    3 4 号电机：3号电机顺时针 4号电机逆时针 */
-	bl_ctrl->torque_info.joint_vertical_torque_temp1_L =
-		(bl_ctrl->torque_info.joint_vertical_torque_L) * (bl_ctrl->mapping_info.invJ1_L);
-	bl_ctrl->torque_info.joint_vertical_torque_temp2_L =
-		(bl_ctrl->torque_info.joint_vertical_torque_L) * (-bl_ctrl->mapping_info.invJ2_L);
-	bl_ctrl->torque_info.joint_vertical_torque_temp1_R =
-		(bl_ctrl->torque_info.joint_vertical_torque_R) * (-bl_ctrl->mapping_info.invJ1_R);
-	bl_ctrl->torque_info.joint_vertical_torque_temp2_R =
-		(bl_ctrl->torque_info.joint_vertical_torque_R) * (bl_ctrl->mapping_info.invJ2_R);
-	
-	/****************************************/
+		if (fabsf(det_l) > 1.0e-6f)
+		{
+			/* tau_(1,2)=diag(1,-1)*N^(-T)*[F,T_model]. */
+			bl_ctrl->joint_motor_1.torque_out = (n22_l * force_l - n21_l * torque_l) / det_l;
+			bl_ctrl->joint_motor_2.torque_out = (n12_l * force_l - n11_l * torque_l) / det_l;
+		}
+		else
+		{
+			bl_ctrl->joint_motor_1.torque_out = 0.0f;
+			bl_ctrl->joint_motor_2.torque_out = 0.0f;
+		}
 
-	bl_ctrl->joint_motor_1.torque_out = +bl_ctrl->torque_info.joint_horizontal_torque_temp1_L + bl_ctrl->torque_info.joint_vertical_torque_temp1_L;
-	bl_ctrl->joint_motor_2.torque_out = +bl_ctrl->torque_info.joint_horizontal_torque_temp2_L + bl_ctrl->torque_info.joint_vertical_torque_temp2_L;
-	bl_ctrl->joint_motor_3.torque_out = +bl_ctrl->torque_info.joint_horizontal_torque_temp1_R + bl_ctrl->torque_info.joint_vertical_torque_temp1_R;
-	bl_ctrl->joint_motor_4.torque_out = +bl_ctrl->torque_info.joint_horizontal_torque_temp2_R + bl_ctrl->torque_info.joint_vertical_torque_temp2_R;
+		if (fabsf(det_r) > 1.0e-6f)
+		{
+			/* theta_R=-Q0_R；正解第一/第二关节分别是电机 4/3。 */
+			bl_ctrl->joint_motor_4.torque_out = (n22_r * force_r + n21_r * torque_r) / det_r;
+			bl_ctrl->joint_motor_3.torque_out = (n12_r * force_r + n11_r * torque_r) / det_r;
+		}
+		else
+		{
+			bl_ctrl->joint_motor_4.torque_out = 0.0f;
+			bl_ctrl->joint_motor_3.torque_out = 0.0f;
+		}
+	}
 
 	/* Match the HT protocol's physical torque range before the CAN layer. */
 	LimitOutput(bl_ctrl->joint_motor_1.torque_out, T_MIN, T_MAX);
@@ -1428,7 +1448,7 @@ void handle_airborne_state(chassis_move_t *bl_ctrl)
 	// 2. 处理 joint_balancing_torque（平衡力矩）
     if (bl_ctrl->flag_info.suspend_flag_R == 1)
     {
-		bl_ctrl->torque_info.joint_balancing_torque_R = -(
+		bl_ctrl->torque_info.joint_balancing_torque_R = (
 			+ LQR[3][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle)
             + LQR[3][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
         );
@@ -1521,7 +1541,14 @@ void Forward_kinematic_solution(chassis_leg_posture_t *leg_posture,
 	}
 
 
-		if (ce)
+	/* 保存与 B、D、phi 同一时刻的未滤波机身局部几何量。
+	 * leg_angle/leg_gyro 随后转换为上交 WBR 使用的统一腿角。
+	 */
+	leg_posture->leg_length_raw = L0;
+	leg_posture->leg_angle_local = Q0;
+	leg_posture->leg_gyro_local = S0;
+
+	if (ce)
 	{
 			leg_posture->last_leg_length = leg_posture->leg_length;
 			leg_posture->leg_length = 0.9f*L0+0.1f*leg_posture->last_leg_length;
@@ -1567,17 +1594,21 @@ float evaluate_polynomial(float L0, float Q0, PolynomialCoefficients coeffs)
 // 计算雅可比矩阵
 float get_jacobian_element(chassis_leg_posture_t *leg_posture, uint8_t element_type)
 {
-	float L0 = leg_posture->leg_length;
-	float Q0 = leg_posture->leg_angle;
+	/* 雅可比属于机身局部五连杆，不能使用已经叠加 pitch 的对地腿角。
+	 * 长度也必须与当前 B、D、phi 属于同一未滤波姿态。
+	 */
+	float L0 = leg_posture->leg_length_raw;
+	float Q0 = leg_posture->leg_angle_local;
 	float Y1 = leg_posture->leg_y1;
 	float Y2 = leg_posture->leg_y2;
 	float X1 = leg_posture->leg_x1;
 	float X2 = leg_posture->leg_x2;
 	float PHI1 = leg_posture->leg_phi1;
 	float PHI2 = leg_posture->leg_phi2;
-	float xe = L0 * cosf(Q0);
-	float ye = L0 * sinf(Q0);
-	float denominator_1 = (xe + X1) * sinf(PHI1) + (ye - Y1) * cosf(PHI1);
+	/* Q0=atan2(xc,yc)，因此 C=(L0*sin(Q0), L0*cos(Q0))。 */
+	float xe = L0 * sinf(Q0);
+	float ye = L0 * cosf(Q0);
+	float denominator_1 = -(xe + X1) * sinf(PHI1) + (ye - Y1) * cosf(PHI1);
 	float denominator_2 = (xe - X2) * sinf(PHI2) + (ye - Y2) * cosf(PHI2);
                                                            
 	switch (element_type)            
@@ -1587,13 +1618,13 @@ float get_jacobian_element(chassis_leg_posture_t *leg_posture, uint8_t element_t
 		{
 			return 0.0f;
 		}
-		return -((xe + X1) * sinf(Q0) + (ye - Y1) * cosf(Q0)) / (L1 * denominator_1);
+		return ((xe + X1) * sinf(Q0) + (ye - Y1) * cosf(Q0)) / (L1 * denominator_1);
 	case 2: // N12
 		if (fabsf(denominator_1) < 1.0e-6f)
 		{
 			return 0.0f;                
 		}
-		return -L0 * ((xe + X1) * cosf(Q0) - (ye - Y1) * sinf(Q0)) / (L1 * denominator_1);
+		return L0 * ((xe + X1) * cosf(Q0) - (ye - Y1) * sinf(Q0)) / (L1 * denominator_1);
 	case 3: // N21
 		if (fabsf(denominator_2) < 1.0e-6f)
 		{
