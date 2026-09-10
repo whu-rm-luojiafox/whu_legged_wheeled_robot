@@ -5,7 +5,7 @@ function results = run_chassis_algorithm_sim()
 % LQR.c. It compares three paths at the firmware sampling period:
 %   legacy  - behavior before the recent velocity/kinematics changes
 %   problem - the on-vehicle behavior found in the modified worktree
-%   fixed   - SI motor speed + exact five-bar dL/dt + corrected right leg
+%   fixed   - exact local geometry + N^(-T) VMC + corrected right leg
 %
 % No Simulink or extra toolbox is required. The script reads the active LQR
 % and polynomial coefficients directly from the project source so that the
@@ -97,16 +97,18 @@ for k = 1:n
 
     [foot_legacy(k,:), virtual_h_legacy(k,:), joint_legacy(k,:)] = ...
         controller_sample(p, K, L(k,:), Q(k,:), gyro_legacy(k,:), ...
-                          gyro_legacy(k,2), 0.0);
+                          gyro_legacy(k,2), 0.0, [], false);
 
     % The problem version overwrote right wheel feedback with leg_gyro_L.
     [foot_problem(k,:), virtual_h_problem(k,:), joint_problem(k,:)] = ...
         controller_sample(p, K, L(k,:), Q(k,:), gyro_problem(k,:), ...
-                          gyro_problem(k,1), problem_forward_bias);
+                          gyro_problem(k,1), problem_forward_bias, [], false);
 
+	N_exact(:,:,1) = inverse_jacobian_exact(p,fkL_fixed);
+	N_exact(:,:,2) = inverse_jacobian_exact(p,fkR_fixed);
     [foot_fixed(k,:), virtual_h_fixed(k,:), joint_fixed(k,:)] = ...
         controller_sample(p, K, L(k,:), Q(k,:), gyro_exact(k,:), ...
-                          gyro_exact(k,2), fixed_forward_bias);
+                          gyro_exact(k,2), fixed_forward_bias, N_exact, true);
 end
 
 ddL_legacy = filtered_derivative(dL_legacy, p.Ts, p.alpha_da);
@@ -218,7 +220,7 @@ p.L2 = parse_define(h_text,'L2');
 p.L3 = parse_define(h_text,'L3');
 p.L4 = parse_define(h_text,'L4');
 p.L5 = parse_define(h_text,'L5');
-p.T_max = parse_define(fullfile_text(project_root,'application','CAN_receive.h'),'T_MAX');
+p.T_max = parse_define(fullfile_text(project_root,'protocols','motor_protocol.h'),'T_MAX');
 p.TORQ_K = parse_define(h_text,'TORQ_K');
 p.FEED_f = parse_define(h_text,'FEED_f');
 p.forward_speed = parse_define(c_text,'FORWARD_SPEED');
@@ -306,6 +308,10 @@ xc = xb+cos(Q2)*p.L2;
 yc = yb+sin(Q2)*p.L2;
 out.L0 = hypot(xc,yc);
 out.Q0 = atan2(xc,yc);
+out.B = [xb,yb];
+out.D = [xd,yd];
+out.C = [xc,yc];
+out.phi = [Q1,Q4];
 
 vxb = -S1*p.L1*sin(Q1);
 vyb =  S1*p.L1*cos(Q1);
@@ -337,26 +343,53 @@ basis = [1,L0,Q0,L0^2,L0*Q0,Q0^2].';
 N = coeff*basis; % [N11; N12; N21; N22]
 end
 
+function N = inverse_jacobian_exact(p,fk)
+u = fk.C-fk.B;
+v = fk.C-fk.D;
+radial = [sin(fk.Q0),cos(fk.Q0)];
+angular = fk.L0*[cos(fk.Q0),-sin(fk.Q0)];
+den1 = p.L1*dot(u,[-sin(fk.phi(1)),cos(fk.phi(1))]);
+den2 = p.L4*dot(v,[ sin(fk.phi(2)),cos(fk.phi(2))]);
+N = [dot(u,radial)/den1,dot(u,angular)/den1; ...
+     dot(v,radial)/den2,dot(v,angular)/den2];
+end
+
 function K = lqr_at_length(K_fit,LL,LR)
 basis = [1,LL,LR,LL^2,LL*LR,LR^2].';
 K = reshape(K_fit*basis,10,4).';
 end
 
-function [foot,horizontal,joint] = controller_sample(p,K,L,Q,gyro,right_wheel_gyro,forward_bias)
+function [foot,horizontal,joint] = controller_sample(p,K,L,Q,gyro,right_wheel_gyro,forward_bias,N_exact,corrected_mapping)
 horizontal(1) = K(3,5)*(-Q(1)) + K(3,6)*(-gyro(1));
-horizontal(2) = -(K(4,7)*(-Q(2)) + K(4,8)*(-gyro(2)));
+horizontal(2) = K(4,7)*(-Q(2)) + K(4,8)*(-gyro(2));
+
+if ~corrected_mapping
+    horizontal(2) = -horizontal(2); % legacy/problem actuator-side sign
+end
 
 foot(1) = (K(1,5)*(-Q(1)) + K(1,6)*(-gyro(1)) + ...
            K(1,2)*forward_bias)*p.TORQ_K;
 foot(2) = -(K(2,7)*(-Q(2)) + K(2,8)*(-right_wheel_gyro))*p.TORQ_K ...
           -K(2,2)*forward_bias*p.TORQ_K;
 
-NL = evaluate_vmc_coefficients(p.N,L(1),Q(1));
-NR = evaluate_vmc_coefficients(p.N,L(2),Q(2));
-joint = [horizontal(1)*(-NL(2))+p.FEED_f*NL(1), ...
-         horizontal(1)*NL(4)-p.FEED_f*NL(3), ...
-         horizontal(2)*(-NR(2))-p.FEED_f*NR(1), ...
-         horizontal(2)*NR(4)+p.FEED_f*NR(3)];
+if corrected_mapping
+    NL = N_exact(:,:,1);
+    NR = N_exact(:,:,2);
+    detL = det(NL);
+    detR = det(NR);
+    % Output order is motor 1,2,3,4; positive is CCW from each shaft side.
+    joint = [(NL(2,2)*p.FEED_f-NL(2,1)*horizontal(1))/detL, ...
+             (NL(1,2)*p.FEED_f-NL(1,1)*horizontal(1))/detL, ...
+             (NR(1,2)*p.FEED_f+NR(1,1)*horizontal(2))/detR, ...
+             (NR(2,2)*p.FEED_f+NR(2,1)*horizontal(2))/detR];
+else
+    NL = evaluate_vmc_coefficients(p.N,L(1),Q(1));
+    NR = evaluate_vmc_coefficients(p.N,L(2),Q(2));
+    joint = [horizontal(1)*(-NL(2))+p.FEED_f*NL(1), ...
+             horizontal(1)*NL(4)-p.FEED_f*NL(3), ...
+             horizontal(2)*(-NR(2))-p.FEED_f*NR(1), ...
+             horizontal(2)*NR(4)+p.FEED_f*NR(3)];
+end
 joint = min(max(joint,-p.T_max),p.T_max);
 end
 
