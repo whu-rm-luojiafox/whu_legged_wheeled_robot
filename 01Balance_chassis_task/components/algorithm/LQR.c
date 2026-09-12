@@ -106,11 +106,11 @@ void LQR_Data_Update(chassis_move_t *chassis_move)
 			myindex =j+i*10;
 			LQR[i][j]=
                K_Fit[myindex][0]
-               +K_Fit[myindex][1]*chassis_move->chassis_posture_info.leg_length_L
-               +K_Fit[myindex][2]*chassis_move->chassis_posture_info.leg_length_R
-               +K_Fit[myindex][3]*((chassis_move->chassis_posture_info.leg_length_L)*(chassis_move->chassis_posture_info.leg_length_L))
-               +K_Fit[myindex][4]*((chassis_move->chassis_posture_info.leg_length_L)*(chassis_move->chassis_posture_info.leg_length_R))
-               +K_Fit[myindex][5]*((chassis_move->chassis_posture_info.leg_length_R)*(chassis_move->chassis_posture_info.leg_length_R));
+               +K_Fit[myindex][1]*chassis_move->chassis_posture_info.chassis_posture_L.leg_length
+               +K_Fit[myindex][2]*chassis_move->chassis_posture_info.chassis_posture_R.leg_length
+               +K_Fit[myindex][3]*((chassis_move->chassis_posture_info.chassis_posture_L.leg_length)*(chassis_move->chassis_posture_info.chassis_posture_L.leg_length))
+               +K_Fit[myindex][4]*((chassis_move->chassis_posture_info.chassis_posture_L.leg_length)*(chassis_move->chassis_posture_info.chassis_posture_R.leg_length))
+               +K_Fit[myindex][5]*((chassis_move->chassis_posture_info.chassis_posture_R.leg_length)*(chassis_move->chassis_posture_info.chassis_posture_R.leg_length));
 		}		
 	}
 }
