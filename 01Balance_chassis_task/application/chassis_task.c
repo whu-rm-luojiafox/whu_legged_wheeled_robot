@@ -373,7 +373,7 @@ void chassis_feedback_update(chassis_move_t *fdb)
 	fdb->chassis_posture_info.pitch_angle = rad_format(*(fdb->chassis_INS_angle + INS_PITCH_ADDRESS_OFFSET)); 
 	fdb->chassis_posture_info.roll_angle = *(fdb->chassis_INS_angle + INS_ROLL_ADDRESS_OFFSET);
 
-	//腿部角度、角速度更新；腿长和腿长速度已在五连杆正解中更新
+	//腿部角度、角速度更新；!!腿长和腿长速度已在五连杆正解中更新
 	fdb->chassis_posture_info.chassis_posture_L.leg_angle += fdb->chassis_posture_info.pitch_angle;
 	fdb->chassis_posture_info.chassis_posture_R.leg_angle += fdb->chassis_posture_info.pitch_angle;
 	fdb->chassis_posture_info.chassis_posture_L.leg_gyro += fdb->chassis_posture_info.pitch_gyro;
@@ -942,7 +942,7 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 		else
 		{
 			rollD = 0.0f;
-		}
+		}//这个是支持力 不是力矩 F_support
 		bl_ctrl->torque_info.joint_roll_torque_R = rollP + rollD ;//极性问题建议自己实际尝试
 		bl_ctrl->torque_info.joint_roll_torque_L = -bl_ctrl->torque_info.joint_roll_torque_R;
 	}
@@ -1549,11 +1549,11 @@ void Forward_kinematic_solution(chassis_leg_posture_t *leg_posture,
 	leg_posture->leg_gyro_local = S0;
 
 	if (ce)
-	{
+	{//L
 			leg_posture->last_leg_length = leg_posture->leg_length;
 			leg_posture->leg_length = 0.9f*L0+0.1f*leg_posture->last_leg_length;
-			leg_posture->leg_angle = Q0;
-			leg_posture->leg_gyro = S0;
+			leg_posture->leg_angle = -Q0;
+			leg_posture->leg_gyro = -S0;
 			leg_posture->leg_dlength = dL0;
 			leg_posture->leg_dlength_jacobian = dL0;
 			leg_posture->leg_x1 = -xb;
@@ -1564,11 +1564,11 @@ void Forward_kinematic_solution(chassis_leg_posture_t *leg_posture,
 			leg_posture->leg_phi2 = Q4;
 	}
 	else
-	{
+	{//R
 			leg_posture->last_leg_length = leg_posture->leg_length;
 			leg_posture->leg_length = 0.9f*L0+0.1f*leg_posture->last_leg_length;
-			leg_posture->leg_angle = -Q0;
-			leg_posture->leg_gyro = -S0;
+			leg_posture->leg_angle = Q0;
+			leg_posture->leg_gyro = S0;
 			leg_posture->leg_dlength = dL0;
 			leg_posture->leg_dlength_jacobian = dL0;
 			leg_posture->leg_x1 = -xb;
