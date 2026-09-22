@@ -40,7 +40,6 @@
 #include "set_power_task.h"
 #include "uart_receive.h"
 #include "motor_cmd.h"
-#include "iwdg_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,7 +58,6 @@ osThreadId oled_handle;
 osThreadId setpower_handle;
 osThreadId uart_receive_handle;
 osThreadId motor_cmd_handle;
-osThreadId iwdg_task_handle;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -189,8 +187,6 @@ void MX_FREERTOS_Init(void)
   osThreadDef(MOTOR_CMD, motor_cmd_task, osPriorityAboveNormal, 0, 256);
   motor_cmd_handle = osThreadCreate(osThread(MOTOR_CMD), NULL);
 
-  osThreadDef(IWDG_TASK, iwdg_task, osPriorityAboveNormal, 0, 128);
-  iwdg_task_handle = osThreadCreate(osThread(IWDG_TASK), NULL);
 
   /* USER CODE END RTOS_THREADS */
 }

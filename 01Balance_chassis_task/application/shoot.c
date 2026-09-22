@@ -7,6 +7,7 @@
 #include "math.h"
 #include "user_lib.h"
 #include "uart_receive.h"
+#include <stdlib.h>
 
 shoot_control_t shoot_control;
 const chassis_data_t *shoot_enable;

@@ -141,35 +141,35 @@
 /* -----------------------------平步新增宏定义---------------------------- */
 
 //腿长设定PID
-#define LEG_SET_PID_KP 420
-#define LEG_SET_PID_KI 2.0f
-#define LEG_SET_PID_KD 4500.0f //350.0f
-#define LEG_SET_PID_OUT 100.0f
-#define LEG_SET_PID_IOUT 12.0f
+#define LEG_SET_PID_KP 200.0f
+#define LEG_SET_PID_KI 0.0f
+#define LEG_SET_PID_KD 300.0f //350.0f
+#define LEG_SET_PID_OUT 50.0f
+#define LEG_SET_PID_IOUT 10.0f
 
 
 // -------------  Limit info ------------- 
 #define MAX_ACCL 13000.0f
-#define MAX_ACCL_JOINT 20.0f
+#define MAX_ACCL_JOINT 18.0f
 #define MAX_FOOT_OUTPUT 2048
 
 // ------------- Mech info ------------- 
-#define L1 0.15f
-#define L2 0.27f
-#define L3 0.27f
-#define L4 0.15f
-#define L5 0.15f
+#define L1 0.21f//0.15f
+#define L2 0.25f//0.27f
+#define L3 0.25f//0.27f
+#define L4 0.21f//0.15f
+#define L5 0.0f//0.15f
   
 #define WHEEL_PERIMETER  0.446106f                        //0.56547
-#define WHEEL_RADIUS 0.071f
+#define WHEEL_RADIUS 0.068f
 #define LEG_OFFSET       30.0f// 标定姿态相对主动杆朝外水平的软件角偏置（轴侧逆时针为正）
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
-#define LOWER_SUPPORT_FORCE 0.0f
+#define LOWER_SUPPORT_FORCE 10.0f
 #define MOVE_LOWER_BOUND 0.5f
 #define EXIT_PITCH_ANGLE 0.2f
 #define DANGER_PITCH_ANGLE 0.5f
 
-#define FEED_f 50.0f
+#define FEED_f 40.0f
 
 
 
@@ -180,7 +180,6 @@
 
 // ------------- Transfer info ------------- 
 #define HALF_POSITION_RANGE    178.0f
-#define TORQ_K            77.1604f
 // ------------- Math info ------------- 
 #define PI2					  6.28318530717959f
 #define PI					  3.14159265358979f
@@ -192,7 +191,6 @@
 {
     ENABLE_CHASSIS = 0,
     DISABLE_CHASSIS,
-    DEBUG_CHASSIS,
 } chassis_mode_e;
 
 
@@ -333,6 +331,8 @@ typedef struct
     fp32 joint_roll_torque_L,  joint_roll_torque_R;
     
     
+    // 腿角力矩映射出的电机力矩分量，单位 N*m，输出限幅前。
+    // temp1/temp2 顺序与正解一致：左侧1/2号，右侧4/3号。
     fp32 joint_horizontal_torque_temp1_R, joint_horizontal_torque_temp2_R;
     fp32 joint_horizontal_torque_temp1_L, joint_horizontal_torque_temp2_L;
     
@@ -345,6 +345,8 @@ typedef struct
     fp32 joint_vertical_torque_L,      joint_vertical_torque_R;
     fp32 joint_real_vertical_torque_L, joint_real_vertical_torque_R;
 
+    // 腿长方向力映射出的电机力矩分量，单位 N*m，输出限幅前。
+    // 与同名 horizontal 分量相加后赋给对应电机；不是实测反馈力矩。
     fp32 joint_vertical_torque_temp1_R, joint_vertical_torque_temp2_R;
     fp32 joint_vertical_torque_temp1_L, joint_vertical_torque_temp2_L;
 
@@ -364,7 +366,7 @@ typedef struct
 
 typedef struct
 {
-    HTmotor_measure_t *motor_measure;
+    dm_motor_measure_t *motor_measure;
     chassis_motor_mode_e motor_mode, last_motor_mode;
 
     bool_t offline_flag;
@@ -382,12 +384,12 @@ typedef struct
 
 typedef struct
 {
-    lkmotor_measure_t *motor_measure;
+    motor_measure_t *motor_measure;
     chassis_motor_mode_e motor_mode, last_motor_mode;
 
     bool_t offline_flag;
 
-    fp32 distance, distance_offset, last_position, position, turns;
+    fp32 distance,last_position, position, turns;
     fp32 speed,speed_kf;
     fp32 torque_out, torque_get;
     fp32 last_control_torque;
@@ -439,13 +441,7 @@ typedef struct {
     float c5; // Q0^2系数
 } PolynomialCoefficients;
 
-// 定义逆雅可比矩阵系数
-typedef struct {
-    PolynomialCoefficients N11;
-    PolynomialCoefficients N12;
-    PolynomialCoefficients N21;
-    PolynomialCoefficients N22;
-} InverseJacobianCoefficients;
+
 
 typedef struct
 {
@@ -455,7 +451,6 @@ typedef struct
     chassis_posture_info_t chassis_posture_info;
     torque_info_t torque_info;
     mapping_info_t mapping_info;
-    InverseJacobianCoefficients InverseJacobianCoefficient;
     const RC_ctrl_t *chassis_RC;
     const fp32 *chassis_INS_angle;
     const fp32 *chassis_INS_gyro;

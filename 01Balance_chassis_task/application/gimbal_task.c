@@ -64,11 +64,12 @@ void gimbal_Init(gimbal_control_t *gimbal_control)
 }
 void gimbal_set_mode(gimbal_control_t *gimbal_control)
 {
-	if(gimbal_control->yaw_ctrl_data->chassis_mode==CHASSIS_MODE_OFF)
+	if(gimbal_control->yaw_ctrl_data->chassis_mode==CHASSIS_MODE_OFF ||
+	   gimbal_control->yaw_ctrl_data->chassis_mode==CHASSIS_MODE_DEBUG)
 	{
 		gimbal_control->gimbal_yaw_motor.gimbal_motor_mode=GIMBAL_MOTOR_OFF;
 	}
-	else if(gimbal_control->yaw_ctrl_data->chassis_mode==CHASSIS_MOVE_ON||gimbal_control->yaw_ctrl_data->chassis_mode==CHASSIS_MODE_DEBUG)
+	else if(gimbal_control->yaw_ctrl_data->chassis_mode==CHASSIS_MOVE_ON)
 	{
 		gimbal_control->gimbal_yaw_motor.gimbal_motor_mode=GIMBAL_MOTOR_GYRO;
 	}
