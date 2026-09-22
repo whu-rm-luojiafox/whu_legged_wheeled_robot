@@ -3,27 +3,32 @@
  
 #include "struct_typedef.h"
 //========海泰电机参数===========
-#define P_MIN -95.5f// Radians
-#define P_MAX 95.5f
-#define V_MIN -45.0f// Rad/s
-#define V_MAX 45.0f
-#define KP_MIN 0.0f// N-m/rad
-#define KP_MAX 500.0f
-#define KD_MIN 0.0f// N-m/rad/s
-#define KD_MAX 5.0f
-#define T_MIN -18.0f
-#define T_MAX 18.0f
+#define HT_P_MIN -95.5f// Radians
+#define HT_P_MAX 95.5f
+#define HT_V_MIN -45.0f// Rad/s
+#define HT_V_MAX 45.0f
+#define HT_KP_MIN 0.0f// N-m/rad
+#define HT_KP_MAX 500.0f
+#define HT_KD_MIN 0.0f// N-m/rad/s
+#define HT_KD_MAX 5.0f
+#define HT_T_MIN -18.0f
+#define HT_T_MAX 18.0f
 //========dm电机参数===========
-#define P_MIN   -12.5  
-#define P_MAX   12.5   
-#define V_MIN   -30.0    
-#define V_MAX   30.0     
-#define KP_MIN  0      
-#define KP_MAX  500    
-#define KD_MIN  0      
-#define KD_MAX  5      
-#define Tor_MIN   -18.0f  
-#define Tor_MAX   18.0f
+#define DM_P_MIN    -12.5f
+#define DM_P_MAX     12.5f
+
+#define DM_V_MIN    -45.0f
+#define DM_V_MAX     45.0f
+
+#define DM_KP_MIN     0.0f
+#define DM_KP_MAX   500.0f
+
+#define DM_KD_MIN     0.0f
+#define DM_KD_MAX     5.0f
+
+#define DM_T_MIN    -18.0f
+#define DM_T_MAX     18.0f
+#define JOINT_TORQUE_LIMIT 18.0f  // 应用输出限幅，需根据机构调整
 //=======can_id================
 /* CAN send and receive ID */
 typedef enum
@@ -45,18 +50,21 @@ typedef enum
   CAN_chassis_gimbal_ID = 0x123,
   CAN_referee_data = 0x05,
 
-  CAN_HT_MOTOR_ID1 = 0x01,
-  CAN_HT_MOTOR_ID2 = 0x02,
-  CAN_HT_MOTOR_ID3 = 0x03,
-  CAN_HT_MOTOR_ID4 = 0x04,
-
+  // CAN_HT_MOTOR_ID1 = 0x01,
+  // CAN_HT_MOTOR_ID2 = 0x02,
+  // CAN_HT_MOTOR_ID3 = 0x03,
+  // CAN_HT_MOTOR_ID4 = 0x04,
   CAN_LK_MOTOR_ID1 = 0x141,
   CAN_LK_MOTOR_ID2 = 0x142,
   CAN_LK_MOTOR_ID3 = 0x143,
 
   CAN_DM_CLEAR_ERROR_ID = 0x7FF,
   CAN_DM_IMU_ID = 0x11,
-  CAN_DM_MOTOR_ID4 = 0x204,
+  
+  CAN_DM_MOTOR_ID1 = 0x11,
+  CAN_DM_MOTOR_ID2 = 0x12,
+  CAN_DM_MOTOR_ID3 = 0x13,
+  CAN_DM_MOTOR_ID4 = 0x14,
 
   CAN_SUPER_CAP_ID = 0x211,
   CAN_SUPER_CAP_SET_ID = 0x210,
@@ -69,12 +77,13 @@ typedef enum
 typedef struct
 {
     uint16_t ecd;
-    int16_t speed_rpm;
+    int16_t speed_rpm;    //rpm
     int16_t given_current;
     uint8_t temperate;
     int16_t last_ecd;
 	fp32 angle;
     int32_t ecd_count;
+    uint32_t last_update_time;
 } motor_measure_t;
 
 typedef struct
@@ -103,9 +112,9 @@ typedef struct
 	int p_int;
     int v_int;
     int t_int;
-    float pos;
-    float vel;
-    float torque;
+    float pos;    //rad
+    float vel;    //rad/s
+    float torque; //N·m
     uint8_t mos_temperate;
 	uint8_t rotor_temperate;
 } dm_motor_measure_t;
@@ -147,7 +156,7 @@ typedef struct
   {                                                                              \
     (ptr)->last_ecd = (ptr)->ecd;                                                \
     (ptr)->ecd = uint_to_float(                                                  \
-        (uint16_t)(((data)[1] << 8) | (data)[2]), P_MIN, P_MAX, 16) * 180.0f / PI;   \
+        (uint16_t)(((data)[1] << 8) | (data)[2]), HT_P_MIN, HT_P_MAX, 16) * 180.0f / PI; \
     if ((ptr)->ecd > 180.0f)                                                     \
     {                                                                            \
       (ptr)->ecd -= 360.0f;                                                      \
@@ -157,10 +166,10 @@ typedef struct
       (ptr)->ecd += 360.0f;                                                      \
     }                                                                            \
     (ptr)->velocity_rad_s = uint_to_float(                                       \
-        (uint16_t)(((data)[3] << 4) | ((data)[4] >> 4)), V_MIN, V_MAX, 12);      \
+        (uint16_t)(((data)[3] << 4) | ((data)[4] >> 4)), HT_V_MIN, HT_V_MAX, 12); \
     (ptr)->real_torque = uint_to_float(                                          \
         (uint16_t)((((data)[4] & 0x0FU) << 8) | (data)[5]),                      \
-        T_MIN, T_MAX, 12);                                                       \
+        HT_T_MIN, HT_T_MAX, 12);                                                 \
   } while (0)
 
 #define get_superpower_measure(ptr, data)                                        \
@@ -184,9 +193,10 @@ typedef struct
     (ptr)->p_int = (uint16_t)(((data)[1] << 8) | (data)[2]);                   \
     (ptr)->v_int = (uint16_t)(((data)[3] << 4) | ((data)[4] >> 4));            \
     (ptr)->t_int = (uint16_t)((((data)[4] & 0x0F) << 8) | (data)[5]);          \
-    (ptr)->pos = uint_to_float((ptr)->p_int, P_MIN, P_MAX, 16);                \
-    (ptr)->vel = uint_to_float((ptr)->v_int, V_MIN, V_MAX, 12);                \
-    (ptr)->torque = uint_to_float((ptr)->t_int, Tor_MIN, Tor_MAX, 12);         \
+    (ptr)->pos = rad_format(uint_to_float((ptr)->p_int, DM_P_MIN , DM_P_MAX, 16));   \
+    (ptr)->vel = uint_to_float((ptr)->v_int, DM_V_MIN, DM_V_MAX, 12);                \
+    (ptr)->torque = uint_to_float((ptr)->t_int, DM_T_MIN, DM_T_MAX, 12);         \
+    (ptr)->mos_temperate   = (data)[6];                                        \
     (ptr)->rotor_temperate = (data)[7];                                       \
   } while (0)
 
@@ -218,8 +228,5 @@ static inline float uint_to_float(int x_int, float x_min, float x_max, int bits)
   return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
 };
 #define LIMIT_MIN_MAX(x,min,max) (x) = (((x)<=(min))?(min):(((x)>=(max))?(max):(x)))
-
-
-
 
 #endif // 

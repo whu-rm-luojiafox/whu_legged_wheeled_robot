@@ -1,5 +1,7 @@
 #include "uart_receive.h"
+#include "cmsis_os.h"
 #include "referee.h"
+#include <string.h>
 
 uint8_t buffer[sizeof(uart_data_t)];//用于存储完整的数据包
 uint8_t Count=0;//接收状态标签

@@ -7,7 +7,7 @@ typedef enum
 {
   CHASSIS_MODE_OFF=0,
   CHASSIS_MOVE_ON,
-  CHASSIS_MODE_DEBUG,
+  CHASSIS_MODE_DEBUG, // Reserved legacy value (2); handled as OFF.
   CHASSIS_MODE_INIT,
 }RC_chassis_mode_e;
 
