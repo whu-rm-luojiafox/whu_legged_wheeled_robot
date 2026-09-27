@@ -109,7 +109,7 @@ fp32 normal_move_scale = 1.0f;
 fp32 SIT_HIGH = 0.12f;
 /* A non-zero zero-command bias makes the chassis drive immediately after
  * enable. Keep feed-forward disabled until it is identified on a test stand. */
-#define FORWARD_SPEED 0.0f
+#define FORWARD_SPEED 0.4f
 
 extern gimbal_control_t gimbal_control;
 
@@ -1049,7 +1049,7 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 		+ LQR[1][1] * (bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED - bl_ctrl->chassis_posture_info.foot_speed_KF)
 		+ LQR[1][2]*( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total)
 		+ LQR[1][3]*( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
-	) ;
+	);
 
 	// 统一的离地处理函数
 	if (bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1)
