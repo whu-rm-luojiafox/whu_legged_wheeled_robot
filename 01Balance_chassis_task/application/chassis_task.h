@@ -151,7 +151,7 @@
 // -------------  Limit info ------------- 
 #define MAX_ACCL 13000.0f
 #define MAX_ACCL_JOINT 18.0f
-#define MAX_FOOT_OUTPUT 2048
+#define MAX_FOOT_OUTPUT 6.3
 
 // ------------- Mech info ------------- 
 #define L1 0.21f//0.15f

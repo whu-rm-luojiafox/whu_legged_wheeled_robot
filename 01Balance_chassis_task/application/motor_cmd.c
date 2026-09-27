@@ -22,7 +22,7 @@ void motor_cmd_task(void const *pvParameters)
         chassis_move.super_power.refereePowerLimit = robot_state.chassis_power_limit;
         chassis_move.super_power.refereeEnergyBuffer = power_heat_data.buffer_energy;
         chassis_move.super_power.activeChargingLimitRatio = 80;
-        CAN_SuperPower_Control(chassis_move.super_power);
+        // CAN_SuperPower_Control(chassis_move.super_power);
         //轮毂
 
         osDelay(1);
