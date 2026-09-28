@@ -165,9 +165,7 @@
 #define LEG_OFFSET       30.0f// 标定姿态相对主动杆朝外水平的软件角偏置（轴侧逆时针为正）
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
 #define LOWER_SUPPORT_FORCE 10.0f
-#define MOVE_LOWER_BOUND 0.5f
 #define EXIT_PITCH_ANGLE 0.2f
-#define DANGER_PITCH_ANGLE 0.5f
 
 #define FEED_f 40.0f
 
@@ -200,14 +198,12 @@ typedef enum
     FOOT_LAUNCHING,
     JOINT_LAUNCHING,
     BALANCING_READY,
-    JOINT_REDUCING,
 } chassis_balancing_mode_e;
 
 typedef enum
 {
     NONE,
     NORMAL_MOVING_MODE,
-    ABNORMAL_MOVING_MODE,
     JUMPING_MODE,
     FLY_MODE,
     TK_MODE,
@@ -236,7 +232,6 @@ typedef enum
     NORMAL_MODE,
     HIGH_MODE,
     EXTREMELY_HIGH_MODE,
-    CHANGING_HIGH,
 } chassis_high_mode_e;
 
 typedef enum
@@ -402,14 +397,10 @@ typedef struct
     bool_t init_flag;
 	suspend_flag_e suspend_flag_L, last_suspend_flag_L;
     suspend_flag_e suspend_flag_R, last_suspend_flag_R;
-    bool_t Ignore_Off_Ground;
-    bool_t abnormal_flag;
     bool_t rotation_flag;
     bool_t set_pos_after_moving;
     bool_t overpower_warning_flag;
     bool_t last_overpower_warning_flag;
-    bool_t stablize_high_flag;
-    bool_t last_stablize_high_flag;
 
     // 跳跃相关标志
     uint8_t jump_prepare_complete;    // 跳跃准备完成标志

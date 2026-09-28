@@ -1,5 +1,5 @@
-#ifndef CHASSIS_POWER_CONTROL_H
-#define CHASSIS_POWER_CONTROL_H
+#ifndef _CHASSIS_POWER_H
+#define _CHASSIS_POWER_H
 #include "struct_typedef.h"
 #include "chassis_task.h"
 extern float Plimit;
