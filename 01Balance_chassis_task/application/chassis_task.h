@@ -142,10 +142,10 @@
 
 //腿长设定PID
 #define LEG_SET_PID_KP 200.0f
-#define LEG_SET_PID_KI 0.0f
+#define LEG_SET_PID_KI 0.5f
 #define LEG_SET_PID_KD 300.0f //350.0f
 #define LEG_SET_PID_OUT 50.0f
-#define LEG_SET_PID_IOUT 10.0f
+#define LEG_SET_PID_IOUT 4.0f
 
 
 // -------------  Limit info ------------- 
@@ -164,7 +164,6 @@
 #define WHEEL_RADIUS 0.068f
 #define LEG_OFFSET       30.0f// 标定姿态相对主动杆朝外水平的软件角偏置（轴侧逆时针为正）
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
-#define LOWER_SUPPORT_FORCE 10.0f
 #define EXIT_PITCH_ANGLE 0.2f
 
 #define FEED_f 40.0f

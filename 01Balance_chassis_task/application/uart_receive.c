@@ -88,8 +88,4 @@ const chassis_data_t *get_Uart_Chassisdata_point()
   return &uart_data.receive_chassis_data;
 }
 
-uint8_t uartChassisCommandFresh(uint32_t maxAgeMs)
-{
-  return chassisPacketSeen &&
-         (uint32_t)(HAL_GetTick() - chassisPacketTickMs) <= maxAgeMs;
-}
+

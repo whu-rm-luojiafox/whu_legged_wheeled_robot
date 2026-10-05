@@ -30,7 +30,6 @@ typedef struct
 void uart_start_task(void const  *pvParameters);
 
 const chassis_data_t *get_Uart_Chassisdata_point();
-uint8_t uartChassisCommandFresh(uint32_t maxAgeMs);
 
 #endif
 

@@ -1,4 +1,5 @@
 {
     "files.encoding": "utf8",
-    "files.autoGuessEncoding": false
+    "files.autoGuessEncoding": false,
+    "emberprobe.openocdPath": "c:\\Users\\ASUS\\AppData\\Roaming\\Code\\User\\globalStorage\\bakesheep.emberprobe\\emberprobe\\openocd\\bin\\openocd.exe"
 }

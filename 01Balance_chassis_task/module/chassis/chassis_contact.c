@@ -1,5 +1,6 @@
 # include "chassis_contact.h"
 # include "LQR.h"
+# include "task.h"
 //物理属性
 const fp32 g = 9.81f;
 const fp32 m_w = 0.51f;
@@ -49,53 +50,54 @@ void Supportive_Force_Calculate(chassis_move_t * detect)
 
 }
 
-fp32 ground_stable_timer = 0;  // 添加这行
+TickType_t offTickL = 0, onTickL = 0;
+TickType_t offTickR = 0, onTickR = 0;
+
+/*--------------------------- Off Ground Detect --------------------------*/
 void Chassis_Status_Detect(chassis_move_t *detect)
 {
-	/*--------------------------- Off Ground Detect --------------------------*/
-
 	Supportive_Force_Calculate(detect);
-	
-	if((detect->flag_info.last_suspend_flag_L ==OFF_GROUND&&detect->flag_info.suspend_flag_L ==ON_GROUND) ||
-		(detect->flag_info.last_suspend_flag_R ==OFF_GROUND&&detect->flag_info.suspend_flag_R ==ON_GROUND))
+
+	TickType_t now = xTaskGetTickCount();
+	if (detect->mode.jumping_stage == EXTENDING_LEGS)
 	{
-		ground_stable_timer = pdMS_TO_TICKS(450);  // 检测到落地，启动450ms计时器
-	}
-	if(ground_stable_timer > 0)
-	{
-		ground_stable_timer--;
-		detect->flag_info.suspend_flag_L = ON_GROUND;
-		detect->flag_info.suspend_flag_R = ON_GROUND;
+		detect->flag_info.suspend_flag_L = detect->flag_info.suspend_flag_R = ON_GROUND;
+		offTickL = onTickL = offTickR = onTickR = 0;	
 	}
 	else
 	{
-		if (detect->mode.jumping_stage == EXTENDING_LEGS)
-			detect->flag_info.suspend_flag_L = detect->flag_info.suspend_flag_R = ON_GROUND;
-		else
+		if (detect->torque_info.supportive_force_L <= LOWER_SUPPORT_FORCE  )
+			{
+				if (offTickL == 0) offTickL = now;
+				if (now - offTickL >= pdMS_TO_TICKS(20))
+				detect->flag_info.suspend_flag_L = OFF_GROUND;			
+			}
+		else offTickL = 0;
+		if (detect->torque_info.supportive_force_L > LOWER_SUPPORT_FORCE + 5.0f)
 		{
-			if( (detect->torque_info.supportive_force_L <= LOWER_SUPPORT_FORCE &&
-				detect->chassis_posture_info.chassis_posture_L.leg_length > 0.20f ))
-				{
-					detect->flag_info.suspend_flag_L = OFF_GROUND;	
-				}
-			else if (detect->torque_info.supportive_force_L > LOWER_SUPPORT_FORCE + 5.0f)  
-			// 添加滞回区间，例如+10N的阈值差
-			{
+			if (onTickL == 0) onTickL = now;
+			if (now - onTickL >= pdMS_TO_TICKS(30))
 				detect->flag_info.suspend_flag_L = ON_GROUND;
-			}
-			if(( detect->torque_info.supportive_force_R <= LOWER_SUPPORT_FORCE &&
-				detect->chassis_posture_info.chassis_posture_R.leg_length > 0.20f ))
-				{
-					detect->flag_info.suspend_flag_R = OFF_GROUND;			
-				}
-			else if (detect->torque_info.supportive_force_R > LOWER_SUPPORT_FORCE + 5.0f)  
-			// 添加滞回区间，例如+10N的阈值差
-			{
-				detect->flag_info.suspend_flag_R = ON_GROUND;
-			}
 		}
-	}		
-}
+		else onTickL = 0;
+
+		if (detect->torque_info.supportive_force_R <= LOWER_SUPPORT_FORCE )
+		{
+			if (offTickR == 0) offTickR = now;
+			if (now - offTickR >= pdMS_TO_TICKS(20))
+				detect->flag_info.suspend_flag_R = OFF_GROUND;
+		}
+		else offTickR = 0;
+		if (detect->torque_info.supportive_force_R > LOWER_SUPPORT_FORCE + 5.0f)
+		{
+			if (onTickR == 0) onTickR = now;
+			if (now - onTickR >= pdMS_TO_TICKS(30))
+				detect->flag_info.suspend_flag_R = ON_GROUND;
+		}
+		else onTickR = 0;
+	}
+}		
+
 
 void Chassis_Contact_ApplyAirborne_Torque(chassis_move_t *bl_ctrl)
 {

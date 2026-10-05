@@ -33,6 +33,7 @@
 #include "ist8310driver.h"
 #include "pid.h"
 #include "ahrs.h"
+#include <math.h>
 
 #include "calibrate_task.h"
 #include "detect_task.h"
@@ -158,8 +159,15 @@ static fp32 INS_mag[3] = {0.0f, 0.0f, 0.0f};
 static fp32 INS_quat[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 fp32 INS_angle[3] = {0.0f, 0.0f, 0.0f};      //euler angle, unit rad.欧拉角 单位 rad
 
+//获得完整pitch范围
+static fp32 quatToFullPitch(const fp32 q[4])
+{
+    const fp32 sinPitch = 2.0f * (q[0] * q[2] - q[1] * q[3]);
+    const fp32 cosPitch = q[0] * q[0] - q[1] * q[1]
+                         - q[2] * q[2] + q[3] * q[3];
 
-
+    return atan2f(sinPitch, cosPitch);  // -π～π，单位 rad
+}
 
 
 /**
@@ -267,8 +275,8 @@ void INS_task(void const *pvParameters)
 
         AHRS_update(INS_quat, timing_time, INS_gyro, accel_fliter_3, INS_mag);
         get_angle(INS_quat, INS_angle + INS_YAW_ADDRESS_OFFSET, INS_angle + INS_PITCH_ADDRESS_OFFSET, INS_angle + INS_ROLL_ADDRESS_OFFSET);
-
-
+        //pitch完成范围值覆盖原值
+        INS_angle[INS_PITCH_ADDRESS_OFFSET] = quatToFullPitch(INS_quat);
         //because no use ist8310 and save time, no use
         if(mag_update_flag &= 1 << IMU_DR_SHFITS)
         {

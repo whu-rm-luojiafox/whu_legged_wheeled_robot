@@ -551,11 +551,6 @@
               <FilePath>..\application\calibrate_task.c</FilePath>
             </File>
             <File>
-              <FileName>chassis_behaviour.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\application\chassis_behaviour.c</FilePath>
-            </File>
-            <File>
               <FileName>detect_task.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\application\detect_task.c</FilePath>
@@ -684,6 +679,16 @@
               <FileName>chassis_recovery.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\module\chassis\chassis_recovery.h</FilePath>
+            </File>
+            <File>
+              <FileName>chassis_climb.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\module\chassis\chassis_climb.c</FilePath>
+            </File>
+            <File>
+              <FileName>chassis_climb.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\module\chassis\chassis_climb.h</FilePath>
             </File>
             <File>
               <FileName>chassis_slip.c</FileName>
