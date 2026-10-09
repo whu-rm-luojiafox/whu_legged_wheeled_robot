@@ -453,21 +453,18 @@ typedef struct
     pid_type_def leg_L_length_pid;    // 腿长设定PID
     pid_type_def leg_R_length_pid;    // 腿长设定PID
 
-    fp32 vx;     // chassis vertical speed, positive means forward,unit m/s. 底盘速度 前进方向 前为正，单位 m/s
-    fp32 vy;     // chassis horizontal speed, positive means letf,unit m/s.底盘速度 左右方向 左为正  单位 m/s
-    fp32 wz;     // chassis rotation speed, positive means counterclockwise,unit rad/s.底盘旋转角速度，逆时针为正 单位 rad/s
-    fp32 vx_set; // chassis set vertical speed,positive means forward,unit m/s.底盘设定速度 前进方向 前为正，单位 m/s
-    fp32 vy_set; // chassis set horizontal speed,positive means left,unit m/s.底盘设定速度 左右方向 左为正，单位 m/s
-    fp32 wz_set; // chassis set rotation speed,positive means counterclockwise,unit rad/s.底盘设定旋转角速度，逆时针为正 单位 rad/s
+    fp32 vx;     //  底盘速度 前进方向 前为正，单位 m/s
+    fp32 vy;     // 底盘速度 左右方向 左为正  单位 m/s
+    fp32 wz;     // 底盘旋转角速度，逆时针为正 单位 rad/s
+    fp32 vx_set; // 底盘设定速度 前进方向 前为正，单位 m/s
+    fp32 vy_set; // 底盘设定速度 左右方向 左为正，单位 m/s
+    fp32 wz_set; // 底盘设定旋转角速度，逆时针为正 单位 rad/s
     fp32 chassis_yaw_set;
 
     fp32 vx_max_speed;
     fp32 vx_min_speed;
     fp32 vy_max_speed;
     fp32 vy_min_speed;
-    fp32 chassis_yaw;
-    fp32 chassis_pitch;
-    fp32 chassis_roll;
     gimbal_motor_t gimbal_yaw_motor;
     joint_motor_t joint_motor_1, joint_motor_2, joint_motor_3, joint_motor_4;
     foot_motor_t foot_motor_L, foot_motor_R;

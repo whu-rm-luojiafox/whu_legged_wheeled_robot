@@ -73,7 +73,7 @@ int temp;
 chassis_move_t chassis_move;
 
 //速度斜坡函数
-ramp_function_source_t speed_ramp_vx, speed_ramp_vy, speed_ramp_wz;
+ramp_function_source_t  speed_ramp_wz;
 
 
 fp32 suspend_LQR[2][6] = {
@@ -104,14 +104,14 @@ fp32 rotate_move_scale_list[11] = {0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 
 
 
 fp32 rollP, rollD, rollI, roll_angle_deadband = 0.004f, roll_gyro_deadband = 0.005f, leg_dlength_deadband = 0.0f;
-fp32  rc_angle_temp, temp_max_spd,normalized_speed, rotate_move_offset, delta_theta, delta_theta_temp, acc_step = 0.3f;
+fp32 normalized_speed,move_angle;
 fp32 normal_move_scale = 1.0f;
 fp32 SIT_HIGH = 0.12f;
 /* A non-zero zero-command bias makes the chassis drive immediately after
  * enable. Keep feed-forward disabled until it is identified on a test stand. */
 #define FORWARD_SPEED 0.0f
-#define OFFEST_PITCH 0.0f
-#define OFFEST_ANGLE 0.06981f
+#define OFFEST_PITCH 0.1072f
+#define OFFEST_ANGLE 0.1172f
 
 extern gimbal_control_t gimbal_control;
 
@@ -232,10 +232,8 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 	chassis_feedback_update(chassis_move_init);
 	chassis_move_init->flag_info.init_flag = 0;
 
-	chassis_move_init->gimbal_yaw_motor.relative_angle_init =44.3f;
+	chassis_move_init->gimbal_yaw_motor.relative_angle_init =101.8f;
 	// 初始化速度斜坡函数
-	ramp_init(&speed_ramp_vx, 0.003f, 2.2f, -2.2f);
-	ramp_init(&speed_ramp_vy, 0.003f, 2.2f, -2.2f);
 	ramp_init(&speed_ramp_wz, 0.004f,15.0f, -15.0f);
 		
 }
@@ -368,17 +366,14 @@ void chassis_feedback_update(chassis_move_t *fdb)
 	//云台相对角度更新
 	fdb->gimbal_yaw_motor.relative_angle = theta_format(fdb->gimbal_yaw_motor.gimbal_motor_measure->angle);
 
-	ramp_calc(&speed_ramp_vx, fdb->chassis_data_->vx_set);
-	ramp_calc(&speed_ramp_vy, fdb->chassis_data_->vy_set);
 	ramp_calc(&speed_ramp_wz, fdb->chassis_data_->wz_set);
-	if(speed_ramp_vx.out>=0)
-	{
-		normalized_speed = fp32_constrain(sqrt(speed_ramp_vx.out*speed_ramp_vx.out+speed_ramp_vy.out*speed_ramp_vy.out),-2.2f,2.2f);
-	}
-	else
-	{
-		normalized_speed = -fp32_constrain(sqrt(speed_ramp_vx.out*speed_ramp_vx.out+speed_ramp_vy.out*speed_ramp_vy.out),-2.2f,2.2f);
-	}
+	//合成 x y 方向速度以及限幅
+	if(fdb->chassis_data_->vx_set>=0)normalized_speed = fp32_constrain(sqrt(fdb->chassis_data_->vx_set*fdb->chassis_data_->vx_set+fdb->chassis_data_->vy_set* fdb->chassis_data_->vy_set),-2.8f,2.8f);
+	else normalized_speed = -fp32_constrain(sqrt(fdb->chassis_data_->vx_set*fdb->chassis_data_->vx_set+fdb->chassis_data_->vy_set* fdb->chassis_data_->vy_set),-2.8f,2.8f);
+	
+	move_angle = atan2f(fdb->chassis_data_->vy_set,fdb->chassis_data_->vx_set) * 180 /PI;
+	if(move_angle>90) move_angle -= 180.0f;
+	else if (move_angle<-90) move_angle += 180.0f;
 }
 
 static void chassis_set_mode(chassis_move_t *chassis_move_mode)
@@ -653,8 +648,8 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 					&& fabs(target_value_set->gimbal_yaw_motor.relative_angle - target_value_set->gimbal_yaw_motor.relative_angle_init) > 0.6f)
 				{
 					float current_relative_angle = target_value_set->gimbal_yaw_motor.relative_angle;
-					float target_relative_angle = target_value_set->gimbal_yaw_motor.relative_angle_init;
-					float angle_diff = current_relative_angle - target_relative_angle;
+					float target_relative_angle = target_value_set->gimbal_yaw_motor.relative_angle_init - move_angle;
+					float angle_diff = target_relative_angle - current_relative_angle;
 					
 					// 将角度差规范化到[-180, 180]区间
 					if (angle_diff > 180.0f) {
@@ -662,17 +657,12 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 					} else if (angle_diff < -180.0f) {
 						angle_diff += 360.0f;
 					}
-					
 					// 使用规范化后的角度差作为PID输入
 					target_value_set->gimbal_yaw_motor.relative_limit = angle_diff;
-					
-					target_value_set->chassis_posture_info.yaw_angle_sett -= 
-						PID_calc(&target_value_set->chassis_yaw_pid, 
-								angle_diff,  // 使用规范化后的角度差
-								0.0f) * 0.004f;  // 目标值是0（角度差为0）
-					
+					target_value_set->chassis_posture_info.yaw_angle_sett += 
+						PID_calc(&target_value_set->chassis_yaw_pid, angle_diff,0.0f) * 0.004f;  
 					target_value_set->chassis_posture_info.yaw_gyro_set = 0.0f;	
-					target_value_set->chassis_posture_info.foot_speed_set = 0.60f * target_value_set->chassis_posture_info.foot_speed_set;
+					target_value_set->chassis_posture_info.foot_speed_set = 0.8 * target_value_set->chassis_posture_info.foot_speed_set;
 				}
 				else
 				{

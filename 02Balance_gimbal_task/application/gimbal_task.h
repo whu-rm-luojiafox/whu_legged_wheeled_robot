@@ -240,7 +240,7 @@ typedef struct
   float pitch_angle;//pitch轴实时角度
 	chassis_mode_e chassis_mode;//底盘模式
 	shoot_mode_e shoot_mode;//射击模式
-  uint8_t jump_flag,sit_flag,high_flag,fric_flag,auto_flag,ui_init_flag,reset_flag;
+  uint8_t jump_flag,sit_flag,climb_flag,fric_flag,auto_flag,ui_init_flag,recovery_flag;
   float fric_speed_set;
 }chassis_data_t;
 
