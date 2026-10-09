@@ -142,10 +142,10 @@
 
 //腿长设定PID
 #define LEG_SET_PID_KP 200.0f
-#define LEG_SET_PID_KI 0.0f
+#define LEG_SET_PID_KI 0.5f
 #define LEG_SET_PID_KD 300.0f //350.0f
 #define LEG_SET_PID_OUT 50.0f
-#define LEG_SET_PID_IOUT 10.0f
+#define LEG_SET_PID_IOUT 4.0f
 
 
 // -------------  Limit info ------------- 
@@ -164,10 +164,7 @@
 #define WHEEL_RADIUS 0.068f
 #define LEG_OFFSET       30.0f// 标定姿态相对主动杆朝外水平的软件角偏置（轴侧逆时针为正）
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
-#define LOWER_SUPPORT_FORCE 10.0f
-#define MOVE_LOWER_BOUND 0.5f
 #define EXIT_PITCH_ANGLE 0.2f
-#define DANGER_PITCH_ANGLE 0.5f
 
 #define FEED_f 40.0f
 
@@ -200,14 +197,12 @@ typedef enum
     FOOT_LAUNCHING,
     JOINT_LAUNCHING,
     BALANCING_READY,
-    JOINT_REDUCING,
 } chassis_balancing_mode_e;
 
 typedef enum
 {
     NONE,
     NORMAL_MOVING_MODE,
-    ABNORMAL_MOVING_MODE,
     JUMPING_MODE,
     FLY_MODE,
     TK_MODE,
@@ -236,7 +231,6 @@ typedef enum
     NORMAL_MODE,
     HIGH_MODE,
     EXTREMELY_HIGH_MODE,
-    CHANGING_HIGH,
 } chassis_high_mode_e;
 
 typedef enum
@@ -402,14 +396,10 @@ typedef struct
     bool_t init_flag;
 	suspend_flag_e suspend_flag_L, last_suspend_flag_L;
     suspend_flag_e suspend_flag_R, last_suspend_flag_R;
-    bool_t Ignore_Off_Ground;
-    bool_t abnormal_flag;
     bool_t rotation_flag;
     bool_t set_pos_after_moving;
     bool_t overpower_warning_flag;
     bool_t last_overpower_warning_flag;
-    bool_t stablize_high_flag;
-    bool_t last_stablize_high_flag;
 
     // 跳跃相关标志
     uint8_t jump_prepare_complete;    // 跳跃准备完成标志
@@ -463,21 +453,18 @@ typedef struct
     pid_type_def leg_L_length_pid;    // 腿长设定PID
     pid_type_def leg_R_length_pid;    // 腿长设定PID
 
-    fp32 vx;     // chassis vertical speed, positive means forward,unit m/s. 底盘速度 前进方向 前为正，单位 m/s
-    fp32 vy;     // chassis horizontal speed, positive means letf,unit m/s.底盘速度 左右方向 左为正  单位 m/s
-    fp32 wz;     // chassis rotation speed, positive means counterclockwise,unit rad/s.底盘旋转角速度，逆时针为正 单位 rad/s
-    fp32 vx_set; // chassis set vertical speed,positive means forward,unit m/s.底盘设定速度 前进方向 前为正，单位 m/s
-    fp32 vy_set; // chassis set horizontal speed,positive means left,unit m/s.底盘设定速度 左右方向 左为正，单位 m/s
-    fp32 wz_set; // chassis set rotation speed,positive means counterclockwise,unit rad/s.底盘设定旋转角速度，逆时针为正 单位 rad/s
+    fp32 vx;     //  底盘速度 前进方向 前为正，单位 m/s
+    fp32 vy;     // 底盘速度 左右方向 左为正  单位 m/s
+    fp32 wz;     // 底盘旋转角速度，逆时针为正 单位 rad/s
+    fp32 vx_set; // 底盘设定速度 前进方向 前为正，单位 m/s
+    fp32 vy_set; // 底盘设定速度 左右方向 左为正，单位 m/s
+    fp32 wz_set; // 底盘设定旋转角速度，逆时针为正 单位 rad/s
     fp32 chassis_yaw_set;
 
     fp32 vx_max_speed;
     fp32 vx_min_speed;
     fp32 vy_max_speed;
     fp32 vy_min_speed;
-    fp32 chassis_yaw;
-    fp32 chassis_pitch;
-    fp32 chassis_roll;
     gimbal_motor_t gimbal_yaw_motor;
     joint_motor_t joint_motor_1, joint_motor_2, joint_motor_3, joint_motor_4;
     foot_motor_t foot_motor_L, foot_motor_R;

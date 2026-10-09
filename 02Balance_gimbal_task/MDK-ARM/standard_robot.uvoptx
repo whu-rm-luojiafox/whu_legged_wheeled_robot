@@ -198,6 +198,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>key_mode_flag</ItemText>
         </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>uart_data</ItemText>
+        </Ww>
       </WatchWindow1>
       <MemoryWindow1>
         <Mm>

@@ -75,7 +75,6 @@ void gimbal_set_mode(gimbal_control_t *gimbal_control)
 	}
 	if(gimbal_control->yaw_ctrl_data->chassis_mode==CHASSIS_MODE_INIT)
 	{
-		gimbal_control->gimbal_yaw_motor.gimbal_motor_mode=GIMBAL_MOTOR_INIT;
 	}
 }
 void gimbal_feedback_update(gimbal_control_t *gimbal_control)
@@ -96,9 +95,7 @@ void gimbal_set_control(gimbal_control_t *gimbal_control)
 	{
 		gimbal_control->gimbal_yaw_motor.absolute_angle_set=gimbal_control->yaw_ctrl_data->yaw_angle_set;
 	}
-	else  if(gimbal_control->gimbal_yaw_motor.gimbal_motor_mode==GIMBAL_MOTOR_INIT)
-	{
-	}	
+
 }
 void gimbal_control_loop(gimbal_control_t *gimbal_control,chassis_move_t *chassis_move)
 {
@@ -106,6 +103,15 @@ void gimbal_control_loop(gimbal_control_t *gimbal_control,chassis_move_t *chassi
 	{
 		gimbal_control->gimbal_yaw_motor.yaw_given_current=0;
 		gimbal_control->gimbal_yaw_motor.motor_gyro = 0;
+		PID_clear(&gimbal_control->gimbal_yaw_motor.gimbal_motor_angle_pid);
+		PID_clear(&gimbal_control->gimbal_yaw_motor.gimbal_motor_gyro_pid);
+	}
+	else if (chassis_move->chassis_posture_info.pitch_angle > PI_2 || chassis_move->chassis_posture_info.pitch_angle < -PI_2 )
+	{
+		gimbal_control->gimbal_yaw_motor.yaw_given_current=0;
+		gimbal_control->gimbal_yaw_motor.motor_gyro = 0;
+		PID_clear(&gimbal_control->gimbal_yaw_motor.gimbal_motor_angle_pid);
+		PID_clear(&gimbal_control->gimbal_yaw_motor.gimbal_motor_gyro_pid);
 	}
 	else if(gimbal_control->gimbal_yaw_motor.gimbal_motor_mode==GIMBAL_MOTOR_GYRO )
 	{
@@ -114,9 +120,7 @@ void gimbal_control_loop(gimbal_control_t *gimbal_control,chassis_move_t *chassi
 		PID_calc(&gimbal_control->gimbal_yaw_motor.gimbal_motor_gyro_pid,gimbal_control->gimbal_yaw_motor.motor_gyro,gimbal_control->gimbal_yaw_motor.gimbal_motor_angle_pid.out);//-0.08*chassis_move->chassis_posture_info.yaw_gyro);
 		gimbal_control->gimbal_yaw_motor.yaw_given_current= gimbal_control->gimbal_yaw_motor.gimbal_motor_gyro_pid.out;
 	}
-	else if(gimbal_control->gimbal_yaw_motor.gimbal_motor_mode==GIMBAL_MOTOR_INIT)
-	{
-	}
+
 }
 void gimbal_task(void const *pvParameters)
 {

@@ -27,7 +27,6 @@ typedef enum
 {
     GIMBAL_MOTOR_OFF = 0, // 电机原始值控制
     GIMBAL_MOTOR_GYRO,    // 电机陀螺仪角度控制
-    GIMBAL_MOTOR_INIT,   
 } gimbal_motor_mode_e;
 typedef struct
 {

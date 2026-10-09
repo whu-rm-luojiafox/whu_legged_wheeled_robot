@@ -8,6 +8,8 @@ uint8_t Count=0;//接收状态标签
 uint16_t received = 0;//当前接收到的数据长度
 uint8_t Usart_Receive[1];//用于接收单个字节的数据
 uart_data_t uart_data;
+static volatile uint32_t chassisPacketTickMs = 0u;
+static volatile uint8_t chassisPacketSeen = 0u;
 
 shoot_data_t* shoot_data_get;   
 /*发送数据结构体*/
@@ -57,6 +59,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             {
                 // 无论是否校验成功，都重置接收状态
                 memcpy(&uart_data, buffer, sizeof(uart_data_t));
+                chassisPacketTickMs = HAL_GetTick();
+                chassisPacketSeen = 1u;
                 received = 0;
                 Count = 0;
             }
@@ -83,3 +87,5 @@ const chassis_data_t *get_Uart_Chassisdata_point()
 {
   return &uart_data.receive_chassis_data;
 }
+
+
