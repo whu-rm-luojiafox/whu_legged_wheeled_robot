@@ -185,7 +185,7 @@ Leg_data_r = Leg_data_l;
 
 % 矩阵Q中，以下列分别对应：
 %        s     ds     phi     dphi     theta_ll dtheta_ll theta_lr dtheta_lr theta_b dtheta_b
-lqr_Q = [16,    0,     0,      0,       0,       0,        0,       0,        0,      0;
+lqr_Q = [30,    0,     0,      0,       0,       0,        0,       0,        0,      0;
          0,    1,     0,      0,       0,       0,        0,       0,        0,      0;
          0,    0,     1000,      0,       0,       0,        0,       0,        0,      0;
          0,    0,     0,      30,       0,       0,        0,       0,        0,      0;

@@ -23,6 +23,13 @@
 #define SIGN(x) ((x) > 0 ? 1 : ((x) < 0 ? -1 : 0))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+/* Verify that negative calibrated leg angles point toward the rear. */
+#define FOOT_LAUNCH_LEG_TARGET    (-0.15f)
+#define FOOT_LAUNCH_LEG_MIN       (-0.23f)
+#define FOOT_LAUNCH_LEG_MAX       PI_2
+#define FOOT_LAUNCH_LEG_GYRO_MAX  0.3f
+#define FOOT_LAUNCH_LEG_LENGTH    0.30f
+
 #define LimitMax(input, max)     \
 	{                            \
 		if ((input) > max)       \
@@ -106,7 +113,6 @@ fp32 rotate_move_scale_list[11] = {0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 
 fp32 rollP, rollD, rollI, roll_angle_deadband = 0.004f, roll_gyro_deadband = 0.005f, leg_dlength_deadband = 0.0f;
 fp32 normalized_speed,move_angle;
 fp32 normal_move_scale = 1.0f;
-fp32 SIT_HIGH = 0.12f;
 /* A non-zero zero-command bias makes the chassis drive immediately after
  * enable. Keep feed-forward disabled until it is identified on a test stand. */
 #define FORWARD_SPEED 0.0f
@@ -191,7 +197,7 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 		CAN_dm_enable(i);
 		vTaskDelay(2);
 	}
-	//CAN_dm_save_0_point(4);
+	// CAN_dm_save_0_point(4);
 	/* -------------------------param get---------------------------- */
 	chassis_move_init->joint_motor_1.motor_measure = get_DM_motor_measure_point(0);
 	chassis_move_init->joint_motor_2.motor_measure = get_DM_motor_measure_point(1);
@@ -428,10 +434,6 @@ static void chassis_set_mode(chassis_move_t *chassis_move_mode)
 	{
 		if(tmp ==1)
 		{
-			// CAN_dm_disable(1);
-			// CAN_dm_disable(2);
-			// CAN_dm_disable(3);
-			// CAN_dm_disable(4);
 			tmp =0;
 		}
 		chassis_move_mode->joint_motor_1.motor_mode = MOTOR_NO_FORCE;
@@ -470,9 +472,23 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
 		chassis_mode_change->mode.chassis_balancing_mode = FOOT_LAUNCHING;
 		chassis_mode_change->chassis_posture_info.yaw_angle_sett = chassis_mode_change->chassis_posture_info.yaw_angle_total;
 	}
-	else if (chassis_mode_change->mode.chassis_balancing_mode == FOOT_LAUNCHING &&
-		fabs(chassis_mode_change->chassis_posture_info.pitch_angle) < EXIT_PITCH_ANGLE)
-		chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
+	else if (
+		chassis_mode_change->mode.chassis_balancing_mode == FOOT_LAUNCHING)
+	{
+		chassis_leg_posture_t *L = &chassis_mode_change->chassis_posture_info.chassis_posture_L;
+		chassis_leg_posture_t *R = &chassis_mode_change->chassis_posture_info.chassis_posture_R;
+
+		/* Both legs must enter the allowed range and slow down. */
+		if (L->leg_angle > FOOT_LAUNCH_LEG_MIN && L->leg_angle < FOOT_LAUNCH_LEG_MAX &&
+			R->leg_angle > FOOT_LAUNCH_LEG_MIN && R->leg_angle < FOOT_LAUNCH_LEG_MAX &&
+			fabsf(L->leg_gyro) < FOOT_LAUNCH_LEG_GYRO_MAX &&
+			fabsf(R->leg_gyro) < FOOT_LAUNCH_LEG_GYRO_MAX &&
+			fabsf(chassis_mode_change->chassis_posture_info.pitch_angle) < EXIT_PITCH_ANGLE &&
+			fabsf(chassis_mode_change->chassis_posture_info.roll_angle) < 0.25f)
+		{
+			chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
+		}
+	}
 	else if (chassis_mode_change->mode.chassis_balancing_mode == JOINT_LAUNCHING)
 		chassis_mode_change->mode.chassis_balancing_mode = BALANCING_READY;
 	//跳跃模式流程
@@ -716,21 +732,9 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 	}
 
 	// ----------------- Chassis High Mode Update -----------------
-	if (target_value_set->mode.chassis_balancing_mode == FOOT_LAUNCHING)
-		target_value_set->mode.chassis_high_mode = SIT_MODE;
-	else if (target_value_set->mode.chassis_balancing_mode == JOINT_LAUNCHING)
-		target_value_set->mode.chassis_high_mode = NORMAL_MODE;
-
-	else if (target_value_set->mode.jumping_stage == CONSTACTING_LEGS_2)
-		target_value_set->mode.chassis_high_mode = SIT_MODE;
-
-	else
-		target_value_set->mode.chassis_high_mode = NORMAL_MODE;
-
+	target_value_set->mode.chassis_high_mode = NORMAL_MODE;
 	// --------- Leg Length Set ---------
-	if (target_value_set->mode.chassis_high_mode == SIT_MODE)
-		target_value_set->chassis_posture_info.ideal_high = SIT_HIGH;
-	else if (target_value_set->mode.chassis_high_mode == NORMAL_MODE)
+	if (target_value_set->mode.chassis_high_mode == NORMAL_MODE)
 		target_value_set->chassis_posture_info.ideal_high = fp32_constrain(target_value_set->chassis_data_->high_set,0.17,0.34);
 	// 跳跃阶段优先于其他模式设定腿长
 	if (target_value_set->mode.sport_mode == JUMPING_MODE)
@@ -769,8 +773,8 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 		}
 	}
 	// ==========================================
-	else if ((target_value_set->flag_info.suspend_flag_L == 1 && target_value_set->flag_info.suspend_flag_R == 1) ||
-		target_value_set->chassis_posture_info.ideal_high == SIT_HIGH )
+	else if (target_value_set->flag_info.suspend_flag_L == OFF_GROUND &&
+		target_value_set->flag_info.suspend_flag_R == OFF_GROUND)
 	{
 		target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = target_value_set->chassis_posture_info.ideal_high;
 		target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = target_value_set->chassis_posture_info.ideal_high;
@@ -785,14 +789,44 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 		target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set =
 			target_value_set->chassis_posture_info.ideal_high + 0.24f * arm_sin_f32( target_value_set->chassis_posture_info .foot_roll_angle ) / arm_cos_f32( target_value_set->chassis_posture_info .foot_roll_angle );
 	}
+
+	/* Keep the legs short while aligning; normal height resumes afterwards. */
+	if (target_value_set->mode.chassis_balancing_mode == FOOT_LAUNCHING)
+	{
+		target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
+		target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
+	}
 }
 void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 {
 	//LQR拟合矩阵数据更新
 	LQR_Data_Update(bl_ctrl);
+	if (bl_ctrl->mode.chassis_balancing_mode == FOOT_LAUNCHING)
+	{
+		chassis_leg_posture_t *L = &bl_ctrl->chassis_posture_info.chassis_posture_L;
+		chassis_leg_posture_t *R = &bl_ctrl->chassis_posture_info.chassis_posture_R;
+		torque_info_t *t = &bl_ctrl->torque_info;
+		/* Right-leg mirroring is handled by Chassis_Torque_Combine. */
+		if(L->leg_angle<-PI/10)t->joint_balancing_torque_L = -4;
+		else if(L->leg_angle>PI/10)t->joint_balancing_torque_L = 0;
+		if(R->leg_angle<-PI/10)t->joint_balancing_torque_R = -4;
+		else if(R->leg_angle>PI/10)t->joint_balancing_torque_R = 0;
+		t->joint_stand_torque_L = fp32_constrain(
+			200.0f * (L->leg_length_set - L->leg_length) - 40.0f * L->leg_dlength_jacobian,
+			-8.0f, 8.0f);
+		t->joint_stand_torque_R = fp32_constrain(
+			200.0f * (R->leg_length_set - R->leg_length) - 40.0f * R->leg_dlength_jacobian,
+			-8.0f, 8.0f);
+
+		/* Clear previous-cycle outputs before skipping the LQR branches. */
+		t->joint_moving_torque_L = t->joint_moving_torque_R = 0.0f;
+		t->joint_roll_torque_L = t->joint_roll_torque_R = 0.0f;
+		t->foot_balancing_torque_L = t->foot_balancing_torque_R = 0.0f;
+		t->foot_moving_torque_L = t->foot_moving_torque_R = 0.0f;
+		return;
+	}
 	//不同情况下roll轴控制
-	if (bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1 ||
-		bl_ctrl->mode.chassis_high_mode == SIT_MODE)
+	if (bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1 )
 	{
 		bl_ctrl->torque_info.joint_roll_torque_R = 0.0f;
 		bl_ctrl->torque_info.joint_roll_torque_L = 0.0f;
@@ -901,43 +935,31 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 
 	else
 	{
-
-		if (bl_ctrl->mode.chassis_high_mode == SIT_MODE)
-		{
-			bl_ctrl->torque_info.joint_balancing_torque_L = 0.0f;
-			bl_ctrl->torque_info.joint_moving_torque_L = 0.0f;
-			bl_ctrl->torque_info.joint_balancing_torque_R = 0.0f;
-			bl_ctrl->torque_info.joint_moving_torque_R = 0.0f;
-		}
-		else
-		{
-
-			bl_ctrl->torque_info.joint_balancing_torque_L = (
-				+ LQR[2][4] * (bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle)
-				+ LQR[2][5] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_gyro) 
-				+ LQR[2][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
-				+ LQR[2][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+		bl_ctrl->torque_info.joint_balancing_torque_L = (
+			+ LQR[2][4] * (bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle)
+			+ LQR[2][5] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_gyro) 
+			+ LQR[2][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
+			+ LQR[2][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+		);
+		bl_ctrl->torque_info.joint_moving_torque_L    = (
+			+ LQR[2][0] * ( bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
+			+ LQR[2][1] * ( bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED    - bl_ctrl->chassis_posture_info.foot_speed_KF )
+			// + LQR[2][2] * ( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total )
+			// + LQR[2][3] * ( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
 			);
-			bl_ctrl->torque_info.joint_moving_torque_L    = (
-				+ LQR[2][0] * ( bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
-				+ LQR[2][1] * ( bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED    - bl_ctrl->chassis_posture_info.foot_speed_KF )
-				// + LQR[2][2] * ( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total )
-				// + LQR[2][3] * ( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
-				);
 
-			bl_ctrl->torque_info.joint_balancing_torque_R = (
-				+ LQR[3][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle) 
-				+ LQR[3][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
-				+ LQR[3][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
-				+ LQR[3][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+		bl_ctrl->torque_info.joint_balancing_torque_R = (
+			+ LQR[3][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle) 
+			+ LQR[3][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
+			+ LQR[3][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
+			+ LQR[3][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+		);
+		bl_ctrl->torque_info.joint_moving_torque_R    = (
+			+ LQR[3][0] * ( bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
+			+ LQR[3][1] * ( bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED    - bl_ctrl->chassis_posture_info.foot_speed_KF )
+			// + LQR[3][2] * ( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total )
+			// + LQR[3][3] * ( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
 			);
-			bl_ctrl->torque_info.joint_moving_torque_R    = (
-				+ LQR[3][0] * ( bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
-				+ LQR[3][1] * ( bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED    - bl_ctrl->chassis_posture_info.foot_speed_KF )
-				// + LQR[3][2] * ( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total )
-				// + LQR[3][3] * ( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
-				);
-		}
 	}
 	//轮毂控制
 	bl_ctrl->torque_info.foot_balancing_torque_L = (
