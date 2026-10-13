@@ -255,13 +255,21 @@ void key_control(gimbal_control_t *gimbal_control_set, chassis_data_t *chassis_d
   }
   else if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_A)
   {
-    chassis_data->wz_set = 10;
+    chassis_data->vy_set = 2.2;
   }
   else if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_D)
   {
-    chassis_data->wz_set = -10;
+    chassis_data->vy_set = -2.2;
   }
-
+  else if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_Q )
+  {
+    chassis_data->wz_set = 8;
+  }
+  else if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_E )
+  {
+    chassis_data->wz_set = -8;
+  }
+  
   if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_W && gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_SHIFT)
   {
     chassis_data->vx_set = 2.6;
@@ -277,14 +285,6 @@ void key_control(gimbal_control_t *gimbal_control_set, chassis_data_t *chassis_d
   else if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_D && gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_SHIFT)
   {
     chassis_data->vy_set = -2.6;
-  }
-  else if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_Q && gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_SHIFT)
-  {
-    chassis_data->wz_set = 13;
-  }
-  else if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_E && gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_SHIFT)
-  {
-    chassis_data->wz_set = -13;
   }
     //增加键盘启停
   if(gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_CTRL&&!(gimbal_control_set->lastkeyboard & KEY_PRESSED_OFFSET_CTRL))

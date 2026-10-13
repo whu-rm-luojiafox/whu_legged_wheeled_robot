@@ -166,7 +166,7 @@
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
 #define EXIT_PITCH_ANGLE 0.2f
 
-#define FEED_f 40.0f
+#define FEED_f 0.0f
 
 
 
@@ -227,8 +227,7 @@ typedef enum
 
 typedef enum
 {
-    SIT_MODE = 0,
-    NORMAL_MODE,
+    NORMAL_MODE = 0,
     HIGH_MODE,
     EXTREMELY_HIGH_MODE,
 } chassis_high_mode_e;
