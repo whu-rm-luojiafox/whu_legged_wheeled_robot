@@ -29,8 +29,8 @@ Power_Buffer = power_heat_data.buffer_energy;
 
 float target_limit = power_buffer_limit(Power_Buffer);
 
-Plimit = 0.9f * Plimit + 0.1f * target_limit;
-Wlimit = 0.9f * Wlimit + 0.1f * target_limit;
+// Plimit = 0.9f * Plimit + 0.1f * target_limit;
+// Wlimit = 0.9f * Wlimit + 0.1f * target_limit;
 
 
 chassis_move_control->chassis_posture_info.foot_speed_set *= Plimit;

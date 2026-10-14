@@ -47,6 +47,8 @@ void Supportive_Force_Calculate(chassis_move_t * detect)
 	detect->torque_info.supportive_force_R = 0.7f*detect->torque_info.supportive_force_R + 0.3f * detect->torque_info.last_supportive_force_R;
 	detect->torque_info.last_supportive_force_L=detect->torque_info.supportive_force_L;
 	detect->torque_info.last_supportive_force_R=detect->torque_info.supportive_force_R;
+	// detect->torque_info.supportive_force_L = 30;
+	// detect->torque_info.supportive_force_R = 30;
 
 }
 
