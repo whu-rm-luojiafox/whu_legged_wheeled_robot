@@ -141,18 +141,18 @@
 /* -----------------------------平步新增宏定义---------------------------- */
 
 //腿长设定PID
-#define LEG_SET_PID_KP 200.0f
-#define LEG_SET_PID_KI 0.5f
+#define LEG_SET_PID_KP 300.0f
+#define LEG_SET_PID_KI 0.1f
 #define LEG_SET_PID_KD 300.0f //350.0f
 #define LEG_SET_PID_OUT 50.0f
-#define LEG_SET_PID_IOUT 8.0f
+#define LEG_SET_PID_IOUT 3.0f
 
 //roll轴水平pid
-#define ROLL_PID_KP 200.0f
-#define ROLL_PID_KI 1.0f
+#define ROLL_PID_KP 300.0f
+#define ROLL_PID_KI 0.1f
 #define ROLL_PID_KD 10.0f
-#define ROLL_PID_OUT 15.0f
-#define ROLL_PID_IOUT 10.0f
+#define ROLL_PID_OUT 10.0f
+#define ROLL_PID_IOUT 3.0f
 
 // -------------  Limit info ------------- 
 #define MAX_ACCL 13000.0f
@@ -172,7 +172,7 @@
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
 #define EXIT_PITCH_ANGLE 0.2f
 
-#define FEED_f 40.0f
+#define FEED_f 35.0f
 
 
 
