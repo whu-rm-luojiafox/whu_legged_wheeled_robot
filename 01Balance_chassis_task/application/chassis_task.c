@@ -827,9 +827,9 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 	}
 	else
 	{
-		PID_calc(&bl_ctrl->chassis_roll_pid, bl_ctrl->chassis_posture_info.roll_angle_set,bl_ctrl->chassis_posture_info.roll_angle);
-		bl_ctrl->torque_info.joint_roll_torque_R = bl_ctrl->chassis_roll_pid.out;//极性问题建议自己实际尝试
-		bl_ctrl->torque_info.joint_roll_torque_L = -bl_ctrl->torque_info.joint_roll_torque_R;
+		PID_calc(&bl_ctrl->chassis_roll_pid, bl_ctrl->chassis_posture_info.roll_angle,bl_ctrl->chassis_posture_info.roll_angle_set);
+		bl_ctrl->torque_info.joint_roll_torque_R = -bl_ctrl->chassis_roll_pid.out;//极性问题建议自己实际尝试
+		bl_ctrl->torque_info.joint_roll_torque_L = bl_ctrl->torque_info.joint_roll_torque_R;
 	}
 
 	
