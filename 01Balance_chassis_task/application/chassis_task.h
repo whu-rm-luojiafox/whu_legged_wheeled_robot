@@ -145,8 +145,14 @@
 #define LEG_SET_PID_KI 0.5f
 #define LEG_SET_PID_KD 300.0f //350.0f
 #define LEG_SET_PID_OUT 50.0f
-#define LEG_SET_PID_IOUT 4.0f
+#define LEG_SET_PID_IOUT 8.0f
 
+//roll轴水平pid
+#define ROLL_PID_KP 200.0f
+#define ROLL_PID_KI 1.0f
+#define ROLL_PID_KD 10.0f
+#define ROLL_PID_OUT 15.0f
+#define ROLL_PID_IOUT 10.0f
 
 // -------------  Limit info ------------- 
 #define MAX_ACCL 13000.0f
@@ -166,7 +172,7 @@
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
 #define EXIT_PITCH_ANGLE 0.2f
 
-#define FEED_f 0.0f
+#define FEED_f 40.0f
 
 
 
@@ -448,9 +454,10 @@ typedef struct
 
     chassis_motor_t motor_chassis[4]; // chassis motor data.底盘电机数据
     pid_type_def motor_speed_pid[4];  // motor speed PID.底盘电机速度pid
-    pid_type_def chassis_yaw_pid;     // follow angle PID.底盘跟随角度pid
     pid_type_def leg_L_length_pid;    // 腿长设定PID
     pid_type_def leg_R_length_pid;    // 腿长设定PID
+    pid_type_def chassis_yaw_pid;     // follow angle PID.底盘跟随角度pid
+    pid_type_def chassis_roll_pid;     // roll轴控制PID
 
     fp32 vx;     //  底盘速度 前进方向 前为正，单位 m/s
     fp32 vy;     // 底盘速度 左右方向 左为正  单位 m/s
