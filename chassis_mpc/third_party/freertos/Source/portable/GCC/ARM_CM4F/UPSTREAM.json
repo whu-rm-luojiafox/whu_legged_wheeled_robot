@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/FreeRTOS/FreeRTOS-Kernel",
+  "commit": "88e32327e975ddde97c390bc5b6c1f8e7d9d239e",
+  "tag": "V10.3.1-kernel-only",
+  "sha256": {
+    "port.c": "89f24a509ec85bf502724334c2607eeb7a432e1f26afbc9b7291254b8f7971dc",
+    "portmacro.h": "356ce2ec084883d8fc41d380910f828aee559f140e877629974752ea26a89792"
+  }
+}

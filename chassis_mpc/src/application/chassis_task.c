@@ -1,0 +1,1271 @@
+
+
+#include "chassis_task.h"
+#include "cmsis_os.h"
+#include "arm_math.h"
+#include "math.h"
+#include "pid.h"
+#include "remote_control.h"
+#include "detect_task.h"
+#include "INS_task.h"
+#include "vofa.h"
+#include "LQR.h"
+#include "usart.h"
+#include "user_lib.h"
+#include "uart_receive.h"
+//功能类头文件包含
+#include "chassis_power.h"
+#include "chassis_contact.h"
+#include "chassis_recovery.h"
+#include "chassis_climb.h"
+
+#define square(x) ((x) * (x))
+#define SIGN(x) ((x) > 0 ? 1 : ((x) < 0 ? -1 : 0))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+/* Verify that negative calibrated leg angles point toward the rear. */
+#define FOOT_LAUNCH_LEG_TARGET    (-0.15f)
+#define FOOT_LAUNCH_LEG_MIN       (-0.23f)
+#define FOOT_LAUNCH_LEG_MAX       PI_2
+#define FOOT_LAUNCH_LEG_GYRO_MAX  0.3f
+#define FOOT_LAUNCH_LEG_LENGTH    0.30f
+
+#define LimitMax(input, max)     \
+	{                            \
+		if ((input) > max)       \
+		{                        \
+			input = max;         \
+		}                        \
+		else if ((input) < -max) \
+		{                        \
+			input = -max;        \
+		}                        \
+	}
+#define rc_deadband_limit(input, output, dealine)        \
+	{                                                    \
+		if ((input) > (dealine) || (input) < -(dealine)) \
+		{                                                \
+			(output) = (input);                          \
+		}                                                \
+		else                                             \
+		{                                                \
+			(output) = 0;                                \
+		}                                                \
+	}
+
+#define LimitOutput(input, min, max) \
+	{                                \
+		if ((input) < min)           \
+			input = min;             \
+		else if ((input) > max)      \
+			input = max;             \
+	}
+
+
+#define MODEL_PYH_WHEEL_DIR -1
+int16_t cmd_L,cmd_R;
+
+#if INCLUDE_uxTaskGetStackHighWaterMark
+uint32_t chassis_high_water;
+#endif
+
+float a1,b1,c1,d1;
+float a2,b2,c2,d2;
+int temp;
+
+
+
+
+// 底盘运动数据
+chassis_move_t chassis_move;
+
+//速度斜坡函数
+
+
+fp32 suspend_LQR[2][6] = {
+	20.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	0, 0, 0, 0, 0, 0};
+/* ------------------------PID info------------------------ */
+fp32 coordinate_PD[2] = {10.0f, 1.0f}; // 10.0f,0.5f    //15.0f,1.0f
+fp32 yaw_PD_test[2] = {20.0f, 180.0f};
+fp32 jump_stand_PD_L[2] = {30000000.0f, 10.0f};
+fp32 jump_stand_PD_R[2] = {30000000.0f, 10.0f};
+
+fp32 jump_canstacting_PD_L[2] = {30000000.0f, 10.0f};
+fp32 jump_canstacting_PD_R[2] = {30000000.0f, 10.0f};
+
+
+/* ------------------------平步数据------------------------ */
+fp32 delta;
+float alpha_dx = 1.0f;
+float alpha_dv = 1.0f;
+float alpha_da = 0.7f;
+
+fp32 IDEAL_PREPARING_STAND_JUMPING_ANGLE = 0.174532f;//0.0872f;
+fp32 rotate_move_threshold = 45.0f;
+fp32 rotate_speed_list[11] = {0.0, 5.0, 5.3, 5.6, 6.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0};
+fp32 move_scale_list[11] = {0.0, 1.0, 1.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
+fp32 rotate_move_scale_list[11] = {0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8};
+
+
+fp32 rollP, rollD, rollI, roll_angle_deadband = 0.004f, roll_gyro_deadband = 0.005f, leg_dlength_deadband = 0.0f;
+fp32 normalized_speed,move_angle;
+fp32 normal_move_scale = 1.0f;
+/* A non-zero zero-command bias makes the chassis drive immediately after
+ * enable. Keep feed-forward disabled until it is identified on a test stand. */
+#define FORWARD_SPEED 0.0f
+#define OFFEST_PITCH 0.1072f
+#define OFFEST_ANGLE 0.1172f
+
+extern gimbal_control_t gimbal_control;
+
+/* ----------------------function definition ------------------------ */
+void Joint_Motor_to_Init_Pos(void);
+void Motor_Zero_CMD_Send(void);
+void HT_Motor_zero_set(void);
+void Forward_kinematic_solution(chassis_leg_posture_t *leg_posture, fp32 Q1, fp32 S1, fp32 Q4, fp32 S4, uint8_t ce);
+static void chassis_init(chassis_move_t *chassis_move_init);
+void chassis_feedback_update(chassis_move_t *chassis_move_update);
+static void chassis_set_mode(chassis_move_t *chassis_move_mode);
+static void chassis_mode_change_control_transit(chassis_move_t *chassis_move_transit);
+void Target_Value_Set(chassis_move_t *target_value_set);
+void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl);
+void Chassis_Torque_Combine(chassis_move_t *bl_ctrl);
+void Motor_CMD_Send(chassis_move_t *CMD_Send);
+uint8_t Check_Jump_Preparation_Complete(chassis_move_t *chassis);
+float get_jacobian_element(chassis_leg_posture_t *leg_posture, uint8_t element_type);
+
+uint8_t tmp =0;	
+
+void chassis_task(void const *pvParameters)
+{
+	vTaskDelay(CHASSIS_TASK_INIT_TIME);
+
+	//初始化电机 传感器数据获取
+	chassis_init(&chassis_move);
+
+	while (1)
+	{
+		//更新传感器 电机数据
+		chassis_feedback_update(&chassis_move);
+		//状态检测
+		Chassis_Status_Detect(&chassis_move);
+		//模式设置
+		chassis_set_mode(&chassis_move);
+
+		chassis_mode_change_control_transit(&chassis_move);
+
+		Target_Value_Set(&chassis_move);
+		//攀爬逻辑
+		chassisClimbProcess(&chassis_move);
+		//关节力矩计算
+		Chassis_Torque_Calculation(&chassis_move);
+		//虚拟腿映射关节电机力矩计算
+		Chassis_Torque_Combine(&chassis_move);
+		//反倒自救逻辑
+		chassisRecoveryProcess(&chassis_move);
+		//功率限制
+		chassis_power_limit(&chassis_move);
+		//发送计算结果
+		Motor_CMD_Send(&chassis_move);	
+		
+		vTaskDelay(CHASSIS_CONTROL_TIME_MS);
+
+#if INCLUDE_uxTaskGetStackHighWaterMark
+		chassis_high_water = uxTaskGetStackHighWaterMark(NULL);
+#endif
+	}
+}
+
+static void chassis_init(chassis_move_t *chassis_move_init)
+{
+	if (chassis_move_init == NULL)
+	{
+		return;
+	}
+
+	/*----------------------- Set HT Zero Point ---------------------- */
+	
+	vTaskDelay(3000);
+	// HT_Motor_zero_set();
+	// Motor_Zero_CMD_Send();
+	// CAN_clear_dm_error();
+	for(uint8_t i =1;i<=4;i++ )
+	{
+		CAN_dm_enable(i);
+		vTaskDelay(2);
+	}
+	// CAN_dm_save_0_point(4);
+	/* -------------------------param get---------------------------- */
+	chassis_move_init->joint_motor_1.motor_measure = get_DM_motor_measure_point(0);
+	chassis_move_init->joint_motor_2.motor_measure = get_DM_motor_measure_point(1);
+	chassis_move_init->joint_motor_3.motor_measure = get_DM_motor_measure_point(2);
+	chassis_move_init->joint_motor_4.motor_measure = get_DM_motor_measure_point(3);
+	chassis_move_init->foot_motor_L.motor_measure = get_chassis_motor_measure_point(0);
+	chassis_move_init->foot_motor_R.motor_measure = get_chassis_motor_measure_point(1);
+	chassis_move_init->gimbal_yaw_motor.gimbal_motor_measure=get_yaw_gimbal_motor_measure_point();
+	
+	chassis_move_init->chassis_INS_angle = get_INS_angle_point();
+	chassis_move_init->chassis_INS_gyro = get_gyro_data_point();
+	chassis_move_init->chassis_INS_accel = get_accel_data_point();
+	chassis_move_init->chassis_data_ = get_Uart_Chassisdata_point();
+	
+	/* ----------------------------Mode set --------------------------- */
+	chassis_move_init->mode.chassis_mode = chassis_move_init->mode.last_chassis_mode = DISABLE_CHASSIS;
+	chassis_move_init->mode.chassis_balancing_mode = chassis_move_init->mode.last_chassis_balancing_mode = NO_FORCE;
+	chassis_move_init->mode.sport_mode = chassis_move_init->mode.last_sport_mode = NORMAL_MOVING_MODE;
+	chassis_move_init->joint_motor_1.motor_mode = chassis_move_init->joint_motor_1.last_motor_mode = MOTOR_NO_FORCE;
+	chassis_move_init->joint_motor_2.motor_mode = chassis_move_init->joint_motor_2.last_motor_mode = MOTOR_NO_FORCE;
+	chassis_move_init->joint_motor_3.motor_mode = chassis_move_init->joint_motor_3.last_motor_mode = MOTOR_NO_FORCE;
+	chassis_move_init->joint_motor_4.motor_mode = chassis_move_init->joint_motor_4.last_motor_mode = MOTOR_NO_FORCE;
+	chassis_move_init->foot_motor_L.motor_mode = chassis_move_init->foot_motor_L.last_motor_mode = MOTOR_NO_FORCE;
+	chassis_move_init->foot_motor_R.motor_mode = chassis_move_init->foot_motor_R.last_motor_mode = MOTOR_NO_FORCE;
+	
+
+	// 初始化yaw角度PID
+	const static fp32 chassis_yaw_pid[3] = {CHASSIS_FOLLOW_GIMBAL_PID_KP, CHASSIS_FOLLOW_GIMBAL_PID_KI, CHASSIS_FOLLOW_GIMBAL_PID_KD};
+	PID_init(&chassis_move_init->chassis_yaw_pid, PID_POSITION, chassis_yaw_pid, CHASSIS_FOLLOW_GIMBAL_PID_MAX_OUT, CHASSIS_FOLLOW_GIMBAL_PID_MAX_IOUT);
+
+	// 初始化腿长PID
+	const static fp32 leg_length_pid[3] = {LEG_SET_PID_KP, LEG_SET_PID_KI, LEG_SET_PID_KD};
+	PID_init(&chassis_move_init->leg_L_length_pid, PID_POSITION, leg_length_pid, LEG_SET_PID_OUT, LEG_SET_PID_IOUT);
+	PID_init(&chassis_move_init->leg_R_length_pid, PID_POSITION, leg_length_pid, LEG_SET_PID_OUT, LEG_SET_PID_IOUT);
+	//初始化roll控制pid
+	const static fp32 chassis_roll_pid[3] = {ROLL_PID_KP, ROLL_PID_KI, ROLL_PID_KD};
+	PID_init(&chassis_move_init->chassis_roll_pid, PID_POSITION, chassis_roll_pid, ROLL_PID_OUT, ROLL_PID_IOUT);
+
+	chassis_move_init->flag_info.init_flag = 1;
+	chassis_feedback_update(chassis_move_init);
+	chassis_move_init->flag_info.init_flag = 0;
+
+	chassis_move_init->gimbal_yaw_motor.relative_angle_init =101.8f;		
+}
+void chassis_feedback_update(chassis_move_t *fdb)
+{
+	if (fdb == NULL)
+	{
+		return;
+	}
+	/*------------------------------- Update mode info ----------------------------*/
+	fdb->mode.last_chassis_mode = fdb->mode.chassis_mode;
+	fdb->mode.last_chassis_balancing_mode = fdb->mode.chassis_balancing_mode;
+	fdb->mode.last_sport_mode = fdb->mode.sport_mode;
+	fdb->mode.last_jumping_mode = fdb->mode.jumping_mode;
+	fdb->mode.last_jumping_stage = fdb->mode.jumping_stage;
+	fdb->mode.last_chassis_high_mode = fdb->mode.chassis_high_mode;
+
+	fdb->flag_info.last_overpower_warning_flag = fdb->flag_info.overpower_warning_flag;
+
+	fdb->flag_info.last_suspend_flag_L = fdb->flag_info.suspend_flag_L;
+	fdb->flag_info.last_suspend_flag_R = fdb->flag_info.suspend_flag_R;
+
+	fdb->joint_motor_1.last_motor_mode = fdb->joint_motor_1.motor_mode;
+	fdb->joint_motor_2.last_motor_mode = fdb->joint_motor_2.motor_mode;
+	fdb->joint_motor_3.last_motor_mode = fdb->joint_motor_3.motor_mode;
+	fdb->joint_motor_4.last_motor_mode = fdb->joint_motor_4.motor_mode;
+	fdb->foot_motor_L.last_motor_mode = fdb->foot_motor_L.motor_mode;
+	fdb->foot_motor_R.last_motor_mode = fdb->foot_motor_R.motor_mode;
+
+	/*------------------------------- Update HT Motor info ------------------------------ */
+	/* 1~4 号髋关节电机统一约定：从各自电机轴侧观察，逆时针位置、
+	 * 速度和输出力矩为正。下式保留驱动反馈的原始正方向。
+	 */
+	fdb->joint_motor_1.position = fdb->joint_motor_1.motor_measure->pos;
+	fdb->joint_motor_2.position = fdb->joint_motor_2.motor_measure->pos;
+	fdb->joint_motor_3.position = fdb->joint_motor_3.motor_measure->pos;
+	fdb->joint_motor_4.position = fdb->joint_motor_4.motor_measure->pos;
+
+	fdb->joint_motor_1.velocity = fdb->joint_motor_1.motor_measure->vel;
+	fdb->joint_motor_2.velocity = fdb->joint_motor_2.motor_measure->vel;
+	fdb->joint_motor_3.velocity = fdb->joint_motor_3.motor_measure->vel;
+	fdb->joint_motor_4.velocity = fdb->joint_motor_4.motor_measure->vel;
+
+	//更新力矩反馈
+	fdb->joint_motor_1.torque_get = fdb->joint_motor_1.motor_measure->torque;
+	fdb->joint_motor_2.torque_get = fdb->joint_motor_2.motor_measure->torque;
+	fdb->joint_motor_3.torque_get = fdb->joint_motor_3.motor_measure->torque;
+	fdb->joint_motor_4.torque_get = fdb->joint_motor_4.motor_measure->torque;
+	fdb->foot_motor_L.speed = -fdb->foot_motor_L.motor_measure->speed_rpm *  2*PI / 60 / (268.0f / 17.0f) * WHEEL_RADIUS; // dps -> m/s
+	fdb->foot_motor_R.speed = fdb->foot_motor_R.motor_measure->speed_rpm  * 2*PI / 60 / (268.0f / 17.0f) * WHEEL_RADIUS;
+	fdb->chassis_posture_info.foot_speed = (fdb->foot_motor_L.speed + fdb->foot_motor_R.speed) / 2.0f;
+
+    fdb->chassis_posture_info.foot_speed_KF = ( fdb->foot_motor_L.speed + fdb->foot_motor_R.speed ) / 2.0f;
+	if  (fabs(fdb->chassis_posture_info.foot_speed_KF) < 1.6f)
+	{
+		fdb->chassis_posture_info.foot_distance_K += fdb->chassis_posture_info.foot_speed_KF*CHASSIS_CONTROL_TIME;
+	}
+
+
+	
+	//足端角度解算
+	Forward_kinematic_solution(&fdb->chassis_posture_info.chassis_posture_L,
+							   fdb->joint_motor_1.position, fdb->joint_motor_1.velocity,
+							   fdb->joint_motor_2.position, fdb->joint_motor_2.velocity, 1);
+	Forward_kinematic_solution(&fdb->chassis_posture_info.chassis_posture_R,
+							   fdb->joint_motor_4.position, fdb->joint_motor_4.velocity,
+							   fdb->joint_motor_3.position, fdb->joint_motor_3.velocity, 0);
+	
+	//陀螺仪数据更新
+	fdb->chassis_posture_info.yaw_gyro = *(fdb->chassis_INS_gyro + INS_GYRO_YAW_ADDRESS_OFFSET);	
+	fdb->chassis_posture_info.pitch_gyro = *(fdb->chassis_INS_gyro + INS_GYRO_PITCH_ADDRESS_OFFSET);
+	fdb->chassis_posture_info.roll_gyro = *(fdb->chassis_INS_gyro + INS_GYRO_ROLL_ADDRESS_OFFSET);
+
+	fdb->chassis_posture_info.x_accel = *(fdb->chassis_INS_accel + INS_ACCEL_X_ADDRESS_OFFSET);	
+	fdb->chassis_posture_info.y_accel = *(fdb->chassis_INS_accel + INS_ACCEL_Y_ADDRESS_OFFSET);	
+	fdb->chassis_posture_info.z_accel = *(fdb->chassis_INS_accel + INS_ACCEL_Z_ADDRESS_OFFSET);	
+
+	fdb->chassis_posture_info.yaw_angle = rad_format(*(fdb->chassis_INS_angle + INS_YAW_ADDRESS_OFFSET));
+	delta =fdb->chassis_posture_info.yaw_angle-fdb->chassis_posture_info.yaw_angle_last;
+	if(delta<-PI)
+	{
+		 fdb->chassis_posture_info.yaw_round_cnt++;
+	}
+	else if(delta>PI)
+	{
+		fdb->chassis_posture_info.yaw_round_cnt--;
+	}
+	fdb->chassis_posture_info.yaw_angle_total = fdb->chassis_posture_info.yaw_round_cnt*PI2+fdb->chassis_posture_info.yaw_angle;
+	fdb->chassis_posture_info.yaw_angle_last = fdb->chassis_posture_info.yaw_angle;
+	fdb->chassis_posture_info.pitch_angle = rad_format(*(fdb->chassis_INS_angle + INS_PITCH_ADDRESS_OFFSET)); 
+	fdb->chassis_posture_info.roll_angle = *(fdb->chassis_INS_angle + INS_ROLL_ADDRESS_OFFSET);
+
+	/* Publish only ground-frame feedback. Writing the local value first lets
+	 * asynchronous debugger sampling observe an intermediate coordinate frame.
+	 * The right leg's local angle/rate has the opposite model sign. */
+	fdb->chassis_posture_info.chassis_posture_L.leg_angle =
+		fdb->chassis_posture_info.chassis_posture_L.leg_angle_local + fdb->chassis_posture_info.pitch_angle;
+	fdb->chassis_posture_info.chassis_posture_R.leg_angle =
+		-fdb->chassis_posture_info.chassis_posture_R.leg_angle_local + fdb->chassis_posture_info.pitch_angle;
+	fdb->chassis_posture_info.chassis_posture_L.leg_gyro =
+		fdb->chassis_posture_info.chassis_posture_L.leg_gyro_local + fdb->chassis_posture_info.pitch_gyro;
+	fdb->chassis_posture_info.chassis_posture_R.leg_gyro =
+		-fdb->chassis_posture_info.chassis_posture_R.leg_gyro_local + fdb->chassis_posture_info.pitch_gyro;
+	
+	// 计算加速度
+	if (fdb->flag_info.init_flag)
+	{
+		/* Establish a derivative baseline before off-ground detection starts. */
+		fdb->chassis_posture_info.chassis_posture_L.leg_ddlength = 0.0f;
+		fdb->chassis_posture_info.chassis_posture_R.leg_ddlength = 0.0f;
+		fdb->chassis_posture_info.chassis_posture_L.last_leg_dlength_jacobian = fdb->chassis_posture_info.chassis_posture_L.leg_dlength_jacobian;
+		fdb->chassis_posture_info.chassis_posture_R.last_leg_dlength_jacobian = fdb->chassis_posture_info.chassis_posture_R.leg_dlength_jacobian;
+	}
+	else
+	{
+		fp32 temp_a_L = (fdb->chassis_posture_info.chassis_posture_L.leg_dlength_jacobian - fdb->chassis_posture_info.chassis_posture_L.last_leg_dlength_jacobian) / CHASSIS_CONTROL_TIME;
+		fdb->chassis_posture_info.chassis_posture_L.leg_ddlength = alpha_da * temp_a_L + (1-alpha_da) * fdb->chassis_posture_info.chassis_posture_L.last_leg_ddlength;
+		fp32 temp_a_R = (fdb->chassis_posture_info.chassis_posture_R.leg_dlength_jacobian - fdb->chassis_posture_info.chassis_posture_R.last_leg_dlength_jacobian) / CHASSIS_CONTROL_TIME;
+		fdb->chassis_posture_info.chassis_posture_R.leg_ddlength = alpha_da * temp_a_R + (1-alpha_da) * fdb->chassis_posture_info.chassis_posture_R.last_leg_ddlength;
+	}
+	
+	fdb->chassis_posture_info.chassis_posture_L.last_leg_angle = fdb->chassis_posture_info.chassis_posture_L.leg_angle;
+	fdb->chassis_posture_info.chassis_posture_R.last_leg_angle = fdb->chassis_posture_info.chassis_posture_R.leg_angle;
+	fdb->chassis_posture_info.chassis_posture_L.last_leg_length = fdb->chassis_posture_info.chassis_posture_L.leg_length;
+	fdb->chassis_posture_info.chassis_posture_R.last_leg_length = fdb->chassis_posture_info.chassis_posture_R.leg_length;	
+	fdb->chassis_posture_info.chassis_posture_L.last_leg_dlength_jacobian = fdb->chassis_posture_info.chassis_posture_L.leg_dlength_jacobian;
+	fdb->chassis_posture_info.chassis_posture_R.last_leg_dlength_jacobian = fdb->chassis_posture_info.chassis_posture_R.leg_dlength_jacobian;
+	fdb->chassis_posture_info.chassis_posture_L.last_leg_ddlength = fdb->chassis_posture_info.chassis_posture_L.leg_ddlength;
+	fdb->chassis_posture_info.chassis_posture_R.last_leg_ddlength = fdb->chassis_posture_info.chassis_posture_R.leg_ddlength;
+	//云台相对角度更新
+	fdb->gimbal_yaw_motor.relative_angle = theta_format(fdb->gimbal_yaw_motor.gimbal_motor_measure->angle);
+	//合成 x y 方向速度以及限幅
+	if(fdb->chassis_data_->vx_set>=0)normalized_speed = fp32_constrain(sqrt(fdb->chassis_data_->vx_set*fdb->chassis_data_->vx_set+fdb->chassis_data_->vy_set* fdb->chassis_data_->vy_set),-2.8f,2.8f);
+	else normalized_speed = -fp32_constrain(sqrt(fdb->chassis_data_->vx_set*fdb->chassis_data_->vx_set+fdb->chassis_data_->vy_set* fdb->chassis_data_->vy_set),-2.8f,2.8f);
+	
+	move_angle = atan2f(fdb->chassis_data_->vy_set,fdb->chassis_data_->vx_set) * 180 /PI;
+	if(move_angle>90) move_angle -= 180.0f;
+	else if (move_angle<-90) move_angle += 180.0f;
+}
+
+static void chassis_set_mode(chassis_move_t *chassis_move_mode)
+{
+	if (chassis_move_mode == NULL)
+	{
+		return;
+	}
+	/* --------------------------------set chassis mode -------------------------------- */
+	/* The retired debug protocol value now requests zero force. */
+	if (chassis_move_mode->chassis_data_->chassis_mode == CHASSIS_MODE_OFF ||
+		chassis_move_mode->chassis_data_->chassis_mode == CHASSIS_MODE_DEBUG)
+		chassis_move_mode->mode.chassis_mode = DISABLE_CHASSIS;
+	else
+		chassis_move_mode->mode.chassis_mode = ENABLE_CHASSIS;
+
+	if (chassis_move_mode->mode.chassis_mode == ENABLE_CHASSIS)
+	{
+		
+		if(tmp ==0)
+		{
+			CAN_clear_dm_error();
+			CAN_dm_enable(1);
+			CAN_dm_enable(2);
+			CAN_dm_enable(3);
+			CAN_dm_enable(4);
+			tmp =1;
+		}
+
+		chassis_move_mode->joint_motor_1.motor_mode = MOTOR_FORCE;
+		chassis_move_mode->joint_motor_2.motor_mode = MOTOR_FORCE;
+		chassis_move_mode->joint_motor_3.motor_mode = MOTOR_FORCE;
+		chassis_move_mode->joint_motor_4.motor_mode = MOTOR_FORCE;
+		chassis_move_mode->foot_motor_L.motor_mode = MOTOR_FORCE;
+		chassis_move_mode->foot_motor_R.motor_mode = MOTOR_FORCE;
+		uint32_t current_tick = xTaskGetTickCount();
+		uint32_t timeout_threshold = pdMS_TO_TICKS(100);  // 100ms超时
+
+		// if (current_tick - chassis_move_mode->foot_motor_L.motor_measure->last_update_time > timeout_threshold ||
+		// 	current_tick - chassis_move_mode->foot_motor_R.motor_measure->last_update_time > timeout_threshold)
+		// {
+		// 	// 轮毂电机离线，让髋关节失能
+		// 	chassis_move_mode->joint_motor_1.motor_mode = MOTOR_NO_FORCE;
+		// 	chassis_move_mode->joint_motor_2.motor_mode = MOTOR_NO_FORCE;
+		// 	chassis_move_mode->joint_motor_3.motor_mode = MOTOR_NO_FORCE;
+		// 	chassis_move_mode->joint_motor_4.motor_mode = MOTOR_NO_FORCE;
+		// 	chassis_move_mode->foot_motor_L.motor_mode = MOTOR_NO_FORCE;
+		// 	chassis_move_mode->foot_motor_R.motor_mode = MOTOR_NO_FORCE;
+		// }
+	}
+	else
+	{
+		if(tmp ==1)
+		{
+			tmp =0;
+		}
+		chassis_move_mode->joint_motor_1.motor_mode = MOTOR_NO_FORCE;
+		chassis_move_mode->joint_motor_2.motor_mode = MOTOR_NO_FORCE;
+		chassis_move_mode->joint_motor_3.motor_mode = MOTOR_NO_FORCE;
+		chassis_move_mode->joint_motor_4.motor_mode = MOTOR_NO_FORCE;
+		chassis_move_mode->foot_motor_L.motor_mode = MOTOR_NO_FORCE;
+		chassis_move_mode->foot_motor_R.motor_mode = MOTOR_NO_FORCE;
+	}
+
+	/*-------------------------- Sport Mode Update ----------------------------------*/
+	if (chassis_move_mode->mode.chassis_balancing_mode == BALANCING_READY)
+	{
+		if (chassis_move_mode->mode.sport_mode == JUMPING_MODE && chassis_move_mode->mode.jumping_stage != FINISHED)
+			chassis_move_mode->mode.sport_mode = JUMPING_MODE;
+		else if (chassis_move_mode->chassis_data_->jump_flag)
+			chassis_move_mode->mode.sport_mode = JUMPING_MODE;
+		else
+			chassis_move_mode->mode.sport_mode = NORMAL_MOVING_MODE;
+	}
+	else
+		chassis_move_mode->mode.sport_mode = NONE;
+}
+
+static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_change)
+{
+	if (chassis_mode_change == NULL)
+	{
+		return;
+	}
+	/* --------------------------------使能/失能 后判断是否 进入/退出 平衡模式--------------------------------  */
+	if (chassis_mode_change->mode.chassis_mode == DISABLE_CHASSIS)
+		chassis_mode_change->mode.chassis_balancing_mode = NO_FORCE;
+	else if (chassis_mode_change->mode.last_chassis_mode == DISABLE_CHASSIS)
+	{
+		chassis_mode_change->mode.chassis_balancing_mode = FOOT_LAUNCHING;
+		chassis_mode_change->chassis_posture_info.yaw_angle_sett = chassis_mode_change->chassis_posture_info.yaw_angle_total;
+	}
+	else if (
+		chassis_mode_change->mode.chassis_balancing_mode == FOOT_LAUNCHING)
+	{
+		chassis_leg_posture_t *L = &chassis_mode_change->chassis_posture_info.chassis_posture_L;
+		chassis_leg_posture_t *R = &chassis_mode_change->chassis_posture_info.chassis_posture_R;
+
+		/* Both legs must enter the allowed range and slow down. */
+		if (L->leg_angle > FOOT_LAUNCH_LEG_MIN && L->leg_angle < FOOT_LAUNCH_LEG_MAX &&
+			R->leg_angle > FOOT_LAUNCH_LEG_MIN && R->leg_angle < FOOT_LAUNCH_LEG_MAX &&
+			fabsf(L->leg_gyro) < FOOT_LAUNCH_LEG_GYRO_MAX &&
+			fabsf(R->leg_gyro) < FOOT_LAUNCH_LEG_GYRO_MAX &&
+			fabsf(chassis_mode_change->chassis_posture_info.pitch_angle) < EXIT_PITCH_ANGLE &&
+			fabsf(chassis_mode_change->chassis_posture_info.roll_angle) < 0.25f)
+		{
+			chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
+		}
+	}
+	else if (chassis_mode_change->mode.chassis_balancing_mode == JOINT_LAUNCHING)
+		chassis_mode_change->mode.chassis_balancing_mode = BALANCING_READY;
+	//跳跃模式流程
+	if (chassis_mode_change->mode.sport_mode == JUMPING_MODE && chassis_mode_change->mode.last_sport_mode != JUMPING_MODE)
+    {
+        chassis_mode_change->mode.jumping_mode = STANDING_JUMP;
+        chassis_mode_change->mode.jumping_stage = READY_TO_JUMP;
+        chassis_mode_change->flag_info.jump_prepare_complete = 0; 
+    }
+    else if (chassis_mode_change->mode.sport_mode != JUMPING_MODE)
+    {
+        chassis_mode_change->mode.jumping_mode = NOT_DEFINE;
+        chassis_mode_change->mode.jumping_stage = FINISHED;
+    }
+
+    else if (chassis_mode_change->mode.jumping_mode == STANDING_JUMP)
+    {
+	 // 站立跳跃状态机
+        switch(chassis_mode_change->mode.jumping_stage)
+        {
+            case READY_TO_JUMP:
+                // 进入准备阶段
+                chassis_mode_change->mode.jumping_stage = PREPARING_STAND_JUMPING;
+                chassis_mode_change->flag_info.jump_prepare_timer = xTaskGetTickCount();
+                break;
+                
+            case PREPARING_STAND_JUMPING:
+                // 检查准备条件是否满足
+                if (Check_Jump_Preparation_Complete(chassis_mode_change))
+                {
+                    chassis_mode_change->flag_info.jump_prepare_complete = 1;
+                    chassis_mode_change->mode.jumping_stage = EXTENDING_LEGS;
+                    chassis_mode_change->flag_info.jump_extend_timer = xTaskGetTickCount();
+                }
+                else
+                {
+                    // 检查是否超时
+                    if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_prepare_timer) > pdMS_TO_TICKS(3000))
+                    {
+                        // 准备超时，放弃跳跃
+                        chassis_mode_change->mode.jumping_stage = FINISHED;
+                        chassis_mode_change->mode.sport_mode = NORMAL_MOVING_MODE;
+                    }
+                }
+                break;
+                
+            case EXTENDING_LEGS:
+                // 腿伸长阶段
+                if (chassis_mode_change->chassis_posture_info.chassis_posture_L.leg_length >= 0.34f && 
+                    chassis_mode_change->chassis_posture_info.chassis_posture_R.leg_length >= 0.34f&&
+				(xTaskGetTickCount() - chassis_mode_change->flag_info.jump_extend_timer) > pdMS_TO_TICKS(50))
+                {
+                    chassis_mode_change->mode.jumping_stage = CONSTACTING_LEGS_2;
+                    chassis_mode_change->flag_info.jump_contact_timer = xTaskGetTickCount();
+                }
+                else if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_extend_timer) > pdMS_TO_TICKS(500))
+                {
+                    // 伸腿超时，认为失败
+                    chassis_mode_change->mode.jumping_stage = FINISHED;
+                    chassis_mode_change->mode.sport_mode = NORMAL_MOVING_MODE;
+                }
+                break;
+                
+            case CONSTACTING_LEGS_2:
+                // 再次收缩腿准备落地
+                if (chassis_mode_change->chassis_posture_info.chassis_posture_L.leg_length <= 0.11f&&chassis_mode_change->chassis_posture_info.chassis_posture_R.leg_length <= 0.11f)
+                {
+                    chassis_mode_change->mode.jumping_stage = PREPARING_LANDING;
+                }
+                else if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_contact_timer) > pdMS_TO_TICKS(300))
+                {
+                    // 收缩超时，强制进入落地准备
+                    chassis_mode_change->mode.jumping_stage = PREPARING_LANDING;
+                }
+                break;
+                
+            case PREPARING_LANDING:
+                // 等待落地检测
+                if (chassis_mode_change->flag_info.suspend_flag_R == ON_GROUND &&
+                    chassis_mode_change->flag_info.suspend_flag_L == ON_GROUND&&
+					(xTaskGetTickCount() - chassis_mode_change->flag_info.jump_contact_timer) > pdMS_TO_TICKS(500))
+                {
+                    chassis_mode_change->mode.jumping_stage = FINISHED;
+                }
+                // 落地超时保护
+                else if ((xTaskGetTickCount() - chassis_mode_change->flag_info.jump_contact_timer) > pdMS_TO_TICKS(2000))
+                {
+                    chassis_mode_change->mode.jumping_stage = FINISHED;
+                }
+                break;
+                
+            case FINISHED:
+                // 跳跃完成，重置状态
+                chassis_mode_change->mode.jumping_stage = READY_TO_JUMP;
+                chassis_mode_change->mode.sport_mode = NORMAL_MOVING_MODE;
+                chassis_mode_change->flag_info.jump_prepare_complete = 0;
+                break;
+        }
+    }
+    else
+    {
+        chassis_mode_change->mode.jumping_stage = FINISHED;
+    }
+
+
+}
+
+void Target_Value_Set(chassis_move_t *target_value_set)
+{
+
+	//底盘正方向速度控制
+	if (target_value_set->mode.sport_mode != NONE &&
+	target_value_set->flag_info.suspend_flag_L == ON_GROUND &&
+	target_value_set->flag_info.suspend_flag_R == ON_GROUND)
+	{
+		if(fabs(target_value_set->chassis_data_->wz_set) < CHASSIS_RC_WZ_DEADLINE)
+		{
+			target_value_set->chassis_posture_info.foot_speed_set = fp32_constrain(normalized_speed* normal_move_scale,-2.2f,2.2f);
+			chassis_power_limit(target_value_set);
+		}
+	}
+	else 
+	{
+		target_value_set->chassis_posture_info.foot_speed_set=0;
+	}
+
+	//位置环控制器
+	if(fabs(target_value_set->chassis_posture_info.foot_speed_set)!=0)
+	{
+		target_value_set->chassis_posture_info.position_lock_flag=0;
+	}
+	else 
+	{
+		target_value_set->chassis_posture_info.position_lock_flag=1;
+	}
+	if(target_value_set->chassis_posture_info.position_lock_flag==1)
+	{
+		if(target_value_set->chassis_posture_info.position_lock_state==0)
+		{
+			target_value_set->chassis_posture_info.position_lock_state=1;
+			target_value_set->chassis_posture_info.target_distance_set = target_value_set->chassis_posture_info.foot_distance_K;
+		}
+	}
+	else
+	{
+		target_value_set->chassis_posture_info.position_lock_state=0;
+	}
+
+	// --------- Distance Set ---------
+	if( target_value_set->flag_info.suspend_flag_R == OFF_GROUND ||
+		target_value_set->flag_info.suspend_flag_L == OFF_GROUND )
+		target_value_set->chassis_posture_info.foot_distance_set = target_value_set->chassis_posture_info.foot_distance_K;
+	else if(target_value_set->chassis_posture_info.position_lock_flag==1)
+	target_value_set->chassis_posture_info.foot_distance_set = target_value_set->chassis_posture_info.target_distance_set;
+	else if( target_value_set->mode.chassis_balancing_mode == NO_FORCE )
+	target_value_set->chassis_posture_info.foot_distance_set = target_value_set->chassis_posture_info.foot_distance_K;
+	else if(target_value_set->mode.sport_mode == NORMAL_MOVING_MODE)
+	target_value_set->chassis_posture_info.foot_distance_set = target_value_set->chassis_posture_info.foot_distance_K;
+		
+	// --------- yaw_gyro_set ---------
+	if (target_value_set->mode.sport_mode != NONE &&
+		target_value_set->flag_info.suspend_flag_L == ON_GROUND &&
+		target_value_set->flag_info.suspend_flag_R == ON_GROUND)
+	{
+		if (target_value_set->mode.chassis_mode == ENABLE_CHASSIS && target_value_set->mode.last_chassis_mode == DISABLE_CHASSIS)
+			{
+				target_value_set->chassis_posture_info.yaw_angle_sett = target_value_set->chassis_posture_info.yaw_angle_total;
+				target_value_set->chassis_posture_info.yaw_gyro_set = 0.0f;
+			}
+			else if(target_value_set->mode.chassis_mode==ENABLE_CHASSIS&&target_value_set->mode.last_chassis_mode==ENABLE_CHASSIS)
+			{
+				if (fabs(target_value_set->chassis_posture_info.foot_speed_set) > 0.2
+					&& fabs(target_value_set->gimbal_yaw_motor.relative_angle - target_value_set->gimbal_yaw_motor.relative_angle_init) > 0.6f)
+				{
+					float current_relative_angle = target_value_set->gimbal_yaw_motor.relative_angle;
+					float target_relative_angle = target_value_set->gimbal_yaw_motor.relative_angle_init - move_angle;
+					float angle_diff = target_relative_angle - current_relative_angle;
+					
+					// 将角度差规范化到[-180, 180]区间
+					if (angle_diff > 180.0f) {
+						angle_diff -= 360.0f;
+					} else if (angle_diff < -180.0f) {
+						angle_diff += 360.0f;
+					}
+					// 使用规范化后的角度差作为PID输入
+					target_value_set->gimbal_yaw_motor.relative_limit = angle_diff;
+					target_value_set->chassis_posture_info.yaw_angle_sett += 
+						PID_calc(&target_value_set->chassis_yaw_pid, angle_diff,0.0f) * 0.004f;  
+					target_value_set->chassis_posture_info.yaw_gyro_set = 0.0f;	
+					target_value_set->chassis_posture_info.foot_speed_set = 0.8 * target_value_set->chassis_posture_info.foot_speed_set;
+				}
+				else
+				{
+					if (target_value_set->chassis_data_->wz_set < -CHASSIS_RC_WZ_DEADLINE)
+					{
+						target_value_set->chassis_posture_info.yaw_angle_sett = target_value_set->chassis_posture_info.yaw_angle_total;
+						target_value_set->chassis_posture_info.yaw_gyro_set = fp32_constrain(target_value_set->chassis_data_->wz_set,-10,10);
+						target_value_set->chassis_posture_info.yaw_lock_flag =1;
+					}
+					else if (target_value_set->chassis_data_->wz_set > CHASSIS_RC_WZ_DEADLINE)
+					{
+						target_value_set->chassis_posture_info.yaw_angle_sett = target_value_set->chassis_posture_info.yaw_angle_total;
+						target_value_set->chassis_posture_info.yaw_gyro_set = fp32_constrain(target_value_set->chassis_data_->wz_set,-10,10);
+						target_value_set->chassis_posture_info.yaw_lock_flag =1;
+					}
+					else
+					{	
+						if(target_value_set->chassis_posture_info.yaw_lock_flag==1)
+						{
+							target_value_set->chassis_posture_info.yaw_angle_sett = target_value_set->chassis_posture_info.yaw_angle_total;
+							target_value_set->chassis_posture_info.yaw_gyro_set *= 0.89f;  // 指数衰减，每次循环衰减11%
+							if(fabs(target_value_set->chassis_posture_info.yaw_gyro) < 0.02f)
+							{
+								target_value_set->chassis_posture_info.yaw_gyro_set = 0;
+								target_value_set->chassis_posture_info.yaw_lock_flag = 0;
+							}
+						}
+					}
+				}
+			}
+	}
+	else
+	{
+		target_value_set->chassis_posture_info.yaw_angle_sett = target_value_set->chassis_posture_info.yaw_angle_total;
+		target_value_set->chassis_posture_info.yaw_gyro_set = 0;
+	}
+
+	target_value_set->chassis_posture_info.roll_angle_set = 0.0f;
+
+	// ---------------- Leg Angle Set ----------
+	if (target_value_set->mode.jumping_stage == PREPARING_STAND_JUMPING)
+	{
+		target_value_set->chassis_posture_info.chassis_posture_L.leg_angle_set =  IDEAL_PREPARING_STAND_JUMPING_ANGLE;
+		target_value_set->chassis_posture_info.chassis_posture_R.leg_angle_set =  IDEAL_PREPARING_STAND_JUMPING_ANGLE;
+	}
+	else
+	{
+		target_value_set->chassis_posture_info.chassis_posture_L.leg_angle_set = 0.0f;
+		target_value_set->chassis_posture_info.chassis_posture_R.leg_angle_set = 0.0f;
+	}
+
+	// ----------------- Chassis High Mode Update -----------------
+	target_value_set->mode.chassis_high_mode = NORMAL_MODE;
+	// --------- Leg Length Set ---------
+	if (target_value_set->mode.chassis_high_mode == NORMAL_MODE)
+		target_value_set->chassis_posture_info.ideal_high = fp32_constrain(target_value_set->chassis_data_->high_set,0.17,0.34);
+	// 跳跃阶段优先于其他模式设定腿长
+	if (target_value_set->mode.sport_mode == JUMPING_MODE)
+	{
+		switch(target_value_set->mode.jumping_stage)
+		{
+			case PREPARING_STAND_JUMPING:
+				// 跳跃准备阶段：设定较低的腿长用于蓄力
+				target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = 0.13f;
+				target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = 0.13f;
+				break;
+				
+			case EXTENDING_LEGS:
+				// 起跳阶段：快速伸腿
+				target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = 0.34f;
+				target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = 0.34f;
+				break;
+				
+			case CONSTACTING_LEGS_2:
+				// 空中收缩阶段：准备落地
+				target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = 0.10f;
+				target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = 0.10f;
+				break;
+				
+			case PREPARING_LANDING:
+				// 落地准备阶段：保持较低腿长
+				target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = 0.15f;
+				target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = 0.15f;
+				break;
+				
+			default:
+				// 其他跳跃阶段使用理想高度
+				target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = target_value_set->chassis_posture_info.ideal_high;
+				target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = target_value_set->chassis_posture_info.ideal_high;
+				break;
+		}
+	}
+	// ==========================================
+	else if (target_value_set->flag_info.suspend_flag_L == OFF_GROUND &&
+		target_value_set->flag_info.suspend_flag_R == OFF_GROUND)
+	{
+		target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = target_value_set->chassis_posture_info.ideal_high;
+		target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = target_value_set->chassis_posture_info.ideal_high;
+	}
+	else
+	{
+		//目前表现良好
+		target_value_set->chassis_posture_info.foot_roll_angle =
+			target_value_set->chassis_posture_info.roll_angle;
+		target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set =
+			target_value_set->chassis_posture_info.ideal_high - 0.24f * arm_sin_f32( target_value_set->chassis_posture_info .foot_roll_angle ) / arm_cos_f32( target_value_set->chassis_posture_info .foot_roll_angle );
+		target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set =
+			target_value_set->chassis_posture_info.ideal_high + 0.24f * arm_sin_f32( target_value_set->chassis_posture_info .foot_roll_angle ) / arm_cos_f32( target_value_set->chassis_posture_info .foot_roll_angle );
+	}
+
+	/* Keep the legs short while aligning; normal height resumes afterwards. */
+	if (target_value_set->mode.chassis_balancing_mode == FOOT_LAUNCHING)
+	{
+		target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
+		target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
+	}
+}
+void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
+{
+	//LQR拟合矩阵数据更新
+	LQR_Data_Update(bl_ctrl);
+	if (bl_ctrl->mode.chassis_balancing_mode == FOOT_LAUNCHING)
+	{
+		chassis_leg_posture_t *L = &bl_ctrl->chassis_posture_info.chassis_posture_L;
+		chassis_leg_posture_t *R = &bl_ctrl->chassis_posture_info.chassis_posture_R;
+		torque_info_t *t = &bl_ctrl->torque_info;
+		/* Right-leg mirroring is handled by Chassis_Torque_Combine. */
+		if(L->leg_angle<-PI/10)t->joint_balancing_torque_L = -4;
+		else if(L->leg_angle>PI/10)t->joint_balancing_torque_L = 0;
+		if(R->leg_angle<-PI/10)t->joint_balancing_torque_R = -4;
+		else if(R->leg_angle>PI/10)t->joint_balancing_torque_R = 0;
+		t->joint_stand_torque_L = fp32_constrain(
+			200.0f * (L->leg_length_set - L->leg_length) - 40.0f * L->leg_dlength_jacobian,
+			-8.0f, 8.0f);
+		t->joint_stand_torque_R = fp32_constrain(
+			200.0f * (R->leg_length_set - R->leg_length) - 40.0f * R->leg_dlength_jacobian,
+			-8.0f, 8.0f);
+
+		/* Clear previous-cycle outputs before skipping the LQR branches. */
+		t->joint_moving_torque_L = t->joint_moving_torque_R = 0.0f;
+		t->joint_roll_torque_L = t->joint_roll_torque_R = 0.0f;
+		t->foot_balancing_torque_L = t->foot_balancing_torque_R = 0.0f;
+		t->foot_moving_torque_L = t->foot_moving_torque_R = 0.0f;
+		return;
+	}
+	//不同情况下roll轴控制
+	if (bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1 )
+	{
+		bl_ctrl->torque_info.joint_roll_torque_R = 0.0f;
+		bl_ctrl->torque_info.joint_roll_torque_L = 0.0f;
+	}
+	else
+	{
+		PID_calc(&bl_ctrl->chassis_roll_pid, bl_ctrl->chassis_posture_info.roll_angle,bl_ctrl->chassis_posture_info.roll_angle_set);
+		bl_ctrl->torque_info.joint_roll_torque_R = -bl_ctrl->chassis_roll_pid.out;//极性问题建议自己实际尝试
+		bl_ctrl->torque_info.joint_roll_torque_L = bl_ctrl->torque_info.joint_roll_torque_R;
+	}
+
+	
+
+	//不同情况下垂直方向力控制
+	if( bl_ctrl->mode.jumping_stage == EXTENDING_LEGS )
+	{
+		bl_ctrl->torque_info.joint_stand_torque_L =
+			+ jump_stand_PD_L[0] * ( bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length_set - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length )
+			+ jump_stand_PD_L[1] * ( 0 - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_dlength_jacobian );
+
+		bl_ctrl->torque_info.joint_stand_torque_R =
+			+ jump_stand_PD_R[0] * ( bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length_set - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length )
+			+ jump_stand_PD_R[1] * ( 0 - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_dlength_jacobian );
+	}
+	else if(bl_ctrl->mode.jumping_stage == CONSTACTING_LEGS_2)
+	{
+		bl_ctrl->torque_info.joint_stand_torque_L =
+			+ jump_canstacting_PD_L[0] * ( bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length_set - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length )
+			+ jump_canstacting_PD_L[1] * ( 0 - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_dlength_jacobian );
+
+		bl_ctrl->torque_info.joint_stand_torque_R =
+			+ jump_canstacting_PD_R[0] * ( bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length_set - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length )
+			+ jump_canstacting_PD_R[1] * ( 0 - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_dlength_jacobian );
+	}
+	else if( bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1 )
+	{
+		if( bl_ctrl->flag_info.suspend_flag_L == 1 )
+		{
+			PID_calc(&bl_ctrl->leg_L_length_pid, bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length,bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length_set);
+			bl_ctrl->torque_info.joint_stand_torque_L = 0.6*FEED_f + bl_ctrl->leg_L_length_pid.out;		
+		}
+		else{
+			PID_calc(&bl_ctrl->leg_L_length_pid, bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length,bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length_set);
+			bl_ctrl->torque_info.joint_stand_torque_L = FEED_f+bl_ctrl->leg_L_length_pid.out;
+		}
+
+		if( bl_ctrl->flag_info.suspend_flag_R == 1 )
+		{ 
+			PID_calc(&bl_ctrl->leg_R_length_pid, bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length,bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length_set);
+			bl_ctrl->torque_info.joint_stand_torque_R = 0.6*FEED_f + bl_ctrl->leg_R_length_pid.out;
+		} 
+		else {
+			PID_calc(&bl_ctrl->leg_R_length_pid, bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length,bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length_set);
+			bl_ctrl->torque_info.joint_stand_torque_R = FEED_f+bl_ctrl->leg_R_length_pid.out;
+		}
+	}
+	else
+	{
+		//普通情况下加重力补偿
+		PID_calc(&bl_ctrl->leg_L_length_pid, bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length,bl_ctrl->chassis_posture_info.chassis_posture_L.leg_length_set);
+		bl_ctrl->torque_info.joint_stand_torque_L = FEED_f+bl_ctrl->leg_L_length_pid.out;
+		PID_calc(&bl_ctrl->leg_R_length_pid, bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length,bl_ctrl->chassis_posture_info.chassis_posture_R.leg_length_set);
+		bl_ctrl->torque_info.joint_stand_torque_R = FEED_f+bl_ctrl->leg_R_length_pid.out;
+	}
+	//添加被动的检测到离地的相应操作
+	if (bl_ctrl->mode.jumping_stage == CONSTACTING_LEGS_2)
+	{
+		//此时处于空中，想要达到的效果是腿的度跟地面是保持垂直，
+		//不在控制机身角度因为机身保持平衡的力矩其实与腿部保持竖直力矩相冲突，在没有地面支持力的情况下没有意义
+		bl_ctrl->torque_info.joint_balancing_torque_L = (
+			+ LQR[2][4] * (bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle_set - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle)
+			+ LQR[2][5] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_gyro) 
+		);		
+		bl_ctrl->torque_info.joint_balancing_torque_R = (
+			+ LQR[3][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle) 
+			+ LQR[3][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
+		);
+
+		bl_ctrl->torque_info.joint_moving_torque_L = 0.0f;
+		bl_ctrl->torque_info.joint_moving_torque_R = 0.0f;
+	}
+
+	else
+	{
+		bl_ctrl->torque_info.joint_balancing_torque_L = (
+			+ LQR[2][4] * (bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle)
+			+ LQR[2][5] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_gyro) 
+			+ LQR[2][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
+			+ LQR[2][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+		);
+		bl_ctrl->torque_info.joint_moving_torque_L    = (
+			+ LQR[2][0] * ( bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
+			+ LQR[2][1] * ( bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED    - bl_ctrl->chassis_posture_info.foot_speed_KF )
+			+ LQR[2][2] * ( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total )
+			+ LQR[2][3] * ( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
+			);
+
+		bl_ctrl->torque_info.joint_balancing_torque_R = (
+			+ LQR[3][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle) 
+			+ LQR[3][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
+			+ LQR[3][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
+			+ LQR[3][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+		);
+		bl_ctrl->torque_info.joint_moving_torque_R    = (
+			+ LQR[3][0] * ( bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
+			+ LQR[3][1] * ( bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED    - bl_ctrl->chassis_posture_info.foot_speed_KF )
+			+ LQR[3][2] * ( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total )
+			+ LQR[3][3] * ( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
+			);
+	}
+	//轮毂控制
+	bl_ctrl->torque_info.foot_balancing_torque_L = (
+		+ LQR[0][4] * (bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_angle) 
+		+ LQR[0][5] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_L.leg_gyro) 
+		+ LQR[0][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
+		+ LQR[0][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+	) ; 
+	bl_ctrl->torque_info.foot_moving_torque_L = (
+		+ LQR[0][0] * (bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
+		+ LQR[0][1] * (bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED - bl_ctrl->chassis_posture_info.foot_speed_KF)
+		+ LQR[0][2]*( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total)
+		+ LQR[0][3]*( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
+	);
+	bl_ctrl->torque_info.foot_balancing_torque_R = -(
+		+ LQR[1][6] * (bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle_set + OFFEST_ANGLE - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_angle) 
+		+ LQR[1][7] * (0.0f - bl_ctrl->chassis_posture_info.chassis_posture_R.leg_gyro) 
+		+ LQR[1][8] * (bl_ctrl->chassis_posture_info.pitch_angle_set + OFFEST_PITCH - bl_ctrl->chassis_posture_info.pitch_angle) 
+		+ LQR[1][9] * (bl_ctrl->chassis_posture_info.pitch_gyro_set - bl_ctrl->chassis_posture_info.pitch_gyro)
+	) ;
+	bl_ctrl->torque_info.foot_moving_torque_R = -(
+		+ LQR[1][0] * (bl_ctrl->chassis_posture_info.foot_distance_set - bl_ctrl->chassis_posture_info.foot_distance_K )
+		+ LQR[1][1] * (bl_ctrl->chassis_posture_info.foot_speed_set+FORWARD_SPEED - bl_ctrl->chassis_posture_info.foot_speed_KF)
+		+ LQR[1][2]*( bl_ctrl->chassis_posture_info.yaw_angle_sett    - bl_ctrl->chassis_posture_info.yaw_angle_total)
+		+ LQR[1][3]*( bl_ctrl->chassis_posture_info.yaw_gyro_set      - bl_ctrl->chassis_posture_info.yaw_gyro  )
+	);
+
+	// 统一的离地处理函数
+	if (bl_ctrl->flag_info.suspend_flag_R == 1 || bl_ctrl->flag_info.suspend_flag_L == 1)
+	{
+		// 离地状态统一处理
+		Chassis_Contact_ApplyAirborne_Torque(bl_ctrl);
+	}
+	else
+	{}
+	LimitMax( bl_ctrl->torque_info.foot_moving_torque_L,  MAX_ACCL );
+	LimitMax( bl_ctrl->torque_info.foot_moving_torque_R,  MAX_ACCL );
+	LimitMax(bl_ctrl->torque_info.joint_moving_torque_L, MAX_ACCL_JOINT);
+	LimitMax(bl_ctrl->torque_info.joint_moving_torque_R, MAX_ACCL_JOINT);
+}
+void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
+{
+	/* N=d(phi1,phi2)/d(length,Q0) 是逆运动学雅可比。
+	 * phi1=-q_first, phi2=q_second，故电机力矩为
+	 * diag(-1,+1)*N^(-T)*[F,T_local]，不能遗漏电机坐标变换。
+	 * 左腿电机顺序为 (1,2)，theta_L=Q0；右腿为 (4,3)，theta_R=-Q0。
+	 * 因此 T_local_L=T_model_L，T_local_R=-T_model_R。
+	 */
+	bl_ctrl->mapping_info.invJ1_L = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_L, 1);
+	bl_ctrl->mapping_info.invJ2_L = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_L, 3);
+	bl_ctrl->mapping_info.invJ3_L = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_L, 2);
+	bl_ctrl->mapping_info.invJ4_L = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_L, 4);
+	bl_ctrl->mapping_info.invJ1_R = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_R, 1);
+	bl_ctrl->mapping_info.invJ2_R = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_R, 3);
+	bl_ctrl->mapping_info.invJ3_R = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_R, 2);
+	bl_ctrl->mapping_info.invJ4_R = get_jacobian_element(&bl_ctrl->chassis_posture_info.chassis_posture_R, 4);
+
+	bl_ctrl->torque_info.foot_horizontal_torque_L =
+		bl_ctrl->torque_info.foot_balancing_torque_L + bl_ctrl->torque_info.foot_moving_torque_L;
+	bl_ctrl->torque_info.foot_horizontal_torque_R =
+		bl_ctrl->torque_info.foot_balancing_torque_R + bl_ctrl->torque_info.foot_moving_torque_R; // 足端轮子水平力矩
+
+	bl_ctrl->foot_motor_L.torque_out = bl_ctrl->torque_info.foot_horizontal_torque_L;
+	bl_ctrl->foot_motor_R.torque_out = bl_ctrl->torque_info.foot_horizontal_torque_R;
+	LimitMax(bl_ctrl->foot_motor_L.torque_out, MAX_FOOT_OUTPUT);
+	LimitMax(bl_ctrl->foot_motor_R.torque_out, MAX_FOOT_OUTPUT);
+	bl_ctrl->torque_info.joint_horizontal_torque_L = 
+		bl_ctrl->torque_info.joint_balancing_torque_L+bl_ctrl->torque_info.joint_moving_torque_L;
+	bl_ctrl->torque_info.joint_horizontal_torque_R =
+		bl_ctrl->torque_info.joint_balancing_torque_R+bl_ctrl->torque_info.joint_moving_torque_R;
+
+	bl_ctrl->torque_info.joint_vertical_torque_L = 
+		bl_ctrl->torque_info.joint_stand_torque_L + bl_ctrl->torque_info.joint_roll_torque_L;
+	bl_ctrl->torque_info.joint_vertical_torque_R = 
+		bl_ctrl->torque_info.joint_stand_torque_R + bl_ctrl->torque_info.joint_roll_torque_R;
+
+	{
+		const fp32 n11_l = bl_ctrl->mapping_info.invJ1_L;
+		const fp32 n12_l = bl_ctrl->mapping_info.invJ3_L;
+		const fp32 n21_l = bl_ctrl->mapping_info.invJ2_L;
+		const fp32 n22_l = bl_ctrl->mapping_info.invJ4_L;
+		const fp32 n11_r = bl_ctrl->mapping_info.invJ1_R;
+		const fp32 n12_r = bl_ctrl->mapping_info.invJ3_R;
+		const fp32 n21_r = bl_ctrl->mapping_info.invJ2_R;
+		const fp32 n22_r = bl_ctrl->mapping_info.invJ4_R;
+		const fp32 det_l = n11_l * n22_l - n12_l * n21_l;
+		const fp32 det_r = n11_r * n22_r - n12_r * n21_r;
+		const fp32 force_l = bl_ctrl->torque_info.joint_vertical_torque_L;
+		const fp32 force_r = bl_ctrl->torque_info.joint_vertical_torque_R;
+		const fp32 torque_l = bl_ctrl->torque_info.joint_horizontal_torque_L;
+		const fp32 torque_r = bl_ctrl->torque_info.joint_horizontal_torque_R;
+
+		if (fabsf(det_l) > 1.0e-6f)
+		{
+			/* tau_(1,2)=diag(-1,+1)*N^(-T)*[F,T_model]. */
+			bl_ctrl->torque_info.joint_vertical_torque_temp1_L = -n22_l * force_l / det_l;
+			bl_ctrl->torque_info.joint_vertical_torque_temp2_L = -n12_l * force_l / det_l;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp1_L = n21_l * torque_l / det_l;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp2_L = n11_l * torque_l / det_l;
+		}
+		else
+		{
+			bl_ctrl->torque_info.joint_vertical_torque_temp1_L = 0.0f;
+			bl_ctrl->torque_info.joint_vertical_torque_temp2_L = 0.0f;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp1_L = 0.0f;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp2_L = 0.0f;
+		}
+
+		if (fabsf(det_r) > 1.0e-6f)
+		{
+			/* theta_R=-Q0_R；正解第一/第二关节分别是电机 4/3。 */
+			bl_ctrl->torque_info.joint_vertical_torque_temp1_R = -n22_r * force_r / det_r;
+			bl_ctrl->torque_info.joint_vertical_torque_temp2_R = -n12_r * force_r / det_r;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp1_R = -n21_r * torque_r / det_r;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp2_R = -n11_r * torque_r / det_r;
+		}
+		else
+		{
+			bl_ctrl->torque_info.joint_vertical_torque_temp1_R = 0.0f;
+			bl_ctrl->torque_info.joint_vertical_torque_temp2_R = 0.0f;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp1_R = 0.0f;
+			bl_ctrl->torque_info.joint_horizontal_torque_temp2_R = 0.0f;
+		}
+	}
+
+	/* Diagnostic components are motor-side N*m before the output clamp.
+	 * temp1/temp2 follow FK input order: L=(1,2), R=(4,3). */
+	bl_ctrl->joint_motor_1.torque_out = bl_ctrl->torque_info.joint_vertical_torque_temp1_L
+		+ bl_ctrl->torque_info.joint_horizontal_torque_temp1_L;
+	bl_ctrl->joint_motor_2.torque_out = bl_ctrl->torque_info.joint_vertical_torque_temp2_L
+		+ bl_ctrl->torque_info.joint_horizontal_torque_temp2_L;
+	bl_ctrl->joint_motor_4.torque_out = bl_ctrl->torque_info.joint_vertical_torque_temp1_R
+		+ bl_ctrl->torque_info.joint_horizontal_torque_temp1_R;
+	bl_ctrl->joint_motor_3.torque_out = bl_ctrl->torque_info.joint_vertical_torque_temp2_R
+		+ bl_ctrl->torque_info.joint_horizontal_torque_temp2_R;
+
+	/* Match the HT protocol's physical torque range before the CAN layer. */
+	LimitOutput(bl_ctrl->joint_motor_1.torque_out, -JOINT_TORQUE_LIMIT, JOINT_TORQUE_LIMIT);
+	LimitOutput(bl_ctrl->joint_motor_2.torque_out, -JOINT_TORQUE_LIMIT, JOINT_TORQUE_LIMIT);
+	LimitOutput(bl_ctrl->joint_motor_3.torque_out, -JOINT_TORQUE_LIMIT, JOINT_TORQUE_LIMIT);
+	LimitOutput(bl_ctrl->joint_motor_4.torque_out, -JOINT_TORQUE_LIMIT, JOINT_TORQUE_LIMIT);
+}
+void Motor_CMD_Send(chassis_move_t *CMD_Send)
+{
+	//为保证轮毂电机高相应速度的要求，单独开任务负责给电机发力矩指令
+	if (CMD_Send->foot_motor_R.motor_mode != MOTOR_FORCE)
+		CMD_Send->foot_motor_R.torque_out = 0.0f;
+	if (CMD_Send->foot_motor_L.motor_mode != MOTOR_FORCE)
+		CMD_Send->foot_motor_L.torque_out = 0.0f;
+	
+	
+	if (CMD_Send->joint_motor_1.motor_mode == MOTOR_FORCE)
+	MIT_CtrlMotor(0,0,0,0,CMD_Send->joint_motor_1.torque_out,0x01);
+	else
+	MIT_CtrlMotor(0,0,0,0,0,0x01);
+	if (CMD_Send->joint_motor_3.motor_mode == MOTOR_FORCE)
+	MIT_CtrlMotor(0,0,0,0,CMD_Send->joint_motor_3.torque_out,0x03);
+	else
+	MIT_CtrlMotor(0,0,0,0,0,0x03);
+	vTaskDelay(1);
+	if (CMD_Send->joint_motor_2.motor_mode == MOTOR_FORCE)
+	MIT_CtrlMotor(0,0,0,0,CMD_Send->joint_motor_2.torque_out,0x02);
+	else
+	MIT_CtrlMotor(0,0,0,0,0,0x02);
+	if (CMD_Send->joint_motor_4.motor_mode == MOTOR_FORCE)
+	MIT_CtrlMotor(0,0,0,0,CMD_Send->joint_motor_4.torque_out,0x04);
+	else
+	MIT_CtrlMotor(0,0,0,0,0,0x04);
+
+	cmd_L = (int16_t)fp32_constrain(
+		(MODEL_PYH_WHEEL_DIR * chassis_move.foot_motor_L.torque_out * 2598.20f),
+		-16384.0f, 16384.0f);
+
+	cmd_R = (int16_t)fp32_constrain(
+		(MODEL_PYH_WHEEL_DIR * chassis_move.foot_motor_R.torque_out * 2598.20f),
+		-16384.0f, 16384.0f);
+	CAN_cmd_chassis(cmd_L,cmd_R,0,0);
+}
+
+
+uint8_t leg_length_ready,leg_angle_ready,leg_gyro_stable,pitch_stable,both_feet_on_ground ,speed_flag,prepare_complete;
+uint8_t Check_Jump_Preparation_Complete(chassis_move_t *chassis)
+{
+	if (chassis == NULL) return 0;
+    
+    // 综合判断
+    prepare_complete = 1;    
+    return prepare_complete;
+}
+
+
+
+void Forward_kinematic_solution(chassis_leg_posture_t *leg_posture,
+								fp32 Q1, fp32 S1, fp32 Q4, fp32 S4, uint8_t ce)
+{
+	fp32 dL0 = 0, L0 = 0, Q0 = 0, S0 = 0;
+	fp32 xb, xd, yb, yd, Lbd;
+	fp32 A0, B0, C0, Q2, Q3, S2;
+	fp32 temp;
+	fp32 vxb, vxd, vyb, vyd, vxc, vyc;
+	fp32 cos_Q1, cos_Q4, sin_Q1, sin_Q4;
+	fp32 xc, yc;
+	/******************************/
+	/* Keep the calibrated position convention: phi1=-q_first, phi2=q_second.
+	 * Apply the same derivative transform to motor velocities. */
+	Q1 = -Q1;
+	S1 = -S1;
+
+	cos_Q1 = cos(Q1);
+	sin_Q1 = sin(Q1);
+	cos_Q4 = cos(Q4);
+	sin_Q4 = sin(Q4);
+	xb = -L5 / 2.0f + L1 * cos_Q1;
+	xd = L5 / 2.0f - L4 * cos_Q4;
+	yb = L1 * sin_Q1;
+	yd = L4 * sin_Q4;
+
+	Lbd = (xd - xb) * (xd - xb) + (yd - yb) * (yd - yb);
+	A0 = 2.0f * L2 * (xd - xb);
+	B0 = 2.0f * L2 * (yd - yb);
+	C0 = L2 * L2 + Lbd - L3 * L3;
+	temp = A0 * A0 + B0 * B0 - C0 * C0;
+	if(temp<0)
+	{temp = 0;}
+	Q2 = 2.0f * atan2((B0 + sqrt(temp)) , (A0 + C0));
+
+	xc = xb + cos(Q2) * L2;
+	yc = yb + sin(Q2) * L2;
+
+	L0 = sqrt(xc * xc + yc * yc);
+	Q0 = atan2(xc , yc);
+
+	vxb = -S1 * L1 * sin_Q1;
+	vyb = S1 * L1 * cos_Q1;
+	/* D=(-L4*cos(phi2), L4*sin(phi2)), phi2_dot=S4. */
+	vxd = S4 * L4 * sin_Q4;
+	vyd = S4 * L4 * cos_Q4;
+	Q3 = atan2((yc - yd) , (xc - xd));
+	fp32 velocity_denominator = L2 * sin(Q3 - Q2);
+	if (fabs(velocity_denominator) > 1.0e-6f && L0 > 1.0e-6f)
+	{
+		S2 = ((vxd - vxb) * cos(Q3) + (vyd - vyb) * sin(Q3)) / velocity_denominator;
+		vxc = vxb - S2 * L2 * sin(Q2);
+		vyc = vyb + S2 * L2 * cos(Q2);
+		S0 = (cos(Q0) * vxc - sin(Q0) * vyc) / L0;
+		dL0 = (xc * vxc + yc * vyc) / L0;
+	}
+	else
+	{
+		/* A singular/invalid five-bar pose must not inject NaN/Inf into LQR. */
+		S0 = 0.0f;
+		dL0 = 0.0f;
+	}
+
+
+	/* 保存与 B、D、phi 同一时刻的未滤波机身局部几何量。
+	 * leg_angle/leg_gyro 由 chassis_feedback_update 叠加 IMU 后一次写入。
+	 */
+	leg_posture->leg_length_raw = L0;
+	leg_posture->leg_angle_local = Q0;
+	leg_posture->leg_gyro_local = S0;
+
+	if (ce)
+	{
+			leg_posture->last_leg_length = leg_posture->leg_length;
+			leg_posture->leg_length = 0.9f*L0+0.1f*leg_posture->last_leg_length;
+			leg_posture->leg_dlength = dL0;
+			leg_posture->leg_dlength_jacobian = dL0;
+			leg_posture->leg_x1 = -xb;
+			leg_posture->leg_x2 = xd;
+			leg_posture->leg_y1 = yb;
+			leg_posture->leg_y2 = yd;
+			leg_posture->leg_phi1 = Q1;
+			leg_posture->leg_phi2 = Q4;
+	}
+	else
+	{
+			leg_posture->last_leg_length = leg_posture->leg_length;
+			leg_posture->leg_length = 0.9f*L0+0.1f*leg_posture->last_leg_length;
+			leg_posture->leg_dlength = dL0;
+			leg_posture->leg_dlength_jacobian = dL0;
+			leg_posture->leg_x1 = -xb;
+			leg_posture->leg_x2 = xd;
+			leg_posture->leg_y1 = yb;
+			leg_posture->leg_y2 = yd;
+			leg_posture->leg_phi1 = Q1;
+			leg_posture->leg_phi2 = Q4;
+	}
+}
+// 计算雅可比矩阵
+float get_jacobian_element(chassis_leg_posture_t *leg_posture, uint8_t element_type)
+{
+	/* 雅可比属于机身局部五连杆，不能使用已经叠加 pitch 的对地腿角。
+	 * 长度也必须与当前 B、D、phi 属于同一未滤波姿态。
+	 */
+	float L0 = leg_posture->leg_length_raw;
+	float Q0 = leg_posture->leg_angle_local;
+	float Y1 = leg_posture->leg_y1;
+	float Y2 = leg_posture->leg_y2;
+	float X1 = leg_posture->leg_x1;
+	float X2 = leg_posture->leg_x2;
+	float PHI1 = leg_posture->leg_phi1;
+	float PHI2 = leg_posture->leg_phi2;
+	/* Q0=atan2(xc,yc)，因此 C=(L0*sin(Q0), L0*cos(Q0))。 */
+	float xe = L0 * sinf(Q0);
+	float ye = L0 * cosf(Q0);
+	float denominator_1 = -(xe + X1) * sinf(PHI1) + (ye - Y1) * cosf(PHI1);
+	float denominator_2 = (xe - X2) * sinf(PHI2) + (ye - Y2) * cosf(PHI2);
+                                                           
+	switch (element_type)            
+	{               
+	case 1: // N11
+		if (fabsf(denominator_1) < 1.0e-6f)
+		{
+			return 0.0f;
+		}
+		return ((xe + X1) * sinf(Q0) + (ye - Y1) * cosf(Q0)) / (L1 * denominator_1);
+	case 2: // N12
+		if (fabsf(denominator_1) < 1.0e-6f)
+		{
+			return 0.0f;                
+		}
+		return L0 * ((xe + X1) * cosf(Q0) - (ye - Y1) * sinf(Q0)) / (L1 * denominator_1);
+	case 3: // N21
+		if (fabsf(denominator_2) < 1.0e-6f)
+		{
+			return 0.0f;
+		}
+		return ((xe - X2) * sinf(Q0) + (ye - Y2) * cosf(Q0)) / (L4 * denominator_2);
+	case 4: // N22
+		if (fabsf(denominator_2) < 1.0e-6f)
+		{
+			return 0.0f;
+		}
+		return L0 * ((xe - X2) * cosf(Q0) - (ye - Y2) * sinf(Q0)) / (L4 * denominator_2);
+	default:
+		return 0.0f; //无element_type 返回0
+	}
+}
