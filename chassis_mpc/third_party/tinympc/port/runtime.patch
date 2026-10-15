@@ -1,0 +1,86 @@
+--- src/tinympc/admm.cpp
++++ port/admm.cpp
+@@ -263,7 +263,7 @@
+ {
+ 
+     // Update state cost terms
+-    solver->work->q = -(solver->work->Xref.array().colwise() * solver->work->Q.array());
++    solver->work->q = -(solver->work->Xref.array().colwise() * (solver->work->Q.array() - solver->cache->rho));
+     (solver->work->q).noalias() -= solver->cache->rho * (solver->work->vnew - solver->work->g);
+     if (solver->settings->en_state_soc && solver->work->numStateCones > 0) {
+         (solver->work->q).noalias() -= solver->cache->rho * (solver->work->vcnew - solver->work->gc);
+@@ -276,7 +276,7 @@
+     }
+ 
+     // Update input cost terms
+-    solver->work->r = -(solver->work->Uref.array().colwise() * solver->work->R.array());
++    solver->work->r = -(solver->work->Uref.array().colwise() * (solver->work->R.array() - solver->cache->rho));
+     (solver->work->r).noalias() -= solver->cache->rho * (solver->work->znew - solver->work->y);
+     if (solver->settings->en_input_soc && solver->work->numInputCones > 0) {
+         (solver->work->r).noalias() -= solver->cache->rho * (solver->work->zcnew - solver->work->yc);
+@@ -289,7 +289,7 @@
+     }
+ 
+     // Update terminal cost
+-    solver->work->p.col(solver->work->N - 1) = -(solver->work->Xref.col(solver->work->N - 1).transpose().lazyProduct(solver->cache->Pinf));
++    solver->work->p.col(solver->work->N - 1) = -((solver->cache->Pinf - solver->cache->rho * tinyMatrix::Identity(solver->work->nx, solver->work->nx)) * solver->work->Xref.col(solver->work->N - 1));
+     (solver->work->p.col(solver->work->N - 1)).noalias() -= solver->cache->rho * (solver->work->vnew.col(solver->work->N - 1) - solver->work->g.col(solver->work->N - 1));
+ 
+     if (solver->settings->en_state_soc && solver->work->numStateCones > 0) {
+@@ -337,6 +337,7 @@
+     solver->work->iter = 0;
+ 
+     // Setup for adaptive rho
++#ifndef WHU_TINY_FIXED_RHO
+     RhoAdapter adapter;
+     adapter.rho_min = solver->settings->adaptive_rho_min;
+     adapter.rho_max = solver->settings->adaptive_rho_max;
+@@ -348,6 +349,7 @@
+     tinyMatrix v_prev = solver->work->vnew;
+     tinyMatrix z_prev = solver->work->znew;
+     
++#endif
+     // Initialize SOC slack variables if needed
+     if (solver->settings->en_state_soc && solver->work->numStateCones > 0) {
+         solver->work->vcnew = solver->work->x;
+@@ -393,6 +395,7 @@
+ 
+         solver->work->iter += 1;
+ 
++#ifndef WHU_TINY_FIXED_RHO
+         // Handle adaptive rho if enabled
+         if (solver->settings->adaptive_rho) {
+             // Calculate residuals for adaptive rho
+@@ -426,6 +429,7 @@
+         z_prev = solver->work->znew;
+         v_prev = solver->work->vnew;
+ 
++#endif
+         // Check for whether cost is minimized by calculating residuals
+         if (termination_condition(solver)) {
+             solver->work->status = 1; // TINY_SOLVED
+@@ -436,7 +440,9 @@
+             solver->solution->x = solver->work->vnew;
+             solver->solution->u = solver->work->znew;
+ 
++#ifndef WHU_TINY_QUIET
+             std::cout << "Solver converged in " << solver->work->iter << " iterations" << std::endl;
++#endif
+ 
+             return 0;
+         }
+--- src/tinympc/types.hpp
++++ port/types.hpp
+@@ -12,7 +12,11 @@
+ extern "C" {
+ #endif
+ 
+-typedef double tinytype;  // should be double if you want to generate code
++#ifdef WHU_TINY_FLOAT
++typedef float tinytype;
++#else
++typedef double tinytype;
++#endif
+ typedef Matrix<tinytype, Dynamic, Dynamic> tinyMatrix;
+ typedef Matrix<tinytype, Dynamic, 1> tinyVector;
+ 

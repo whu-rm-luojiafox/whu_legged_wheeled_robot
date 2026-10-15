@@ -1,0 +1,4 @@
+numpy==2.3.3
+scipy==1.17.1
+# Solver uses the vendored, commit-pinned official C++ core via native CLI.
+# No global pip install or Python tinympc wrapper is required.
