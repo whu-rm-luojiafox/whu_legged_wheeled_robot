@@ -48,9 +48,12 @@ target_include_directories(chassis_firmware PRIVATE
   "${CHASSIS_ROOT}/third_party/cmsis/Device/ST/STM32F4xx/Include"
   "${CHASSIS_ROOT}/third_party/cmsis/Include")
 target_compile_definitions(chassis_firmware PRIVATE USE_HAL_DRIVER STM32F407xx __FPU_PRESENT=1U)
-target_compile_options(chassis_firmware PRIVATE -std=gnu11)
+# Keep source lines and variable types available in Ozone, including Release builds.
+target_compile_options(chassis_firmware PRIVATE -std=gnu11 -g)
 set(scatter "${CHASSIS_ROOT}/platform/stm32f407/stm32f407ig.sct")
 target_link_options(chassis_firmware PRIVATE --scatter=${scatter}
+  # Keep RW section sizes equal to runtime RAM spans for debugger write validation.
+  --datacompressor=off
   --map --info=sizes,totals --list=${CMAKE_BINARY_DIR}/chassis_firmware.map)
 set_property(TARGET chassis_firmware APPEND PROPERTY LINK_DEPENDS "${scatter}")
 add_custom_command(TARGET chassis_firmware POST_BUILD

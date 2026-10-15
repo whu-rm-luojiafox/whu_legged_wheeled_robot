@@ -7,7 +7,8 @@ uint8_t buffer[sizeof(uart_data_t)];//用于存储完整的数据包
 uint8_t Count=0;//接收状态标签
 uint16_t received = 0;//当前接收到的数据长度
 uint8_t Usart_Receive[1];//用于接收单个字节的数据
-uart_data_t uart_data;
+/* Keep a direct DW_OP_addr so EmberProbe can bind this C struct's layout. */
+uart_data_t uart_data __attribute__((section(".bss.uart_data")));
 static volatile uint32_t chassisPacketTickMs = 0u;
 static volatile uint8_t chassisPacketSeen = 0u;
 

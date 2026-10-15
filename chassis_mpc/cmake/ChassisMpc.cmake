@@ -3,15 +3,15 @@ get_filename_component(CHASSIS_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 
 # The C API is public. Eigen, TinyMPC types and generated caches stay private.
 function(chassis_add_mpc target precision)
-  set(module "${CHASSIS_ROOT}/src/module/chassis/chassis_mpc")
+  set(controller_dir "${CHASSIS_ROOT}/src/components/controller/chassis_mpc")
   set(vendor "${CHASSIS_ROOT}/third_party/tinympc")
   add_library(${target} STATIC
-    "${module}/chassis_mpc.cpp"
-    "${module}/mpc_generated/chassis_tiny_data.cpp"
+    "${controller_dir}/chassis_mpc.cpp"
+    "${controller_dir}/mpc_generated/chassis_tiny_data.cpp"
     "${vendor}/port/admm.cpp")
-  target_include_directories(${target} PUBLIC "${module}")
+  target_include_directories(${target} PUBLIC "${controller_dir}")
   target_include_directories(${target} PRIVATE
-    "${module}/mpc_generated" "${vendor}/port" "${vendor}/include/Eigen")
+    "${controller_dir}/mpc_generated" "${vendor}/port" "${vendor}/include/Eigen")
   target_compile_definitions(${target} PRIVATE
     WHU_TINY_FIXED_RHO WHU_TINY_QUIET EIGEN_DONT_VECTORIZE EIGEN_MAX_ALIGN_BYTES=0)
   if(precision STREQUAL "float")

@@ -23,6 +23,8 @@
 #include "gim_cha_protocol.h"
 #include "super_power_protocol.h"
 #include "pid.h"
+#include "chassis_config.h"
+#include "chassis_leg_math.h"
 #include "remote_control.h"
 #include "user_lib.h"
 #include "gimbal_task.h"
@@ -131,28 +133,8 @@
 #define M3505_MOTOR_SPEED_PID_MAX_IOUT 5000.0f
 
 
-//底盘旋转跟随PID
-#define CHASSIS_FOLLOW_GIMBAL_PID_KP 0.2f
-#define CHASSIS_FOLLOW_GIMBAL_PID_KI 0.0006f//0.5
-#define CHASSIS_FOLLOW_GIMBAL_PID_KD 20.0f
-#define CHASSIS_FOLLOW_GIMBAL_PID_MAX_OUT 10.0f//2.8
-#define CHASSIS_FOLLOW_GIMBAL_PID_MAX_IOUT 10.0f
 #define MOTOR_ECD_TO_RAD 0.000766990394f 
 /* -----------------------------平步新增宏定义---------------------------- */
-
-//腿长设定PID
-#define LEG_SET_PID_KP 300.0f
-#define LEG_SET_PID_KI 0.1f
-#define LEG_SET_PID_KD 300.0f //350.0f
-#define LEG_SET_PID_OUT 50.0f
-#define LEG_SET_PID_IOUT 3.0f
-
-//roll轴水平pid
-#define ROLL_PID_KP 300.0f
-#define ROLL_PID_KI 0.1f
-#define ROLL_PID_KD 10.0f
-#define ROLL_PID_OUT 10.0f
-#define ROLL_PID_IOUT 3.0f
 
 // -------------  Limit info ------------- 
 #define MAX_ACCL 13000.0f
@@ -160,11 +142,6 @@
 #define MAX_FOOT_OUTPUT 6.3
 
 // ------------- Mech info ------------- 
-#define L1 0.21f//0.15f
-#define L2 0.25f//0.27f
-#define L3 0.25f//0.27f
-#define L4 0.21f//0.15f
-#define L5 0.0f//0.15f
   
 #define WHEEL_PERIMETER  0.446106f                        //0.56547
 #define WHEEL_RADIUS 0.068f
@@ -262,22 +239,7 @@ typedef struct
     chassis_high_mode_e       chassis_high_mode, last_chassis_high_mode;
 
 } mode_t;
-typedef struct
-{
-    fp32 leg_length_set;
-    fp32 leg_length, last_leg_length;
-    fp32 leg_length_raw;     // 当前五连杆几何长度，雅可比使用（未滤波）
-    fp32 leg_dlength, last_leg_dlength, leg_dlength_jacobian, last_leg_dlength_jacobian;
-    fp32 leg_ddlength, last_leg_ddlength;
-    fp32 leg_angle, last_leg_angle, leg_angle_set, leg_angle_kf;
-    fp32 leg_angle_local;    // 相对机身向下轴的局部角 Q0，五连杆雅可比使用
-    fp32 leg_gyro, last_leg_gyro;
-    fp32 leg_gyro_local;     // Q0 对时间的导数；右腿统一腿角速度为其相反数
-    fp32 leg_gyro_jacobian, last_leg_gyro_jacobian;
-    fp32 leg_accel;
-    fp32 leg_x1, leg_x2, leg_y1, leg_y2;
-    fp32 leg_phi1, leg_phi2;
-} chassis_leg_posture_t;
+
 
 typedef struct
 {
@@ -456,7 +418,6 @@ typedef struct
     pid_type_def motor_speed_pid[4];  // motor speed PID.底盘电机速度pid
     pid_type_def leg_L_length_pid;    // 腿长设定PID
     pid_type_def leg_R_length_pid;    // 腿长设定PID
-    pid_type_def chassis_yaw_pid;     // follow angle PID.底盘跟随角度pid
     pid_type_def chassis_roll_pid;     // roll轴控制PID
 
     fp32 vx;     //  底盘速度 前进方向 前为正，单位 m/s

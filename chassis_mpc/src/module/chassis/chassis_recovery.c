@@ -276,6 +276,11 @@ static void chassisRecoveryApply(const RecoveryContext *r, chassis_move_t *c)
 
 
 
+uint8_t chassisRecoveryIsActive(void)
+{
+    return recovery.state != REC_IDLE;
+}
+
 void chassisRecoveryProcess(chassis_move_t *c)
 {
     const bool finished = chassisRecoveryUpdate(&recovery, c);

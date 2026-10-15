@@ -45,6 +45,15 @@ int32_t cnt;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+/* Inspect fault_record after halting in HardFault. Cleared by a normal reset. */
+volatile struct {
+  uint32_t captured;
+  uint32_t exc_return;
+  uint32_t stack_address;
+  uint32_t cfsr, hfsr, bfar, mmfar;
+  uint32_t frame_valid;
+  uint32_t r0, r1, r2, r3, r12, lr, pc, xpsr;
+} fault_record;
 
 /* USER CODE END PV */
 
@@ -90,16 +99,49 @@ void NMI_Handler(void)
 /**
   * @brief This function handles Hard fault interrupt.
   */
-void HardFault_Handler(void)
+__attribute__((used, noinline, noreturn))
+void hard_fault_capture(uint32_t *stack, uint32_t exc_return)
 {
-  /* USER CODE BEGIN HardFault_IRQn 0 */
-
-  /* USER CODE END HardFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
+  uint32_t address = (uint32_t)stack;
+  fault_record.exc_return = exc_return;
+  fault_record.stack_address = address;
+  fault_record.cfsr = SCB->CFSR;
+  fault_record.hfsr = SCB->HFSR;
+  fault_record.bfar = SCB->BFAR;
+  fault_record.mmfar = SCB->MMFAR;
+  /* R0..xPSR are at the frame base even with an extended FP frame;
+   * S0..S15/FPSCR follow the core registers at higher addresses. */
+  /* Avoid a second fault if stacking failed or the stack is corrupted. */
+  if ((fault_record.cfsr & 0x00003838u) == 0u &&
+      (address & 3u) == 0u &&
+      ((address >= 0x20000000u && address <= 0x2001ffe0u) ||
+       (address >= 0x10000000u && address <= 0x1000ffe0u))) {
+    const uint32_t *frame = (const uint32_t *)address;
+    fault_record.r0 = frame[0];
+    fault_record.r1 = frame[1];
+    fault_record.r2 = frame[2];
+    fault_record.r3 = frame[3];
+    fault_record.r12 = frame[4];
+    fault_record.lr = frame[5];
+    fault_record.pc = frame[6];
+    fault_record.xpsr = frame[7];
+    fault_record.frame_valid = 1u;
   }
+  fault_record.captured = 1u;
+  __disable_irq();
+  for (;;) { __NOP(); }
+}
+
+__attribute__((naked)) void HardFault_Handler(void)
+{
+  __asm volatile (
+    "tst lr, #4\n"
+    "ite eq\n"
+    "mrseq r0, msp\n"
+    "mrsne r0, psp\n"
+    "mov r1, lr\n"
+    "b hard_fault_capture\n"
+  );
 }
 
 /**

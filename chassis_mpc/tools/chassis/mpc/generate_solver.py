@@ -17,7 +17,7 @@ from scipy.linalg import solve_discrete_are
 
 ROOT = Path(__file__).resolve().parents[3]
 VENDOR = ROOT / "third_party/tinympc"
-OUT = ROOT / "src/module/chassis/chassis_mpc/mpc_generated"
+OUT = ROOT / "src/components/controller/chassis_mpc/mpc_generated"
 COMMIT = "023f36bd5b27267e1a96ed47a774d120b5707f13"
 
 

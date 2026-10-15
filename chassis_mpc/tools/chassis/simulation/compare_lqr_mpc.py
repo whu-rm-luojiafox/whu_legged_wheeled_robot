@@ -74,7 +74,7 @@ def main():
     ap.add_argument("--output-dir",type=Path,default=ROOT/"build/host/reports")
     args=ap.parse_args()
     model=json.loads(next((ROOT/"tools/chassis/model/generated").glob("fixed_leg_L0p240_R0p240_Ts0p004000.json")).read_text(encoding="utf-8"))
-    manifest=json.loads((ROOT/"src/module/chassis/chassis_mpc/mpc_generated/manifest.json").read_text())
+    manifest=json.loads((ROOT/"src/components/controller/chassis_mpc/mpc_generated/manifest.json").read_text())
     Qf=np.array(manifest["Qf"])
     def state(**values):
         x=np.zeros(10,dtype=np.float32)

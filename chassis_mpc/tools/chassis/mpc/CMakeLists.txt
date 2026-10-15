@@ -11,7 +11,7 @@ foreach(precision double float)
   target_compile_features(mpc_probe_${precision} PRIVATE cxx_std_17)
   # This diagnostic executable intentionally inspects solver internals.
   target_include_directories(mpc_probe_${precision} PRIVATE
-    "${CHASSIS_ROOT}/src/module/chassis/chassis_mpc/mpc_generated"
+    "${CHASSIS_ROOT}/src/components/controller/chassis_mpc/mpc_generated"
     "${CHASSIS_ROOT}/third_party/tinympc/port"
     "${CHASSIS_ROOT}/third_party/tinympc/include/Eigen")
   target_compile_definitions(mpc_probe_${precision} PRIVATE
