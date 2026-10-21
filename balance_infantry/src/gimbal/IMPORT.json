@@ -1,0 +1,1067 @@
+{
+  "origin": "02Balance_gimbal_task",
+  "date": "2026-10-21",
+  "note": "Hashes describe files before local integration edits; no sibling sources are referenced by the build.",
+  "files": [
+    {
+      "source": "application/calibrate_task.c",
+      "destination": "src/gimbal/application/calibrate_task.c",
+      "sha256": "a21d7195d4d7a8f1386a48e7968c4d4c56af71ec1d7fbc9c61bc24794bcbf2a6"
+    },
+    {
+      "source": "application/calibrate_task.h",
+      "destination": "src/gimbal/application/calibrate_task.h",
+      "sha256": "5c371a91e910fbee857c794d805f83f06639d5624a5c2957ac9e241fbe3b82fe"
+    },
+    {
+      "source": "application/CAN_receive.c",
+      "destination": "src/gimbal/application/CAN_receive.c",
+      "sha256": "01354a2edd08851928bbcebed11ecc8ddc6787b611790dc619889087446b98ce"
+    },
+    {
+      "source": "application/CAN_receive.h",
+      "destination": "src/gimbal/application/CAN_receive.h",
+      "sha256": "f0b4c8f9f00d769a25f84719d1eb6d4e2e3ee71598f3d0bda80e421a3943fc53"
+    },
+    {
+      "source": "application/detect_task.c",
+      "destination": "src/gimbal/application/detect_task.c",
+      "sha256": "2d7f7222f33563730cefa6bd4a599fb5d94962afc23ef97372fa34d6189f4cdb"
+    },
+    {
+      "source": "application/detect_task.h",
+      "destination": "src/gimbal/application/detect_task.h",
+      "sha256": "61327ca84341f992b3442d386a7a28871363e178b8d632726d1ee43f5f7372c1"
+    },
+    {
+      "source": "application/gimbal_task.c",
+      "destination": "src/gimbal/application/gimbal_task.c",
+      "sha256": "3273a4c19965c52563ee80b3bff2cf218bb84805b8e12157fac7b0a1f3f19d7c"
+    },
+    {
+      "source": "application/gimbal_task.h",
+      "destination": "src/gimbal/application/gimbal_task.h",
+      "sha256": "608004b60d4b2334dfed5ce629ba37e23bb83f514c1a0a9be571b6e98019555b"
+    },
+    {
+      "source": "application/INS_task.c",
+      "destination": "src/gimbal/application/INS_task.c",
+      "sha256": "7ec10a09de5cd0fb63be03d3485fa24a31b640def090bcfa1eb045fb0a4230d8"
+    },
+    {
+      "source": "application/INS_task.h",
+      "destination": "src/gimbal/application/INS_task.h",
+      "sha256": "67a501d5aa6d424a621b7e65f07e298bc50ae9801a9e5201e109fc725e635111"
+    },
+    {
+      "source": "application/referee.c",
+      "destination": "src/gimbal/application/referee.c",
+      "sha256": "1f603b7252635b0c2abfb773b826a8af832a1aa8f40b6a1ea66d7ae393d029b4"
+    },
+    {
+      "source": "application/referee.h",
+      "destination": "src/gimbal/application/referee.h",
+      "sha256": "f2f475552a6c982931411c58eb25f2f1c70cb8e273374e7e9882557a193ba2a7"
+    },
+    {
+      "source": "application/referee_usart_task.c",
+      "destination": "src/gimbal/application/referee_usart_task.c",
+      "sha256": "5ce1ee8a10e8c0bc3c87892a30bb4efb71de6b3be1a05bd946a95f9f8965d3b8"
+    },
+    {
+      "source": "application/remote_control.c",
+      "destination": "src/gimbal/application/remote_control.c",
+      "sha256": "51e9f0b2d01ad0f07aba67d2ebbc8b0bc914e4843efeda8adef8f03edf1976d2"
+    },
+    {
+      "source": "application/remote_control.h",
+      "destination": "src/gimbal/application/remote_control.h",
+      "sha256": "b5a6d0d46bb0a5ea42d4e62accaac31347c4c02199d6495b53325a9877bdb1e3"
+    },
+    {
+      "source": "application/Self_aim.c",
+      "destination": "src/gimbal/application/Self_aim.c",
+      "sha256": "04222d8b4657124dd0f7f84a6fd81eed53d0ff8015db82e33c03d2ac3d0859c4"
+    },
+    {
+      "source": "application/Self_aim.h",
+      "destination": "src/gimbal/application/Self_aim.h",
+      "sha256": "5772ed1546cd48fd08a839d54e0d0fe68ef6c8ca1de79aa321fc9c30551b4a92"
+    },
+    {
+      "source": "application/servo_task.c",
+      "destination": "src/gimbal/application/servo_task.c",
+      "sha256": "adb7bac6d3bfd1d0ce64aa85faf8bfe5f80ecedcbc44ce65146b95ba0e9f90a6"
+    },
+    {
+      "source": "application/servo_task.h",
+      "destination": "src/gimbal/application/servo_task.h",
+      "sha256": "4e78b2f50153cb545badd4ddd9b1dab001ee706ea076501574d34f0f85637173"
+    },
+    {
+      "source": "application/shoot.c",
+      "destination": "src/gimbal/application/shoot.c",
+      "sha256": "bf1c71e06ba1dd0ba5239d527683af395d3378c3946895fefd19b023a193b77d"
+    },
+    {
+      "source": "application/shoot.h",
+      "destination": "src/gimbal/application/shoot.h",
+      "sha256": "0450d7ad271d4df8e9cdd8ae8a5e4a72e7f804f1f8d149fca99314cd3068733a"
+    },
+    {
+      "source": "application/test_task.c",
+      "destination": "src/gimbal/application/test_task.c",
+      "sha256": "6f01e884e1c5363f4a3ca1cd91313f60924db5ab9ae7627031ba97b943ffb786"
+    },
+    {
+      "source": "application/UART_task.c",
+      "destination": "src/gimbal/application/UART_task.c",
+      "sha256": "e77bf9a362f8c6634b8aea380b1fa5cc10fabdccf9571b1479d4b72418d74ac3"
+    },
+    {
+      "source": "application/UART_task.h",
+      "destination": "src/gimbal/application/UART_task.h",
+      "sha256": "dd3e7a3a64d355fe7b6994d2c9c2b872f95084635c9f5319de684e3ab8a11936"
+    },
+    {
+      "source": "application/vofa.c",
+      "destination": "src/gimbal/application/vofa.c",
+      "sha256": "9781d1f2bb4886492239be11800d7aa9dabe06115c82a2f652d083f192859a10"
+    },
+    {
+      "source": "application/vofa.h",
+      "destination": "src/gimbal/application/vofa.h",
+      "sha256": "47bc11676f738e7744a643aef2d299e7c4c85f1ebc21b86e9fd35bb23a182ee6"
+    },
+    {
+      "source": "bsp/boards/bsp_buzzer.c",
+      "destination": "src/gimbal/bsp/boards/bsp_buzzer.c",
+      "sha256": "16ecdde98fe069aa5cd78864c002642daea87225c9dd3d0c903c1611ff9ce256"
+    },
+    {
+      "source": "bsp/boards/bsp_can.c",
+      "destination": "src/gimbal/bsp/boards/bsp_can.c",
+      "sha256": "491ccce38d6a47009dd2f822c1afd98521d21e486e7bd81be87e26918ddb5cb3"
+    },
+    {
+      "source": "bsp/boards/bsp_crc32.c",
+      "destination": "src/gimbal/bsp/boards/bsp_crc32.c",
+      "sha256": "34ad3610fbd606a4f11272a05d640800a4261d2d6fdadbf187e002d5f3846258"
+    },
+    {
+      "source": "bsp/boards/bsp_crc32.h",
+      "destination": "src/gimbal/bsp/boards/bsp_crc32.h",
+      "sha256": "edc2b636c3018d07f3ce5d34fd3f4f26591eceb7c048d51de51874ccd5716a51"
+    },
+    {
+      "source": "bsp/boards/bsp_dwt.c",
+      "destination": "src/gimbal/bsp/boards/bsp_dwt.c",
+      "sha256": "91c02ff3c48243953f37b697a98024deff5db1a2b8ab9de7f52c3f9b260d474e"
+    },
+    {
+      "source": "bsp/boards/bsp_dwt.h",
+      "destination": "src/gimbal/bsp/boards/bsp_dwt.h",
+      "sha256": "ceeea67ead5b103d6eede0777851f72a1bd0ecf40aeaaa623932b89fe52319a0"
+    },
+    {
+      "source": "bsp/boards/bsp_flash.c",
+      "destination": "src/gimbal/bsp/boards/bsp_flash.c",
+      "sha256": "da705c12a5c5d0f667b8313c60fd028b14dacbc557b452f1c2861c8dbd91c6e6"
+    },
+    {
+      "source": "bsp/boards/bsp_fric.c",
+      "destination": "src/gimbal/bsp/boards/bsp_fric.c",
+      "sha256": "886a17696ec4486910ff2e4e7255d2f3086d102580e1d90a7da7e4f842d40277"
+    },
+    {
+      "source": "bsp/boards/bsp_fric.h",
+      "destination": "src/gimbal/bsp/boards/bsp_fric.h",
+      "sha256": "54493c2c256df19841afb28a34b080905e3254622dd8d269a5dc901ca8bd9f1a"
+    },
+    {
+      "source": "bsp/boards/bsp_laser.c",
+      "destination": "src/gimbal/bsp/boards/bsp_laser.c",
+      "sha256": "715923215562da1e657eac14fb165bb625b46e828156f0716111b8abd07c0855"
+    },
+    {
+      "source": "bsp/boards/bsp_laser.h",
+      "destination": "src/gimbal/bsp/boards/bsp_laser.h",
+      "sha256": "c02d255069dcb399b78fadb4bc0af493e0c3343c967824a490ccee68aec9f7dc"
+    },
+    {
+      "source": "bsp/boards/bsp_PWM.c",
+      "destination": "src/gimbal/bsp/boards/bsp_PWM.c",
+      "sha256": "68cae15651656d8f4a6384cfd257676a94421d8562d8db3cc02364511a3541d5"
+    },
+    {
+      "source": "bsp/boards/bsp_PWM.h",
+      "destination": "src/gimbal/bsp/boards/bsp_PWM.h",
+      "sha256": "ad44e68b54e9ef2c3508c28c6d8ec54721ee37253570ccaa4c8a3d12cf6f8d34"
+    },
+    {
+      "source": "bsp/boards/bsp_rc.c",
+      "destination": "src/gimbal/bsp/boards/bsp_rc.c",
+      "sha256": "e1f5feb6523c63aa5344e48d414f1c28e9a6e337715cdc7399207d41d484872c"
+    },
+    {
+      "source": "bsp/boards/bsp_rng.c",
+      "destination": "src/gimbal/bsp/boards/bsp_rng.c",
+      "sha256": "ff68273cd94f055d9220e071a087b703c032f728f145244a286c3073ab5895c8"
+    },
+    {
+      "source": "bsp/boards/bsp_rng.h",
+      "destination": "src/gimbal/bsp/boards/bsp_rng.h",
+      "sha256": "c9ee247688146f056924a07f8cd52ea8e0ef03cef2039f25fe297dc0aab6c22c"
+    },
+    {
+      "source": "bsp/boards/bsp_servo_pwm.c",
+      "destination": "src/gimbal/bsp/boards/bsp_servo_pwm.c",
+      "sha256": "035d91b1b6993e0dcd43c227bfa60ef8fb73d09dcf70192a5f81f29d07a5f6d9"
+    },
+    {
+      "source": "bsp/boards/bsp_servo_pwm.h",
+      "destination": "src/gimbal/bsp/boards/bsp_servo_pwm.h",
+      "sha256": "defe86e7ebe6dc0cc82a8af70f2827d1ef1c2c2867642e591e90d751ddf58c43"
+    },
+    {
+      "source": "components/algorithm/user_lib.c",
+      "destination": "src/gimbal/components/algorithm/user_lib.c",
+      "sha256": "2db9983230feaea239c41520e31d53b29b635c29623119f7e0170dc8f0a1ca22"
+    },
+    {
+      "source": "components/algorithm/user_lib.h",
+      "destination": "src/gimbal/components/algorithm/user_lib.h",
+      "sha256": "a1d1a29ea5d8108f43f36c827626c01aadd4693c4b88a69bac7a622491b0e7b4"
+    },
+    {
+      "source": "components/devices/BMI088driver.c",
+      "destination": "src/gimbal/components/devices/BMI088driver.c",
+      "sha256": "5a71f1fb4e68d3b59f2199bbdd25482b1eff75e040ede06eb53ab9fdd4cd9e5c"
+    },
+    {
+      "source": "components/devices/BMI088driver.h",
+      "destination": "src/gimbal/components/devices/BMI088driver.h",
+      "sha256": "4e9ee9cee6e4fd062b6ff63de24761d3e0fb6bc317193bff25adfee549c8ae81"
+    },
+    {
+      "source": "components/devices/BMI088Middleware.c",
+      "destination": "src/gimbal/components/devices/BMI088Middleware.c",
+      "sha256": "a8f10d9d6695272cf4a651b4789c680d870670b58091edcac0db441eacf5f2c9"
+    },
+    {
+      "source": "components/devices/BMI088Middleware.h",
+      "destination": "src/gimbal/components/devices/BMI088Middleware.h",
+      "sha256": "0593c7e42b1aa9ec2a64b2fb5133551dbc5038bf5513bcbddb55433b4a1b3f1f"
+    },
+    {
+      "source": "components/devices/controller.c",
+      "destination": "src/gimbal/components/devices/controller.c",
+      "sha256": "77fc077763011121a012b567b0a82f9bca57cd43a36d636226db8c1cc18dc3f8"
+    },
+    {
+      "source": "components/devices/controller.h",
+      "destination": "src/gimbal/components/devices/controller.h",
+      "sha256": "6fd6f87f25511d625e85a63c5d0c7457262833ff9277ea8d07404e12864a722c"
+    },
+    {
+      "source": "components/devices/ist8310driver_middleware.c",
+      "destination": "src/gimbal/components/devices/ist8310driver_middleware.c",
+      "sha256": "6432de4029a7564a4a68a794a4d895ff81a48565e0d857865705d9efef97c47e"
+    },
+    {
+      "source": "components/devices/kalman_filter.c",
+      "destination": "src/gimbal/components/devices/kalman_filter.c",
+      "sha256": "6bce8f1cbe97a66139531f3de758f81b18bc9b356a981bd08da41abb1da2da06"
+    },
+    {
+      "source": "components/devices/kalman_filter.h",
+      "destination": "src/gimbal/components/devices/kalman_filter.h",
+      "sha256": "6ace588c451af59b73198f1d1aedf899bc3761780536f78fef06b53fc1430fbf"
+    },
+    {
+      "source": "components/devices/QuaternionEKF.c",
+      "destination": "src/gimbal/components/devices/QuaternionEKF.c",
+      "sha256": "8b1d6fd53b653143c6c8fbe927b54cb950f4374522cd6c1fe4fd52d220c7af19"
+    },
+    {
+      "source": "components/devices/QuaternionEKF.h",
+      "destination": "src/gimbal/components/devices/QuaternionEKF.h",
+      "sha256": "1cc368dc4128864d8f4df950da4910b612c520487410128ff1f6edadb917259d"
+    },
+    {
+      "source": "components/support/CRC8_CRC16.c",
+      "destination": "src/gimbal/components/support/CRC8_CRC16.c",
+      "sha256": "218840183bf83d6a9623c477c3b2780c8bc068162e39c945228e0fb9fcf2e013"
+    },
+    {
+      "source": "components/support/linux_list.h",
+      "destination": "src/gimbal/components/support/linux_list.h",
+      "sha256": "aeb1cd05d2e42095c1d47681ef006a76d8aa922b8f89cb527eccbcf0023370f7"
+    },
+    {
+      "source": "components/support/macro_mutex.h",
+      "destination": "src/gimbal/components/support/macro_mutex.h",
+      "sha256": "84f48ba641b741d9035b337c1073fefd711ceb764b2f88f0817006cdd6099ee9"
+    },
+    {
+      "source": "components/support/mem_mang.h",
+      "destination": "src/gimbal/components/support/mem_mang.h",
+      "sha256": "57e817e800f5b5d8e3b6794e33c48d1f21dd9b6a834631c5fe266131a95ab842"
+    },
+    {
+      "source": "components/support/mem_mang4.c",
+      "destination": "src/gimbal/components/support/mem_mang4.c",
+      "sha256": "1c3936d152a04638e510e5126506de8cf7c55fec7ce071b5c31248602be1f3da"
+    },
+    {
+      "source": "Src/adc.c",
+      "destination": "platform/stm32f407/gimbal/src/adc.c",
+      "sha256": "d27cdfc20e481d5e8b846012b20524a1ef4184c277d6dabc11ac11525867f143"
+    },
+    {
+      "source": "Src/can.c",
+      "destination": "platform/stm32f407/gimbal/src/can.c",
+      "sha256": "2a4673d139d6b05333c7352674f29eea5730337bbe75dcad2e16ff3906f1c6f7"
+    },
+    {
+      "source": "Src/crc.c",
+      "destination": "platform/stm32f407/gimbal/src/crc.c",
+      "sha256": "c2293c592b12e27ece96ea67688156e70850bd927333cdfb9a7527ad7369e58e"
+    },
+    {
+      "source": "Src/dma.c",
+      "destination": "platform/stm32f407/gimbal/src/dma.c",
+      "sha256": "f228d9bc6180dc310dd118337ad23411ab9975769dc490dcf382fa811de67a6d"
+    },
+    {
+      "source": "Src/freertos.c",
+      "destination": "platform/stm32f407/gimbal/src/freertos.c",
+      "sha256": "dfdabc3c389a00c6cacbd9c8d73b630ae8038d5fab662ad9200f435e0805d7aa"
+    },
+    {
+      "source": "Src/gpio.c",
+      "destination": "platform/stm32f407/gimbal/src/gpio.c",
+      "sha256": "b097c3ba1692b613fb86c502b068d0e92eabf809ddc0abd38f66bc706e942e68"
+    },
+    {
+      "source": "Src/i2c.c",
+      "destination": "platform/stm32f407/gimbal/src/i2c.c",
+      "sha256": "a65b47bff9765b2d084ffc10f6d707e851730ef2a556a65ed2ad944259001352"
+    },
+    {
+      "source": "Src/main.c",
+      "destination": "platform/stm32f407/gimbal/src/main.c",
+      "sha256": "25889a88130d284b78310e38b93c90a53c43e8014452fe2c26524086480e6875"
+    },
+    {
+      "source": "Src/rng.c",
+      "destination": "platform/stm32f407/gimbal/src/rng.c",
+      "sha256": "ab719350aed6a27d4f545f87b50b5413906eeaf2777091c82ad27823b0d6bb9f"
+    },
+    {
+      "source": "Src/rtc.c",
+      "destination": "platform/stm32f407/gimbal/src/rtc.c",
+      "sha256": "ab3a31887e0a027a0d290e6af48ecf13fe604bac1847058c00049871006db883"
+    },
+    {
+      "source": "Src/spi.c",
+      "destination": "platform/stm32f407/gimbal/src/spi.c",
+      "sha256": "b674a48d62c783b7e5f712bd12e0d5dc9bfed03c877f777d0ca07ce8976007b9"
+    },
+    {
+      "source": "Src/stm32f4xx_hal_msp.c",
+      "destination": "platform/stm32f407/gimbal/src/stm32f4xx_hal_msp.c",
+      "sha256": "2c8969a2117e18095adb96c51390d02a5a8cde0480fa1e2f3da32c32df636c83"
+    },
+    {
+      "source": "Src/stm32f4xx_it.c",
+      "destination": "platform/stm32f407/gimbal/src/stm32f4xx_it.c",
+      "sha256": "3f4e5408d730e51a084a8ccd4bd541e8247c5cec2bb55d7306c6734645db7fba"
+    },
+    {
+      "source": "Src/system_stm32f4xx.c",
+      "destination": "platform/stm32f407/gimbal/src/system_stm32f4xx.c",
+      "sha256": "c178efc65b0df9461ad5955a88fab5fbda9c7519dac222a838ccda3b8a6a689e"
+    },
+    {
+      "source": "Src/tim.c",
+      "destination": "platform/stm32f407/gimbal/src/tim.c",
+      "sha256": "364628e3e38a3f01433cd5b302d4403e79ea2add7776f93d639478b6f9b47338"
+    },
+    {
+      "source": "Src/usart.c",
+      "destination": "platform/stm32f407/gimbal/src/usart.c",
+      "sha256": "e3cc0ca06cd065975f9702666cc9b42536de8e3b9afe086083711c9caeaa99fa"
+    },
+    {
+      "source": "Src/usbd_cdc_if.c",
+      "destination": "platform/stm32f407/gimbal/src/usbd_cdc_if.c",
+      "sha256": "d8d623fa071eb545bc0cbbdb4d83f615bc2dd7b4afbc4b6b102aace1cc997acd"
+    },
+    {
+      "source": "Src/usbd_conf.c",
+      "destination": "platform/stm32f407/gimbal/src/usbd_conf.c",
+      "sha256": "2d7711f9eac851efa2c3a6917921d0d0b1ecd3828e14c64a9b12f33efc283f6b"
+    },
+    {
+      "source": "Src/usbd_desc.c",
+      "destination": "platform/stm32f407/gimbal/src/usbd_desc.c",
+      "sha256": "f253db35a3ecbad9d8373f9daf3cd100cda9dec9fae8bd253c284dcde22f5efe"
+    },
+    {
+      "source": "Src/usb_device.c",
+      "destination": "platform/stm32f407/gimbal/src/usb_device.c",
+      "sha256": "42aece1e7603da60648c43f79a9914211646cadf7b3c3e25d089a1896f2a5be5"
+    },
+    {
+      "source": "Src/usb_otg.c",
+      "destination": "platform/stm32f407/gimbal/src/usb_otg.c",
+      "sha256": "735e5149ff11c5bbfebeab8e7c74c77913af0cbb73e52fd3750e267183e87f4d"
+    },
+    {
+      "source": "Inc/adc.h",
+      "destination": "platform/stm32f407/gimbal/include/adc.h",
+      "sha256": "8120e2f3deffee954f141aea3b0d6e09ee48ec5bdc74d8c4edd39187e3b583b0"
+    },
+    {
+      "source": "Inc/can.h",
+      "destination": "platform/stm32f407/gimbal/include/can.h",
+      "sha256": "227d3207d0bb836c08dec10d14a7be9581f6da0ed2fd94447c574e0c0dfc3f26"
+    },
+    {
+      "source": "Inc/crc.h",
+      "destination": "platform/stm32f407/gimbal/include/crc.h",
+      "sha256": "680c9f11b08795f6611b2255b23b9fdd1e20589913bfe7cf71a943553f4fab20"
+    },
+    {
+      "source": "Inc/dma.h",
+      "destination": "platform/stm32f407/gimbal/include/dma.h",
+      "sha256": "3dd05431f4c88b292c1f46e206f3001536efdd155d7d61dd75adbfa6c0eeff0a"
+    },
+    {
+      "source": "Inc/FreeRTOSConfig.h",
+      "destination": "platform/stm32f407/gimbal/include/FreeRTOSConfig.h",
+      "sha256": "62b177844253de119a3e094ebad6aa2fc24fc108d7df27b7cf959da5e677b6ad"
+    },
+    {
+      "source": "Inc/gpio.h",
+      "destination": "platform/stm32f407/gimbal/include/gpio.h",
+      "sha256": "96746ff5862bebcc4f912d105126c316f73a6a0e40731e7f37c61a22e02d0125"
+    },
+    {
+      "source": "Inc/i2c.h",
+      "destination": "platform/stm32f407/gimbal/include/i2c.h",
+      "sha256": "005cf29d44e1b38a81a6ec054a391add23ad086545e06855b84c532fd8bc545a"
+    },
+    {
+      "source": "Inc/main.h",
+      "destination": "platform/stm32f407/gimbal/include/main.h",
+      "sha256": "4bf7fc7e49694ad50cab67727527fe1130957dff1197cd6c904f44e3f9934b4f"
+    },
+    {
+      "source": "Inc/rng.h",
+      "destination": "platform/stm32f407/gimbal/include/rng.h",
+      "sha256": "c897db4838bea53301a89b83fb6744aeae8445a9b45a5516f737da6ce49c47ee"
+    },
+    {
+      "source": "Inc/rtc.h",
+      "destination": "platform/stm32f407/gimbal/include/rtc.h",
+      "sha256": "74e9bf572512f5c4b911fbe8ef15f461c8cf06dfc3ec2cec8e4a26841b701136"
+    },
+    {
+      "source": "Inc/spi.h",
+      "destination": "platform/stm32f407/gimbal/include/spi.h",
+      "sha256": "0a270d700dec857f656eca9a208bb1d4f12e7df64328c16dce6c9c0fdcfdfe84"
+    },
+    {
+      "source": "Inc/stm32f4xx_hal_conf.h",
+      "destination": "platform/stm32f407/gimbal/include/stm32f4xx_hal_conf.h",
+      "sha256": "5d6761c4365a367faae7440c4cb234b0dcafc4d8c32cea9d58c7ed4a0a6bef7e"
+    },
+    {
+      "source": "Inc/stm32f4xx_it.h",
+      "destination": "platform/stm32f407/gimbal/include/stm32f4xx_it.h",
+      "sha256": "6b079853731d478467ef5d93a593855e3ea2ca58620ffc0f5d661044e047efa2"
+    },
+    {
+      "source": "Inc/tim.h",
+      "destination": "platform/stm32f407/gimbal/include/tim.h",
+      "sha256": "457b4e6712d305fd8e540d704864516af5a306d061c0e5a3210b6fc19fd15e56"
+    },
+    {
+      "source": "Inc/usart.h",
+      "destination": "platform/stm32f407/gimbal/include/usart.h",
+      "sha256": "133b196dbbbb6e35661e0d4a26ec9e2f52304dc87cabbdb184f59f5c399b5a29"
+    },
+    {
+      "source": "Inc/usbd_cdc_if.h",
+      "destination": "platform/stm32f407/gimbal/include/usbd_cdc_if.h",
+      "sha256": "99234b52a27619bbc96526e28fcf122c82e0dd1698410c2e0a585fbba9fcee92"
+    },
+    {
+      "source": "Inc/usbd_conf.h",
+      "destination": "platform/stm32f407/gimbal/include/usbd_conf.h",
+      "sha256": "fcd4db6631a3983d5fdce0ebe17eaadc646b3577d2e9998b68f4814dec46d095"
+    },
+    {
+      "source": "Inc/usbd_desc.h",
+      "destination": "platform/stm32f407/gimbal/include/usbd_desc.h",
+      "sha256": "f89a107891b28aabd2ef6cdcadc4e6d6cf37cdb37c06e05462ae1c1e2b6e7f85"
+    },
+    {
+      "source": "Inc/usb_device.h",
+      "destination": "platform/stm32f407/gimbal/include/usb_device.h",
+      "sha256": "6c93181221009fcd6678837dcd69dc19130a76a16f63f8750e5e911fc621a105"
+    },
+    {
+      "source": "my_UI/RM_Cilent_UI.c",
+      "destination": "src/gimbal/components/ui/RM_Cilent_UI.c",
+      "sha256": "01df31f631e7b3554df2988d9732a04e03ca1343080210e7a35942ebbc345a5d"
+    },
+    {
+      "source": "my_UI/RM_Cilent_UI.h",
+      "destination": "src/gimbal/components/ui/RM_Cilent_UI.h",
+      "sha256": "0b4e4c7dad2de67df52e693b637fa87174fb8020eb25294bf5606ef73df166d6"
+    },
+    {
+      "source": "my_UI/ui.h",
+      "destination": "src/gimbal/components/ui/ui.h",
+      "sha256": "cea7dc0b6f9b1e8d947420d194d6544d2b36632556bf5b12d2fceaa35c99b1e1"
+    },
+    {
+      "source": "my_UI/ui_default.c",
+      "destination": "src/gimbal/components/ui/ui_default.c",
+      "sha256": "de95d6aa7ccf88018aec376685e0aee6ae5e889ec0c2ea7330693ecb9ad3ff2f"
+    },
+    {
+      "source": "my_UI/ui_default.h",
+      "destination": "src/gimbal/components/ui/ui_default.h",
+      "sha256": "3b6ace762b3fb783727e08a5e981d9c3f7ddfbf115e9366250bf693632988037"
+    },
+    {
+      "source": "my_UI/ui_frame1.c",
+      "destination": "src/gimbal/components/ui/ui_frame1.c",
+      "sha256": "02735e00da9ac76e8d783f42db2065ee90d1337f9a2c5b3c7fd22a73bc000f3a"
+    },
+    {
+      "source": "my_UI/ui_frame1.h",
+      "destination": "src/gimbal/components/ui/ui_frame1.h",
+      "sha256": "bf3daaf540bbf2592006ac3f20dbd0a4da91ab38a440f8aa657face88a502641"
+    },
+    {
+      "source": "my_UI/ui_interface.c",
+      "destination": "src/gimbal/components/ui/ui_interface.c",
+      "sha256": "22c873c691f0ae07ebae187b5484fcc6ea65ec9bcb1c93faa61d174cebea8921"
+    },
+    {
+      "source": "my_UI/ui_interface.h",
+      "destination": "src/gimbal/components/ui/ui_interface.h",
+      "sha256": "6739daf7db99af1943f541a07b21ae35c1f00c7663ed380de8796700603be95f"
+    },
+    {
+      "source": "my_UI/ui_types.h",
+      "destination": "src/gimbal/components/ui/ui_types.h",
+      "sha256": "8a3a0d64c2c4b72383f6432edd90f7fce8372813964ef8d068c00ddf2a6d0f08"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal.h",
+      "sha256": "11299f5cbd709eb0623354bc285cd6403c281244c323ebd9667519d70a5300fc"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_adc.h",
+      "sha256": "01afa441d6f80901d4bb0b3383b08c8ee348d5a8a96256e46e2fada64f881c1c"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_adc_ex.h",
+      "sha256": "5bcefe6ea7d077f77920f27f283e16c6c0bf88a8a57332ea3dc2a5c7f4b2fb55"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_can.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_can.h",
+      "sha256": "313b598eecd02b0aacaeb3c9716f85a7ef973f5783ced26ab79cfbff433caf83"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_cortex.h",
+      "sha256": "f2d8d6c2f27b0203c35e986275f612feba01bd4f835560fc5df839102369b585"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_crc.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_crc.h",
+      "sha256": "c9981cc84780636fec8846ccbd315bc2d885c1202076ebf16f074153965d68e5"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_def.h",
+      "sha256": "a0fd395c49b28f917b77df9e53f7a8c9dce21241c851ddbbb509741eb30f408e"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_dma.h",
+      "sha256": "ed211f05fdb42ce4c647ad588c03c64764263594ec079908112437cdf6af80cd"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_dma_ex.h",
+      "sha256": "cc1cc94a98945e793e7e73ead38e73138c3816b6a8bb475edb09d4adb9b80b39"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_exti.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_exti.h",
+      "sha256": "dc58f7410e33afd9bf372b2bfcd53ee2a68e38475f6029c8f0f4436e3b1289b9"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_flash.h",
+      "sha256": "49ace9937ba7d18c10c7806f94a12b19cf5cc7e2434424235e36a387a0c60ed3"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_flash_ex.h",
+      "sha256": "b008dea9d48f83e11b90d806d8a8565394d59b093f8769ede0dadd1012272be8"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_flash_ramfunc.h",
+      "sha256": "d4991e679c01ce5bcd1cedadad0e25d0541e4997a5c10a7dd717cbe15b81c198"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_gpio.h",
+      "sha256": "a0c3bc2771cddea3d8a13f5c1a854e9dd7140a307d904835834b1b4ce20e2b5c"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_gpio_ex.h",
+      "sha256": "259ced57e0e31cbbc0c552741af592d6a51f5b8eee8a4caaecad4ce75108d435"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_i2c.h",
+      "sha256": "8bf26ee0cf2ac4d668c859d20d84a613b27ca1c94e12763ddb9d6fce358f68ef"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_i2c_ex.h",
+      "sha256": "0b08b0a12205869226b0f6afb127accb539af41094d1a5641062ccb5d62e236b"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_pcd.h",
+      "sha256": "31aa76fe01979664c59578e528d97967910613d920481df93a5593e8aee3f82c"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_pcd_ex.h",
+      "sha256": "623238bef2c2a4505bfb8927b1eb861836e183996b8816a234146d5bf6b86560"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_pwr.h",
+      "sha256": "dbca0e7c98403d5b1be330db65d043c71d0d3035658337d66fd6619d8b8b3305"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_pwr_ex.h",
+      "sha256": "5606b1bc814da0e27e231393ea507b476f76f6826ea8e989048aaaf3f6845ee1"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_rcc.h",
+      "sha256": "1fbdf8e8fc4982cc68b976db7f2249fcf3ce1549d671d5766b068e960bba052c"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_rcc_ex.h",
+      "sha256": "fbb76ff293619d841ca23f4410334d7250762d4a1b0d85a79c357f69619b9cb9"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rng.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_rng.h",
+      "sha256": "3d8246d7cb6fa1881a138cd0512f951165428ea8b0354ee67e0b7bbffcb193cf"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_rtc.h",
+      "sha256": "347539154297f15cfbf788ddca9d21f573c8b1b8ca2f926d4a500d637b34e3c9"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_rtc_ex.h",
+      "sha256": "0fa15849d8ae1ba6e447acec923d285f9efe6f4e08895812052805ed0f47e6c8"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_spi.h",
+      "sha256": "2d3dc767374c95d63366b855fa2336914830dc455073195668faad0d811d5a65"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_tim.h",
+      "sha256": "9d46481862dfdb14f9a120d3dcc7dc544d7186567439232c8cedb8a863b80df2"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_tim_ex.h",
+      "sha256": "28a9237677bd2138cdc77abd7ba5966ce5fc53f175c8b105d4237430a3e01f88"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_hal_uart.h",
+      "sha256": "fde1fb8df86092a52024cf5450bcac9383304a3691e744569d1272c816bb2b24"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/stm32f4xx_ll_usb.h",
+      "sha256": "da2ac811ab694035d29ad779b2c6541234153d7f8797b0b0eeca59b1926e9887"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h",
+      "destination": "third_party/stm32_hal_gimbal/Inc/Legacy/stm32_hal_legacy.h",
+      "sha256": "ae11dcf1db5c761ec72dd2c80dd8f579c53a0b7c991ca03dfaef7adad52eefb5"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h",
+      "destination": "third_party/stm32_usb_device/Class/CDC/Inc/usbd_cdc.h",
+      "sha256": "74e90b6eb1756f7ac00397cbd2dc2778043ca06ae82720e94fcef97216b1b710"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c",
+      "destination": "third_party/stm32_usb_device/Class/CDC/Src/usbd_cdc.c",
+      "sha256": "197828231adc7ba16f2f9e2b7424d97f0e31e342df576a7b6e037138e719871f"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h",
+      "destination": "third_party/stm32_usb_device/Core/Inc/usbd_core.h",
+      "sha256": "cb445a5f71751b6a559ec08aeb5343f9b9914edcb0cc230033a4f4bc6250e552"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h",
+      "destination": "third_party/stm32_usb_device/Core/Inc/usbd_ctlreq.h",
+      "sha256": "438d86135b1202078e396c14f50352671be78079a522bf7cbfd39d0d71a3b4dc"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h",
+      "destination": "third_party/stm32_usb_device/Core/Inc/usbd_def.h",
+      "sha256": "988187639942bd04efdfeda301e09733b7fb139394e408bd532aef3eec5721f9"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h",
+      "destination": "third_party/stm32_usb_device/Core/Inc/usbd_ioreq.h",
+      "sha256": "f1a87f51f2f6725c79cce648bed4010a65ea377814336cb4a20140f9f72fe499"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c",
+      "destination": "third_party/stm32_usb_device/Core/Src/usbd_core.c",
+      "sha256": "e61eadfb8c59c63dc2a520820e56c0aeffb15a5944b1b8775c8421c9bb3324d2"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c",
+      "destination": "third_party/stm32_usb_device/Core/Src/usbd_ctlreq.c",
+      "sha256": "471386bfe2a6ad17d9538eefd71d970442f9b3829ca2184b45a286372424461b"
+    },
+    {
+      "source": "Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c",
+      "destination": "third_party/stm32_usb_device/Core/Src/usbd_ioreq.c",
+      "sha256": "e3b781112949e4e18ebc9b219731131c8938ba52a56c728a189b9104d8cff7de"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_pcd.c",
+      "sha256": "db6b5f29b98e82927b152497c179a13cb9f50eaa63872355bb844af99fc999a9"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_pcd_ex.c",
+      "sha256": "95ffef5ae6b0592c8d2915b3ae474bc35464ef0ac6c158c44df76078baa7b456"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_ll_usb.c",
+      "sha256": "62fc245d5de766dea8ac038e7c03fb35c285e881131a94f69b31a3e54052e511"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_rcc.c",
+      "sha256": "103d6eb1b0f808de7d9e723abe61c229ae644b6da658acfddb3039308c8880c0"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_rcc_ex.c",
+      "sha256": "c76ccea0401869aec36dec95378950d80483cb696d05bc5f4cd96cbd67876225"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_flash.c",
+      "sha256": "d44e97fe3edf71496d8945aa7583f07e1a583c00c80d94818cb6598a794b3cb4"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_flash_ex.c",
+      "sha256": "b89eb6f00f456a40f029a23f67d38c26c2bf9c276620099f80d19c85b084d75d"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_flash_ramfunc.c",
+      "sha256": "4133261fd04c8f176dc631eaf35859ed1cc2fd4ead5681f6dc4a7022b1fbf73c"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_gpio.c",
+      "sha256": "1fd44f4bc05fa30c57473031dcbe7712a401022651b907a9cadca91f33146579"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_dma_ex.c",
+      "sha256": "053e6d5a07d79d693f2e6e6dadcce094d4df7db958f7c51545295fa41589b47c"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_dma.c",
+      "sha256": "f5c9be9b38748729eb576778ad4a9e1db1b7684757ed2f76e28a826e70d80f0c"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_pwr.c",
+      "sha256": "e3871d182e08e8df39fdf44b95a50c2044c5710540f86b25361c18a65b919d1f"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_pwr_ex.c",
+      "sha256": "162086981ff41b78e08bfb4c526500e07bf5edac59deaad3e367f2acfbc81434"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_cortex.c",
+      "sha256": "284f4f276ba6a5b3938b4e04371fad1bb8a193ba1a48a5f2227b7ebcccbee65e"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal.c",
+      "sha256": "bfddc28066ff4626eceae35d668f40c656c9a2345e68d572751de0b5c5ddbf51"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_exti.c",
+      "sha256": "d1ac2a8541a2c5e243f140396e9de879e6bf36172682cd1d31fd75e6197505bd"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_adc.c",
+      "sha256": "77eec39de91d5ea99c7537fb89e93236d5a1212e9e9e81cadd937a8d17284b17"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_adc_ex.c",
+      "sha256": "ad52545b15a6da53efa9bb53507c56a548a8bcdd58908770c546ca9637bc9ccf"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_can.c",
+      "sha256": "cbbb9d57b4d4be3946a1020de0de81bbea904a6b042d072b5d8c93185dff304b"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_crc.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_crc.c",
+      "sha256": "7eed22678948e0410a68e22b1c3e34f514f7ae552682c06dc800ca31edbc45db"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_i2c.c",
+      "sha256": "8b5ff5de660bf1009cac724c88b9e7b2a4265423a42190b394eef213bc699d69"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_i2c_ex.c",
+      "sha256": "8b85421fe815031086e964fdc437886b90b5b308501d83651177021195d6cca2"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rng.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_rng.c",
+      "sha256": "036a7c0a66821b0b41bc170b2f3559ba15c1df07dfefdc16cc9b926b6c270b07"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rtc.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_rtc.c",
+      "sha256": "a35509b4646ffd9a35e343fe60e5292dcd5b8df8927dff4f0a2235545d0761e4"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rtc_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_rtc_ex.c",
+      "sha256": "f18d4d81614818b96db2dc623e6628c0207771da6ce3ebc0f9734571b51e6615"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_spi.c",
+      "sha256": "2ab503cd3a5569a172e4b793c28b9546ca97ec51d6a665af79716000cfa08cea"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_tim.c",
+      "sha256": "f931e73a824287d71af7fb47d2d8bceca5ed871fd273b12a8eaf72b810c59656"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_tim_ex.c",
+      "sha256": "5fc0c341627a9e26376cf83330431b8f9723347f7c57855e63ba6959649de433"
+    },
+    {
+      "source": "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c",
+      "destination": "third_party/stm32_hal_gimbal/Src/stm32f4xx_hal_uart.c",
+      "sha256": "4551ab1934d2f37de6f3e6afcf7d3bf9e1d918f48f5d11299daebb85e9e793ab"
+    }
+  ],
+  "shared": [
+    {
+      "source": "application/led_flow_task.c",
+      "destination": "src/common/application/led_flow_task.c"
+    },
+    {
+      "source": "application/led_flow_task.h",
+      "destination": "src/common/include/led_flow_task.h"
+    },
+    {
+      "source": "application/referee_usart_task.h",
+      "destination": "src/common/include/referee_usart_task.h"
+    },
+    {
+      "source": "application/struct_typedef.h",
+      "destination": "src/common/include/struct_typedef.h"
+    },
+    {
+      "source": "application/test_task.h",
+      "destination": "src/common/include/test_task.h"
+    },
+    {
+      "source": "bsp/boards/bsp_buzzer.h",
+      "destination": "src/common/bsp/boards/bsp_buzzer.h"
+    },
+    {
+      "source": "bsp/boards/bsp_can.h",
+      "destination": "src/common/bsp/boards/bsp_can.h"
+    },
+    {
+      "source": "bsp/boards/bsp_delay.c",
+      "destination": "src/common/bsp/boards/bsp_delay.c"
+    },
+    {
+      "source": "bsp/boards/bsp_delay.h",
+      "destination": "src/common/bsp/boards/bsp_delay.h"
+    },
+    {
+      "source": "bsp/boards/bsp_flash.h",
+      "destination": "src/common/bsp/boards/bsp_flash.h"
+    },
+    {
+      "source": "bsp/boards/bsp_i2c.c",
+      "destination": "src/common/bsp/boards/bsp_i2c.c"
+    },
+    {
+      "source": "bsp/boards/bsp_i2c.h",
+      "destination": "src/common/bsp/boards/bsp_i2c.h"
+    },
+    {
+      "source": "bsp/boards/bsp_imu_pwm.c",
+      "destination": "src/common/bsp/boards/bsp_imu_pwm.c"
+    },
+    {
+      "source": "bsp/boards/bsp_imu_pwm.h",
+      "destination": "src/common/bsp/boards/bsp_imu_pwm.h"
+    },
+    {
+      "source": "bsp/boards/bsp_led.c",
+      "destination": "src/common/bsp/boards/bsp_led.c"
+    },
+    {
+      "source": "bsp/boards/bsp_led.h",
+      "destination": "src/common/bsp/boards/bsp_led.h"
+    },
+    {
+      "source": "bsp/boards/bsp_rc.h",
+      "destination": "src/common/bsp/boards/bsp_rc.h"
+    },
+    {
+      "source": "bsp/boards/bsp_spi.c",
+      "destination": "src/common/bsp/boards/bsp_spi.c"
+    },
+    {
+      "source": "bsp/boards/bsp_spi.h",
+      "destination": "src/common/bsp/boards/bsp_spi.h"
+    },
+    {
+      "source": "bsp/boards/bsp_usart.c",
+      "destination": "src/common/bsp/boards/bsp_usart.c"
+    },
+    {
+      "source": "bsp/boards/bsp_usart.h",
+      "destination": "src/common/bsp/boards/bsp_usart.h"
+    },
+    {
+      "source": "components/algorithm/AHRS.h",
+      "destination": "src/common/components/algorithm/AHRS.h"
+    },
+    {
+      "source": "components/algorithm/AHRS.lib",
+      "destination": "src/common/components/algorithm/AHRS.lib"
+    },
+    {
+      "source": "components/algorithm/AHRS_middleware.c",
+      "destination": "src/common/components/algorithm/AHRS_middleware.c"
+    },
+    {
+      "source": "components/algorithm/AHRS_middleware.h",
+      "destination": "src/common/components/algorithm/AHRS_middleware.h"
+    },
+    {
+      "source": "components/algorithm/arm_cortexM4lf_math.lib",
+      "destination": "src/common/components/algorithm/arm_cortexM4lf_math.lib"
+    },
+    {
+      "source": "components/controller/pid.c",
+      "destination": "src/common/components/controller/pid.c"
+    },
+    {
+      "source": "components/controller/pid.h",
+      "destination": "src/common/components/controller/pid.h"
+    },
+    {
+      "source": "components/devices/BMI088reg.h",
+      "destination": "src/common/components/devices/BMI088reg.h"
+    },
+    {
+      "source": "components/devices/ist8310driver.c",
+      "destination": "src/common/components/devices/ist8310driver.c"
+    },
+    {
+      "source": "components/devices/ist8310driver.h",
+      "destination": "src/common/components/devices/ist8310driver.h"
+    },
+    {
+      "source": "components/devices/ist8310driver_middleware.h",
+      "destination": "src/common/components/devices/ist8310driver_middleware.h"
+    },
+    {
+      "source": "components/devices/oledfont.h",
+      "destination": "src/common/components/devices/oledfont.h"
+    },
+    {
+      "source": "components/support/CRC8_CRC16.h",
+      "destination": "src/common/components/algorithm/CRC8_CRC16.h"
+    },
+    {
+      "source": "components/support/fifo.c",
+      "destination": "src/common/components/algorithm/fifo.c"
+    },
+    {
+      "source": "components/support/fifo.h",
+      "destination": "src/common/components/algorithm/fifo.h"
+    },
+    {
+      "source": "application/protocol/protocol.h",
+      "destination": "src/common/protocols/protocol.h"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Chassis: host validation",
+      "type": "process",
+      "command": "python",
+      "args": [
+        "tools/chassis/mpc/run_host_checks.py"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Chassis: configure LQR",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "lqr"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Chassis: build LQR",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "lqr"
+      ],
+      "dependsOn": "Chassis: configure LQR",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Chassis: configure MPC probe",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "mpc-probe"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Chassis: build MPC probe",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "mpc-probe"
+      ],
+      "dependsOn": "Chassis: configure MPC probe",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Balance robot: configure chassis",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "chassis"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Balance robot: build chassis",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "chassis"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc",
+      "dependsOn": "Balance robot: configure chassis"
+    },
+    {
+      "label": "Balance robot: configure gimbal",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "gimbal"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Balance robot: build gimbal",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "gimbal"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc",
+      "dependsOn": "Balance robot: configure gimbal"
+    }
+  ]
+}
