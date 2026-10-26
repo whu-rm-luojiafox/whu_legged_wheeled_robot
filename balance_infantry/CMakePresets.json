@@ -1,0 +1,104 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "host",
+      "displayName": "Native MPC validation",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/host",
+      "cacheVariables": {
+        "CHASSIS_BUILD": "host",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "arm-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/armclang.cmake",
+      "cacheVariables": {
+        "CHASSIS_BUILD": "firmware",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "lqr",
+      "inherits": "arm-base",
+      "binaryDir": "${sourceDir}/build/lqr",
+      "cacheVariables": {
+        "CHASSIS_FIRMWARE": "lqr",
+        "ROBOT_BOARD": "chassis"
+      }
+    },
+    {
+      "name": "mpc-probe",
+      "inherits": "arm-base",
+      "binaryDir": "${sourceDir}/build/mpc-probe",
+      "cacheVariables": {
+        "CHASSIS_FIRMWARE": "mpc-probe",
+        "ROBOT_BOARD": "chassis"
+      }
+    },
+    {
+      "name": "chassis",
+      "displayName": "balance_robot / chassis LQR",
+      "inherits": "arm-base",
+      "binaryDir": "${sourceDir}/build/chassis",
+      "cacheVariables": {
+        "ROBOT_BOARD": "chassis",
+        "CHASSIS_FIRMWARE": "lqr"
+      }
+    },
+    {
+      "name": "gimbal",
+      "displayName": "balance_robot / gimbal",
+      "inherits": "arm-base",
+      "binaryDir": "${sourceDir}/build/gimbal",
+      "cacheVariables": {
+        "ROBOT_BOARD": "gimbal",
+        "CHASSIS_FIRMWARE": "lqr"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "host",
+      "configurePreset": "host",
+      "jobs": 2
+    },
+    {
+      "name": "lqr",
+      "configurePreset": "lqr",
+      "jobs": 2
+    },
+    {
+      "name": "mpc-probe",
+      "configurePreset": "mpc-probe",
+      "jobs": 2
+    },
+    {
+      "name": "chassis",
+      "configurePreset": "chassis",
+      "jobs": 2
+    },
+    {
+      "name": "gimbal",
+      "configurePreset": "gimbal",
+      "jobs": 2
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "host",
+      "configurePreset": "host",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
