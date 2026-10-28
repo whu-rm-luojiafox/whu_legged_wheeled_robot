@@ -10,7 +10,7 @@
  * 默认值采用 2026-10-23 用户选定的实车试调组合，供请求变量和参考初始化共用。
  * 这些参考不能从 IMU 反馈中减掉。 */
 #define BALANCE_PITCH_DEFAULT_RAD  0.0f// (-0.0200f)
-#define BALANCE_LEG_GROUND_DEFAULT_RAD 0.1372f
+#define BALANCE_LEG_GROUND_DEFAULT_RAD 0.1572f
 #define BALANCE_PITCH_LIMIT_RAD 0.15f
 #define BALANCE_LEG_GROUND_LIMIT_RAD 0.30f
 #define BALANCE_LEG_LOCAL_LIMIT_RAD 0.20f
