@@ -56,6 +56,10 @@ elseif(CHASSIS_FIRMWARE STREQUAL "lqr")
   add_executable(chassis_firmware ${CHASSIS_FIRMWARE_SOURCES} "${startup}"
     "${CHASSIS_ROOT}/platform/stm32f407/chassis/protocol_layout_checks.c"
     "${CHASSIS_ROOT}/platform/stm32f407/robot_link_layout_checks.c")
+  # EmberProbe 0.8.8 cannot bind ARMClang's merged-global DWARF addresses
+  # (DW_OP_addr followed by DW_OP_plus_uconst) to composite layouts.
+  set_property(SOURCE "${CHASSIS_ROOT}/src/chassis/module/chassis_climb.c"
+    APPEND PROPERTY COMPILE_OPTIONS -mno-global-merge)
   target_include_directories(chassis_firmware PRIVATE
     "${CHASSIS_ROOT}/third_party/stm32_hal/Inc/Legacy"
     "${CHASSIS_ROOT}/third_party/freertos/Source/include"

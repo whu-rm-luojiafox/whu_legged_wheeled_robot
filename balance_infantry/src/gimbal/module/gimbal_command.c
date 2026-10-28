@@ -158,6 +158,11 @@ static void key_control(gimbal_control_t *gimbal_control_set, chassis_data_t *ch
   {
     chassis_data->jump_flag = 0;
   }
+
+  /* The chassis detects the rising edge; releasing F does not abort a climb. */
+  chassis_data->climb_flag =
+      ((gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_F) != 0u &&
+       chassis_data->chassis_mode == CHASSIS_MODE_ON);
   
   if (gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_Z)
   {
@@ -218,6 +223,7 @@ static void key_control(gimbal_control_t *gimbal_control_set, chassis_data_t *ch
   ((gimbal_control_set->keyboard & KEY_PRESSED_OFFSET_R || gimbal_control_set->gimbal_rc_ctrl->rc.s[2] == 1)
   != 0u && chassis_data->chassis_mode == CHASSIS_MODE_ON);
   #else
+  chassis_data->climb_flag = 0u;
   chassis_data->recovery_flag = 0u;
   #endif
 }

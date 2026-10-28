@@ -27,15 +27,6 @@
       }
     },
     {
-      "name": "lqr",
-      "inherits": "arm-base",
-      "binaryDir": "${sourceDir}/build/lqr",
-      "cacheVariables": {
-        "CHASSIS_FIRMWARE": "lqr",
-        "ROBOT_BOARD": "chassis"
-      }
-    },
-    {
       "name": "mpc-probe",
       "inherits": "arm-base",
       "binaryDir": "${sourceDir}/build/mpc-probe",
@@ -69,11 +60,6 @@
     {
       "name": "host",
       "configurePreset": "host",
-      "jobs": 2
-    },
-    {
-      "name": "lqr",
-      "configurePreset": "lqr",
       "jobs": 2
     },
     {

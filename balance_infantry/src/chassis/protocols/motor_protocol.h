@@ -194,7 +194,7 @@ typedef struct
     (ptr)->v_int = (uint16_t)(((data)[3] << 4) | ((data)[4] >> 4));            \
     (ptr)->t_int = (uint16_t)((((data)[4] & 0x0F) << 8) | (data)[5]);          \
     (ptr)->pos = rad_format(uint_to_float((ptr)->p_int, DM_P_MIN , DM_P_MAX, 16));   \
-    (ptr)->vel = uint_to_float((ptr)->v_int, DM_V_MIN, DM_V_MAX, 12);                \
+    (ptr)->vel = dm_velocity_from_uint12((uint16_t)(ptr)->v_int);                  \
     (ptr)->torque = uint_to_float((ptr)->t_int, DM_T_MIN, DM_T_MAX, 12);         \
     (ptr)->mos_temperate   = (data)[6];                                        \
     (ptr)->rotor_temperate = (data)[7];                                       \
@@ -227,6 +227,20 @@ static inline float uint_to_float(int x_int, float x_min, float x_max, int bits)
   float offset = x_min;
   return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
 };
+
+static inline float dm_velocity_from_uint12(uint16_t code)
+{
+  /* A symmetric 12-bit range has no exact zero: the two central codes
+   * decode to +/- half an LSB. Treat only those bins as stationary so
+   * quantization does not inject a persistent joint-rate feedback bias.
+   * Keep every other code, and any asymmetric range, unchanged.
+   */
+  if ((DM_V_MIN == -DM_V_MAX) && (code == 2047U || code == 2048U))
+  {
+    return 0.0f;
+  }
+  return uint_to_float(code, DM_V_MIN, DM_V_MAX, 12);
+}
 #define LIMIT_MIN_MAX(x,min,max) (x) = (((x)<=(min))?(min):(((x)>=(max))?(max):(x)))
 
 #endif // 

@@ -2,7 +2,7 @@
 
 一份 CMake 工程，分别构建 **底盘板 chassis** 和 **云台板 gimbal** 固件。名称 `balance_robot` 表达整车工程；物理目录暂保留 `chassis_mpc`，避免已有工具的绝对路径失效。打开 [balance_robot.code-workspace](balance_robot.code-workspace) 可使用新的工作区显示名。
 
-云台代码来自同级 `02Balance_gimbal_task`，已复制到本工程，构建不依赖同级目录。原工程未修改。底盘原有 `lqr`、`host`、`mpc-probe` 入口继续可用；实车底盘仍使用 LQR，MPC 保留为独立验证实验。
+云台代码来自同级 `02Balance_gimbal_task`，已复制到本工程，构建不依赖同级目录。原工程未修改。实车编译统一使用 `chassis` 和 `gimbal` 两个入口；底盘使用 LQR。旧的 `lqr` 重复入口已移除，`host`、`mpc-probe` 仅供主动运行独立算法实验时使用。
 
 ## 选择、编译与烧录文件
 
@@ -26,15 +26,12 @@ cmake --build --preset gimbal
 | --- | --- | --- |
 | `chassis` | 底盘 LQR、轮腿控制、底盘侧 yaw 与发射控制 | `build/chassis/chassis_firmware.elf` |
 | `gimbal` | 云台姿态估计、pitch、遥控/键鼠、自瞄通信及底盘指令生成 | `build/gimbal/gimbal_firmware.elf` |
-| `lqr` | 原底盘入口，兼容旧命令和输出路径 | `build/lqr/chassis_firmware.elf` |
-| `mpc-probe` | 独立 MPC 测量，不创建整车任务 | `build/mpc-probe/chassis_firmware.elf` |
-| `host` | 电脑算法检查与 MPC 数值对照 | `build/host/` 下的测试程序与报告 |
 
-固件同目录还会生成 `.hex`、`.bin`、`.map`。在烧录工具/EmberProbe 中选择**对应板的 ELF**；调试和变量读取也使用同一次构建的 ELF。两个常规板 preset 使用不同输出目录。本轮只编译，未连接或烧录硬件。
+固件同目录还会生成 `.hex`、`.bin`、`.map`。在烧录工具/EmberProbe 中选择**对应板的 ELF**；调试和变量读取也使用同一次构建的 ELF。日常 `build/` 只保留 `chassis/` 和 `gimbal/`；旧测试目录、历史 ELF、临时脚本和报告已清理。`host` 与 `mpc-probe` 只有显式运行对应 preset 时才会重新生成实验目录，不能作为整车运行固件烧录。
 
 CMake 缓存变量 `ROBOT_BOARD=chassis|gimbal` 选择不同的**源码清单、main、外设配置和头文件目录**，并自动定义 `ROBOT_BOARD_CHASSIS=1` 或 `ROBOT_BOARD_GIMBAL=1`。不需要手工编辑宏；两个宏同时出现或都缺失会编译报错。`CHASSIS_FIRMWARE=lqr|mpc-probe` 用于底盘应用选择，云台不允许选择 MPC probe。兼容旧脚本的 CMake 构建目标名仍为 `chassis_firmware`，输出文件按板区分。
 
-VS Code 的“运行生成任务”也提供 `Balance robot: build chassis` 和 `Balance robot: build gimbal`。
+VS Code 的“运行生成任务”提供 `Balance robot: build chassis` 和 `Balance robot: build gimbal`；默认生成任务（Ctrl+Shift+B）编译底盘。
 
 ### 一个参数如何选择不同固件
 
@@ -63,7 +60,7 @@ cmake --build --preset gimbal
 ```text
 balance_robot/                  # 工程名；当前物理目录为 chassis_mpc
 ├── CMakeLists.txt               # host / firmware 总入口
-├── CMakePresets.json            # chassis / gimbal / lqr / mpc-probe / host
+├── CMakePresets.json            # chassis / gimbal；host / mpc-probe 为独立实验
 ├── balance_robot.code-workspace
 ├── cmake/
 │   ├── Firmware.cmake           # 板选择、独立 include、宏与固件输出

@@ -1,4 +1,5 @@
 {
     "files.encoding": "utf8",
-    "files.autoGuessEncoding": false
+    "files.autoGuessEncoding": false,
+    "cmake.sourceDirectory": "E:/02GC/balance_infantry/balance_infantry"
 }

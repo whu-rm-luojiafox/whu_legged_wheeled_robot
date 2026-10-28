@@ -31,12 +31,13 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 /* Verify that negative calibrated leg angles point toward the rear. */
+#define FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH 0.17f
 #define FOOT_LAUNCH_LEG_TARGET    (-0.15f)
 #define FOOT_LAUNCH_LEG_MIN       (-0.23f)
 #define FOOT_LAUNCH_LEG_MAX       PI_2
 #define FOOT_LAUNCH_LEG_GYRO_MAX  0.3f
 #define FOOT_LAUNCH_LEG_LENGTH    0.30f
-
+#define FORWARD_TORQUE-2.5f
 #define LimitMax(input, max)     \
 	{                            \
 		if ((input) > max)       \
@@ -369,7 +370,12 @@ void chassis_feedback_update(chassis_move_t *fdb)
 		-fdb->chassis_posture_info.chassis_posture_R.leg_gyro_local + fdb->chassis_posture_info.pitch_gyro;
 	
 	// 计算加速度
-	if (fdb->flag_info.init_flag)
+	/* Motor transmission delays are part of the feedback interval. Do not
+	 * differentiate with the 2 ms loop-tail delay (normally about 4 ms total).
+	 * Rebase after startup or an invalid/stalled interval instead of creating
+	 * an acceleration impulse in the ground-contact force estimate. */
+	if (fdb->flag_info.init_flag || !isfinite(chassis_control_dt_s) ||
+		chassis_control_dt_s <= 0.0f || chassis_control_dt_s > 0.05f)
 	{
 		/* Establish a derivative baseline before off-ground detection starts. */
 		fdb->chassis_posture_info.chassis_posture_L.leg_ddlength = 0.0f;
@@ -379,9 +385,9 @@ void chassis_feedback_update(chassis_move_t *fdb)
 	}
 	else
 	{
-		fp32 temp_a_L = (fdb->chassis_posture_info.chassis_posture_L.leg_dlength_jacobian - fdb->chassis_posture_info.chassis_posture_L.last_leg_dlength_jacobian) / CHASSIS_CONTROL_TIME;
+		fp32 temp_a_L = (fdb->chassis_posture_info.chassis_posture_L.leg_dlength_jacobian - fdb->chassis_posture_info.chassis_posture_L.last_leg_dlength_jacobian) / chassis_control_dt_s;
 		fdb->chassis_posture_info.chassis_posture_L.leg_ddlength = alpha_da * temp_a_L + (1-alpha_da) * fdb->chassis_posture_info.chassis_posture_L.last_leg_ddlength;
-		fp32 temp_a_R = (fdb->chassis_posture_info.chassis_posture_R.leg_dlength_jacobian - fdb->chassis_posture_info.chassis_posture_R.last_leg_dlength_jacobian) / CHASSIS_CONTROL_TIME;
+		fp32 temp_a_R = (fdb->chassis_posture_info.chassis_posture_R.leg_dlength_jacobian - fdb->chassis_posture_info.chassis_posture_R.last_leg_dlength_jacobian) / chassis_control_dt_s;
 		fdb->chassis_posture_info.chassis_posture_R.leg_ddlength = alpha_da * temp_a_R + (1-alpha_da) * fdb->chassis_posture_info.chassis_posture_R.last_leg_ddlength;
 	}
 	
@@ -494,17 +500,32 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
 		chassis_mode_change->mode.chassis_balancing_mode = FOOT_LAUNCHING;
 		chassis_mode_change->chassis_posture_info.yaw_angle_sett = chassis_mode_change->chassis_posture_info.yaw_angle_total;
 	}
-	else if (
-		chassis_mode_change->mode.chassis_balancing_mode == FOOT_LAUNCHING)
+	else if (chassis_mode_change->mode.chassis_balancing_mode == FOOT_LAUNCHING)
 	{
 		chassis_leg_posture_t *L = &chassis_mode_change->chassis_posture_info.chassis_posture_L;
 		chassis_leg_posture_t *R = &chassis_mode_change->chassis_posture_info.chassis_posture_R;
 
 		/* Both legs must enter the allowed range and slow down. */
-		if (L->leg_angle > FOOT_LAUNCH_LEG_MIN && L->leg_angle < FOOT_LAUNCH_LEG_MAX &&
+		if(L->leg_length < FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH && R->leg_length< FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
+		{
+			chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
+		}
+		else if(L->leg_length < FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
+		{
+			if(R->leg_angle > FOOT_LAUNCH_LEG_MIN && R->leg_angle < FOOT_LAUNCH_LEG_MAX)
+			{
+				chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
+			}
+		}
+		else if (R->leg_length < FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
+		{
+			if(L->leg_angle > FOOT_LAUNCH_LEG_MIN && L->leg_angle < FOOT_LAUNCH_LEG_MAX)
+			{
+				chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
+			}
+		}
+		else if (L->leg_angle > FOOT_LAUNCH_LEG_MIN && L->leg_angle < FOOT_LAUNCH_LEG_MAX &&
 			R->leg_angle > FOOT_LAUNCH_LEG_MIN && R->leg_angle < FOOT_LAUNCH_LEG_MAX &&
-			fabsf(L->leg_gyro) < FOOT_LAUNCH_LEG_GYRO_MAX &&
-			fabsf(R->leg_gyro) < FOOT_LAUNCH_LEG_GYRO_MAX &&
 			fabsf(chassis_mode_change->chassis_posture_info.pitch_angle) < EXIT_PITCH_ANGLE &&
 			fabsf(chassis_mode_change->chassis_posture_info.roll_angle) < 0.25f)
 		{
@@ -617,7 +638,7 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
 
 }
 
-/* 普通位置锁与前馈共用控制权判定，特殊动作不沿用普通控制的参考。 */
+/* 先生成普通目标，攀爬状态随后覆盖腿长并按阶段限制速度。 */
 
 void Target_Value_Set(chassis_move_t *target_value_set)
 {
@@ -643,6 +664,10 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 	{
 		target_value_set->chassis_posture_info.foot_speed_set=0;
 	}
+
+	/* Preserve real operator input during climb preparation/extension. The
+	 * climb module limits speed; stop-position hold releases on movement and
+	 * captures again after release, just as in ordinary control. */
 
 	//位置环控制器
 	chassis_update_stop_position(target_value_set);
@@ -725,8 +750,14 @@ void Target_Value_Set(chassis_move_t *target_value_set)
 	/* Keep the legs short while aligning; normal height resumes afterwards. */
 	if (target_value_set->mode.chassis_balancing_mode == FOOT_LAUNCHING)
 	{
-		target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
-		target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
+		if(target_value_set->chassis_posture_info.chassis_posture_L.leg_length>FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH )
+		{
+			target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
+		} 
+		if(target_value_set->chassis_posture_info.chassis_posture_R.leg_length>FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
+		{
+			target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
+		}
 	}
 }
 void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
@@ -744,19 +775,33 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 		chassis_leg_posture_t *L = &bl_ctrl->chassis_posture_info.chassis_posture_L;
 		chassis_leg_posture_t *R = &bl_ctrl->chassis_posture_info.chassis_posture_R;
 		torque_info_t *t = &bl_ctrl->torque_info;
-		/* Right-leg mirroring is handled by Chassis_Torque_Combine. */
-		if(L->leg_angle<-PI/10)t->joint_balancing_torque_L = -4;
-		else if(L->leg_angle>PI/10)t->joint_balancing_torque_L = 0;
-		if(R->leg_angle<-PI/10)t->joint_balancing_torque_R = -4;
-		else if(R->leg_angle>PI/10)t->joint_balancing_torque_R = 0;
-		t->joint_stand_torque_L = fp32_constrain(
-			200.0f * (L->leg_length_set - L->leg_length) - 40.0f * L->leg_dlength_jacobian,
-			-8.0f, 8.0f);
-		t->joint_stand_torque_R = fp32_constrain(
-			200.0f * (R->leg_length_set - R->leg_length) - 40.0f * R->leg_dlength_jacobian,
-			-8.0f, 8.0f);
 
-		/* Clear previous-cycle outputs before skipping the LQR branches. */
+		if(L->leg_length>FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
+		{
+			if(L->leg_angle<-PI/10)t->joint_balancing_torque_L = -4;
+			else if(L->leg_angle>PI/10)t->joint_balancing_torque_L = 0;
+			t->joint_stand_torque_L = fp32_constrain(
+				200.0f * (L->leg_length_set - L->leg_length) - 40.0f * L->leg_dlength_jacobian,
+				-8.0f, 8.0f);
+		}
+		else
+		{
+			t->joint_balancing_torque_L =0;
+			t->joint_stand_torque_L = 0;
+		}
+		if(R->leg_length>FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
+		{
+			if(R->leg_angle<-PI/10)t->joint_balancing_torque_R = -4;
+			else if(R->leg_angle>PI/10)t->joint_balancing_torque_R = 0;
+			t->joint_stand_torque_R = fp32_constrain(
+				200.0f * (R->leg_length_set - R->leg_length) - 40.0f * R->leg_dlength_jacobian,
+				-8.0f, 8.0f);
+		}
+		else
+		{
+			t->joint_balancing_torque_R =0;
+			t->joint_stand_torque_R = 0;
+		}		/* Clear previous-cycle outputs before skipping the LQR branches. */
 		t->joint_moving_torque_L = t->joint_moving_torque_R = 0.0f;
 		t->joint_roll_torque_L = t->joint_roll_torque_R = 0.0f;
 		t->foot_balancing_torque_L = t->foot_balancing_torque_R = 0.0f;
@@ -772,9 +817,6 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 	else
 	{
 		PID_calc(&bl_ctrl->chassis_roll_pid, bl_ctrl->chassis_posture_info.roll_angle,bl_ctrl->chassis_posture_info.roll_angle_set);
-		/* Both leg force coordinates use positive supporting force. Roll
-		 * correction must redistribute support, preserving its total.
-		 * Negative roll already requests a longer left leg in Target_Value_Set. */
 		bl_ctrl->torque_info.joint_roll_torque_R = -bl_ctrl->chassis_roll_pid.out;
 		bl_ctrl->torque_info.joint_roll_torque_L = bl_ctrl->chassis_roll_pid.out;
 	}
@@ -879,6 +921,15 @@ void Chassis_Torque_Calculation(chassis_move_t *bl_ctrl)
 }
 void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 {
+	/* Apply after LQR/contact/feedforward (and again on recovery remapping),
+	 * so entering PULL_UP clears torque in this same control cycle. */
+	if (chassisClimbApplyTorquePolicy(bl_ctrl))
+	{
+		chassis_lqr_feedback = (chassis_lqr_feedback_t){0};
+		chassis_feedforward.target_per_leg_nm = 0.0f;
+		chassis_feedforward.applied_per_leg_nm = 0.0f;
+	}
+
 	/* N=d(phi1,phi2)/d(length,Q0) 是逆运动学雅可比。
 	 * phi1=-q_first, phi2=q_second，故电机力矩为
 	 * diag(-1,+1)*N^(-T)*[F,T_local]，不能遗漏电机坐标变换。
@@ -908,9 +959,9 @@ void Chassis_Torque_Combine(chassis_move_t *bl_ctrl)
 	LimitMax(bl_ctrl->foot_motor_L.torque_out, MAX_FOOT_OUTPUT);
 	LimitMax(bl_ctrl->foot_motor_R.torque_out, MAX_FOOT_OUTPUT);
 	bl_ctrl->torque_info.joint_horizontal_torque_L = 
-		bl_ctrl->torque_info.joint_balancing_torque_L+bl_ctrl->torque_info.joint_moving_torque_L;
+		bl_ctrl->torque_info.joint_balancing_torque_L+bl_ctrl->torque_info.joint_moving_torque_L+FORWARD_TORQUE;
 	bl_ctrl->torque_info.joint_horizontal_torque_R =
-		bl_ctrl->torque_info.joint_balancing_torque_R+bl_ctrl->torque_info.joint_moving_torque_R;
+		bl_ctrl->torque_info.joint_balancing_torque_R+bl_ctrl->torque_info.joint_moving_torque_R+FORWARD_TORQUE;
 
 	bl_ctrl->torque_info.joint_vertical_torque_L = 
 		bl_ctrl->torque_info.joint_stand_torque_L + bl_ctrl->torque_info.joint_roll_torque_L;
@@ -1035,7 +1086,14 @@ static uint8_t chassis_is_balancing_on_ground(const chassis_move_t *chassis)
 static void chassis_update_stop_position(chassis_move_t *chassis)
 {
 	chassis_position_input_t input = {0};
-	input.allowed = chassis_is_balancing_on_ground(chassis) && chassis_odometry.sample_valid &&
+	/* Position hold remains available during preparation, extension and return.
+	 * Genuine movement releases it through chassis_position_step(). Feedforward
+	 * and cross-leg feedback retain their existing mode selection. */
+	input.allowed = chassis_is_enabled_on_ground(chassis) &&
+		chassis->mode.chassis_balancing_mode == BALANCING_READY &&
+		chassis->mode.sport_mode == NORMAL_MOVING_MODE &&
+		chassisClimbAllowsPositionHold() && !chassisRecoveryIsActive() &&
+		!chassis->chassis_data_->recovery_flag && chassis_odometry.sample_valid &&
 		fabsf(chassis->chassis_data_->wz_set) < CHASSIS_RC_WZ_DEADLINE;
 	input.dt_s = chassis_control_dt_s;
 	input.command_speed_m_s = chassis->chassis_posture_info.foot_speed_set;
