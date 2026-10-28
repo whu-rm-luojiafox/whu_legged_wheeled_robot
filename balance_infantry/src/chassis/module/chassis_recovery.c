@@ -48,7 +48,7 @@ RecoveryContext recovery = {
 #define SIDE_LIMIT       1.0f
 #define UPRIGHT_PITCH    0.18f
 #define LOCAL_ANGLE_MAX  0.35f
-#define MOTOR_TORQUE_MAX 4.0f
+#define MOTOR_TORQUE_MAX 5.0f
 #define ROTATE_REQUEST_TIMEOUT_MS 3000u
 #define LEG_ALIGN_ERROR_RAD  0.0873f  // 约5°
 #define LEG_ALIGN_WAIT_MS    200u     // 连续对齐200ms
@@ -236,10 +236,10 @@ static void chassisRecoveryApply(const RecoveryContext *r, chassis_move_t *c)
 
     // Hold the length found when R was pressed; the gas springs provide support.
     t->joint_stand_torque_L = clamp(
-        200.0f * (r->holdLength - left->leg_length) -
+        280.0f * (0.35 - left->leg_length) -
         40.0f * left->leg_dlength_jacobian, 8.0f);
     t->joint_stand_torque_R = clamp(
-        200.0f * (r->holdLength - right->leg_length) -
+        280.0f * (0.35 - right->leg_length) -
         40.0f * right->leg_dlength_jacobian, 8.0f);
 
     if (fabsf(pitch) < UPRIGHT_PITCH) return;

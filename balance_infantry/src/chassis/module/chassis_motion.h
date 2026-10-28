@@ -30,7 +30,7 @@ typedef struct {
 } chassis_position_t;
 
 typedef struct {
-    uint8_t allowed;       /* 正常平衡、双腿触地、非攀爬/自救，且里程样本有效 */
+    uint8_t allowed;       /* 普通平衡或攀爬准备/伸腿，双腿触地、非自救且里程有效 */
     float dt_s;
     float command_speed_m_s;
     float measured_speed_m_s;

@@ -15,7 +15,8 @@ typedef enum
     CLIMB_WHEEL_CONFIRM,// 保持短腿，确认左右轮已经落到台阶顶面
     CLIMB_STAND_UP,     // 轮子上台阶后重新伸腿到正常站立高度
     CLIMB_FINISHED,     // 攀爬完成，稳定后自动复位
-    CLIMB_ABORT         // 异常停止
+    CLIMB_ABORT,        // 严重异常时保持，稳定后平滑退出
+    CLIMB_RETURN_NORMAL // 超时/再次按 F 后平滑交回普通高度控制
 } climb_state_e;
 
 /*
@@ -24,7 +25,21 @@ typedef enum
  */
 void chassisClimbProcess(chassis_move_t *chassis);
 
+
+
 /* 方便调试器或者上位机查看当前状态。 */
 climb_state_e chassisClimbGetState(void);
+
+/* Keep stop-position control available in IDLE, READY, EXTEND and RETURN.
+ * Normal movement input still releases the captured position.
+ */
+uint8_t chassisClimbAllowsPositionHold(void);
+
+/* Immediately suppress wheel/hip feedback and roll correction during pull-up
+ * and wheel-contact confirmation. Use radial length PID output without
+ * standing gravity feedforward during these two stages.
+ * Call before every VMC mapping; returns nonzero when suppression is active.
+ */
+uint8_t chassisClimbApplyTorquePolicy(chassis_move_t *chassis);
 
 #endif

@@ -7,9 +7,10 @@
  * 只计算模型坐标下的参考/力矩，不处理驱动、电机极性或 VMC。 */
 /* 机身姿态与对地腿角分别标定。减小 pitch 时保持对地腿角参考，
  * 让机身可相对腿部转动，避免同步移动腿的支撑几何参考。
- * 机身 pitch 默认零偏移；这些参考不能从 IMU 反馈中减掉。 */
-#define BALANCE_PITCH_DEFAULT_RAD 0.0f
-#define BALANCE_LEG_GROUND_DEFAULT_RAD 0.1072f
+ * 默认值采用 2026-10-23 用户选定的实车试调组合，供请求变量和参考初始化共用。
+ * 这些参考不能从 IMU 反馈中减掉。 */
+#define BALANCE_PITCH_DEFAULT_RAD  0.0f// (-0.0200f)
+#define BALANCE_LEG_GROUND_DEFAULT_RAD 0.1372f
 #define BALANCE_PITCH_LIMIT_RAD 0.15f
 #define BALANCE_LEG_GROUND_LIMIT_RAD 0.30f
 #define BALANCE_LEG_LOCAL_LIMIT_RAD 0.20f

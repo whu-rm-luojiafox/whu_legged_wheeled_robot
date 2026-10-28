@@ -9,21 +9,20 @@
 
 /* -------------------------- 腿长参数 -------------------------- */
 
-#define CLIMB_HIGH_LENGTH_M             0.34f
+#define CLIMB_HIGH_LENGTH_M             0.40f
 #define CLIMB_PULL_LENGTH_M             0.14f
-#define CLIMB_LENGTH_ERROR_M            0.008f
+#define CLIMB_LENGTH_ERROR_M            0.03f
+#define CLIMB_EXTEND_LENGTH_ERROR_M     0.020f
 
 /* -------------------------- 速度参数 -------------------------- */
 
-/* 开始判断碰撞所要求的最小操作手前进指令 */
-#define CLIMB_FORWARD_COMMAND_MIN       0.08f
-
 /* 攀爬阶段限制操作手的最大前进速度 */
-#define CLIMB_APPROACH_SPEED_MAX        0.35f
-#define CLIMB_CROSS_SPEED_MAX           0.25f
+#define CLIMB_APPROACH_SPEED_MAX        1.6f
+#define CLIMB_CROSS_SPEED_MAX           1.6f
 
-/* 碰到台阶时，实际轮速应低于此值 */
-#define CLIMB_STALL_SPEED_MPS           0.08f
+/* 有移动指令，且设定与两轮平均反馈相差超过 0.2 m/s，作为撞阶辅助信号。 */
+#define CLIMB_HIT_COMMAND_MIN_MPS       0.20f
+#define CLIMB_HIT_SPEED_ERROR_MPS       0.20f
 
 /* 越过台阶棱边后，轮速应恢复到此值以上 */
 #define CLIMB_RECOVER_SPEED_MPS         0.15f
@@ -31,54 +30,62 @@
 /* -------------------------- 电流参数 -------------------------- */
 
 /*
- * 下面两个数只是示例值。
+ * 顶部电流释放阈值仍需实车标定；撞阶检测已不再使用轮毂电流阈值。
  * given_current 是电机反馈原始值，必须根据实车日志重新标定。
  */
-#define CLIMB_HIT_CURRENT_RAW           5000.0f
 #define CLIMB_RELEASE_CURRENT_RAW       3000.0f
 
 /* -------------------------- 姿态参数 -------------------------- */
 
-#define CLIMB_READY_PITCH_RAD           0.12f
-#define CLIMB_READY_ROLL_RAD            0.08f
+#define CLIMB_READY_PITCH_RAD           0.20f
+#define CLIMB_READY_ROLL_RAD            0.10f
+
+/* 浙大台阶检测主判据的简化试用值，角度取绝对值，需实车验证。
+ * pitch 超过 6°，且任一腿相对世界竖直方向超过 14°。
+ */
+#define CLIMB_HIT_PITCH_RAD             0.104720f
+#define CLIMB_HIT_LEG_RAD               0.244346f
+
+/* 轮子空转时速度差不一定明显，较大的姿态变化也可作为辅助信号。 */
+#define CLIMB_HIT_STRONG_PITCH_RAD      0.209440f  /* 12° */
+#define CLIMB_HIT_STRONG_LEG_RAD        0.349066f  /* 20° */
 
 #define CLIMB_ABORT_PITCH_RAD           0.55f
 #define CLIMB_ABORT_ROLL_RAD            0.30f
 
-#define CLIMB_PITCH_GYRO_STABLE         0.25f
-#define CLIMB_LEG_ANGLE_ERROR_RAD       0.10f
+#define CLIMB_PITCH_GYRO_STABLE         0.5f
+#define CLIMB_LEG_ANGLE_ERROR_RAD       0.20f
 
 /* -------------------------- 时间参数 -------------------------- */
 
-#define CLIMB_COMMAND_TIMEOUT_MS        100u
+#define CLIMB_READY_STABLE_MS           20u
+#define CLIMB_READY_TIMEOUT_MS          8000u
 
-#define CLIMB_READY_STABLE_MS           100u
-#define CLIMB_READY_TIMEOUT_MS          2000u
-
-#define CLIMB_EXTEND_TIME_MS            700u
+#define CLIMB_EXTEND_TIME_MS            900u
 #define CLIMB_EXTEND_STABLE_MS          100u
-#define CLIMB_EXTEND_TIMEOUT_MS         1500u
+#define CLIMB_EXTEND_TIMEOUT_MS         10000u
 
-#define CLIMB_HIT_CONFIRM_MS            30u
-#define CLIMB_CROSS_TIMEOUT_MS          3000u
+#define CLIMB_HIT_CONFIRM_MS            20u
+#define CLIMB_CROSS_TIMEOUT_MS          15000u
 
 #define CLIMB_TOP_DETECT_MS             80u
-#define CLIMB_TOP_STABLE_MS             150u
-#define CLIMB_TOP_CONFIRM_TIMEOUT_MS     1200u
+#define CLIMB_TOP_STABLE_MS             50u
+#define CLIMB_TOP_CONFIRM_TIMEOUT_MS     5000u
 
-#define CLIMB_PULL_TIME_MS              600u
-#define CLIMB_PULL_STABLE_MS            120u
-#define CLIMB_PULL_TIMEOUT_MS            1500u
+#define CLIMB_PULL_TIME_MS              400u
+#define CLIMB_PULL_STABLE_MS            10u
+#define CLIMB_PULL_TIMEOUT_MS            5000u
 
 #define CLIMB_WHEEL_CONTACT_STABLE_MS    100u
-#define CLIMB_WHEEL_CONTACT_TIMEOUT_MS   1000u
+#define CLIMB_WHEEL_CONTACT_TIMEOUT_MS   5000u
 
-#define CLIMB_STAND_TIME_MS             700u
+#define CLIMB_STAND_TIME_MS             500u
 #define CLIMB_STAND_STABLE_MS           200u
-#define CLIMB_STAND_TIMEOUT_MS          1800u
+#define CLIMB_STAND_TIMEOUT_MS          6000u
 
 #define CLIMB_FINISHED_STABLE_MS        200u
 #define CLIMB_ABORT_RESET_MS            300u
+#define CLIMB_RETURN_TIME_MS            1500u
 
 typedef struct
 {
@@ -92,6 +99,12 @@ typedef struct
     fp32 abortHoldLength;
     fp32 approachLegAngle;
 
+    fp32 lastLengthSetL;
+    fp32 lastLengthSetR;
+    fp32 returnStartLengthL;
+    fp32 returnStartLengthR;
+    bool lengthTargetValid;
+
     fp32 currentFiltered;
 
     bool riserDetected;
@@ -102,18 +115,13 @@ typedef struct
  * 模块内部保存状态，因此 chassis_task 不需要调用初始化函数。
  * 初次必须先看到 climb_flag 释放，才接受下一次上升沿。
  */
-static ClimbContext climbContext =
+ClimbContext climbContext =
 {
-    CLIMB_IDLE,
-    0u,
-    0u,
-    0.25f,
-    0.25f,
-    0.25f,
-    0.0f,
-    0.0f,
-    false,
-    true
+    .state = CLIMB_IDLE,
+    .normalLegLength = 0.19f,
+    .motionStartLength = 0.19f,
+    .abortHoldLength = 0.19f,
+    .lastCommand = true
 };
 
 static fp32 climbClamp(fp32 value, fp32 minimum, fp32 maximum)
@@ -176,6 +184,7 @@ static void climbReset(ClimbContext *ctx)
 
     ctx->riserDetected = false;
     ctx->currentFiltered = 0.0f;
+    ctx->lengthTargetValid = false;
 
     /*
      * Do not overwrite lastCommand here. It continuously tracks the real
@@ -216,14 +225,40 @@ static void climbReleasePositionLock(chassis_move_t *chassis)
 /*
  * 设置左右腿相同的目标长度。
  */
-static void climbSetLegLength(chassis_move_t *chassis,
-                              fp32 length)
+static void climbSetLegTargets(chassis_move_t *chassis, fp32 left, fp32 right)
 {
     chassis->chassis_posture_info
-        .chassis_posture_L.leg_length_set = length;
+        .chassis_posture_L.leg_length_set = left;
 
     chassis->chassis_posture_info
-        .chassis_posture_R.leg_length_set = length;
+        .chassis_posture_R.leg_length_set = right;
+
+    climbContext.lastLengthSetL = left;
+    climbContext.lastLengthSetR = right;
+    climbContext.lengthTargetValid = true;
+}
+
+static void climbSetLegLength(chassis_move_t *chassis, fp32 length)
+{
+    climbSetLegTargets(chassis, length, length);
+}
+
+static void climbEnterReturn(ClimbContext *ctx, chassis_move_t *chassis, uint32_t now)
+{
+    /* Target_Value_Set has already published ordinary targets for this cycle.
+     * Start from the last climb targets, not those overwritten ordinary ones,
+     * and not measured lengths: changing PID error at handoff causes a kick.
+     */
+    ctx->returnStartLengthL = ctx->lengthTargetValid ? ctx->lastLengthSetL :
+        chassis->chassis_posture_info.chassis_posture_L.leg_length;
+    ctx->returnStartLengthR = ctx->lengthTargetValid ? ctx->lastLengthSetR :
+        chassis->chassis_posture_info.chassis_posture_R.leg_length;
+    if (!climbValueValid(ctx->returnStartLengthL) || ctx->returnStartLengthL <= 0.0f)
+        ctx->returnStartLengthL = ctx->normalLegLength;
+    if (!climbValueValid(ctx->returnStartLengthR) || ctx->returnStartLengthR <= 0.0f)
+        ctx->returnStartLengthR = ctx->normalLegLength;
+    climbEnterState(ctx, CLIMB_RETURN_NORMAL, now);
+    climbSetLegTargets(chassis, ctx->returnStartLengthL, ctx->returnStartLengthR);
 }
 
 /*
@@ -258,9 +293,44 @@ climb_state_e chassisClimbGetState(void)
     return climbContext.state;
 }
 
+uint8_t chassisClimbAllowsPositionHold(void)
+{
+    return climbContext.state == CLIMB_IDLE ||
+           climbContext.state == CLIMB_READY ||
+           climbContext.state == CLIMB_EXTEND ||
+           climbContext.state == CLIMB_RETURN_NORMAL;
+}
+
+uint8_t chassisClimbApplyTorquePolicy(chassis_move_t *chassis)
+{
+    if (chassis == NULL ||
+        (climbContext.state != CLIMB_PULL_UP &&
+         climbContext.state != CLIMB_WHEEL_CONFIRM))
+        return 0u;
+
+    /* The body is supported by the step while the wheels are pulled up.
+     * Zero every balancing/motion correction at the final mapping boundary,
+     * including air-contact overrides. Use the length PID directly so the
+     * standing gravity feedforward cannot oppose wheel retraction.
+     */
+    torque_info_t *torque = &chassis->torque_info;
+    torque->joint_stand_torque_L = chassis->leg_L_length_pid.out;
+    torque->joint_stand_torque_R = chassis->leg_R_length_pid.out;
+    torque->foot_balancing_torque_L = torque->foot_balancing_torque_R = 0.0f;
+    torque->foot_moving_torque_L = torque->foot_moving_torque_R = 0.0f;
+    torque->joint_balancing_torque_L = torque->joint_balancing_torque_R = 0.0f;
+    torque->joint_moving_torque_L = torque->joint_moving_torque_R = 0.0f;
+    torque->joint_roll_torque_L = torque->joint_roll_torque_R = 0.0f;
+    return 1u;
+}
+ClimbContext *ctx;
+bool hitRiser;
+fp32 speedError;
+bool bodyTilted;
+bool legTilted ;
 void chassisClimbProcess(chassis_move_t *chassis)
 {
-    ClimbContext *ctx = &climbContext;
+    ctx = &climbContext;
 
     uint32_t now;
 
@@ -273,7 +343,6 @@ void chassisClimbProcess(chassis_move_t *chassis)
     bool legsExtended;
     bool legsPulledUp;
     bool legsAtNormalHeight;
-    bool hitRiser;
     bool topDetected;
     bool bodyOnStepStable;
     bool standingStable;
@@ -285,18 +354,25 @@ void chassisClimbProcess(chassis_move_t *chassis)
     fp32 currentAverage;
     fp32 legLength;
     fp32 localLegAngle;
+    fp32 normalTargetL;
+    fp32 normalTargetR;
 
     if (chassis == NULL || chassis->chassis_data_ == NULL)
         return;
     now = (uint32_t)xTaskGetTickCount();
     command = chassis->chassis_data_->climb_flag == 1u;
     commandPressed = command && !ctx->lastCommand;
+    normalTargetL = chassis->chassis_posture_info.chassis_posture_L.leg_length_set;
+    normalTargetR = chassis->chassis_posture_info.chassis_posture_R.leg_length_set;
 
-    /*
-     * 通信失联时将 lastCommand 置为true。
-     * 恢复通信后必须先释放按键，防止意外重新触发。
-     */
+    /* Track the real key level so a held F cannot repeatedly trigger. */
     ctx->lastCommand = command;
+    /* A second real F edge cancels the active sequence through a soft return.
+     * Holding F high still cannot retrigger or repeatedly restart the ramp.
+     */
+    if (commandPressed && ctx->state != CLIMB_IDLE &&
+        ctx->state != CLIMB_ABORT && ctx->state != CLIMB_RETURN_NORMAL)
+        climbEnterReturn(ctx, chassis, now);
     /*
      * 保存 Target_Value_Set() 生成的操作手速度指令。
      * 后续攀爬状态只对它限幅，不主动产生前进速度。
@@ -331,13 +407,15 @@ void chassisClimbProcess(chassis_move_t *chassis)
         fabsf(chassis->chassis_posture_info.roll_angle)
             < CLIMB_READY_ROLL_RAD;
 
+    /* Extension only needs both legs to reach the height band. Overshoot
+     * must not make an already extended leg fail the completion check.
+     * Retraction and final standing keep their existing tighter tolerance.
+     */
     legsExtended =
-        fabsf(chassis->chassis_posture_info
-                   .chassis_posture_L.leg_length -
-               CLIMB_HIGH_LENGTH_M) < CLIMB_LENGTH_ERROR_M &&
-        fabsf(chassis->chassis_posture_info
-                   .chassis_posture_R.leg_length -
-               CLIMB_HIGH_LENGTH_M) < CLIMB_LENGTH_ERROR_M;
+        chassis->chassis_posture_info.chassis_posture_L.leg_length >=
+            CLIMB_HIGH_LENGTH_M - CLIMB_EXTEND_LENGTH_ERROR_M &&
+        chassis->chassis_posture_info.chassis_posture_R.leg_length >=
+            CLIMB_HIGH_LENGTH_M - CLIMB_EXTEND_LENGTH_ERROR_M;
 
     legsPulledUp =
         fabsf(chassis->chassis_posture_info
@@ -355,60 +433,37 @@ void chassisClimbProcess(chassis_move_t *chassis)
                    .chassis_posture_R.leg_length -
                ctx->normalLegLength) < CLIMB_LENGTH_ERROR_M;
 
-    /*
-     * 碰撞立面：
-     * 操作手正在给前进指令；
-     * 两侧轮速都明显下降；
-     * 两侧轮毂电流都升高。
-     */
-    hitRiser =
-        requestedSpeed > CLIMB_FORWARD_COMMAND_MIN &&
-        fabsf(chassis->foot_motor_L.speed)
-            < CLIMB_STALL_SPEED_MPS &&
-        fabsf(chassis->foot_motor_R.speed)
-            < CLIMB_STALL_SPEED_MPS &&
-        currentLeft > CLIMB_HIT_CURRENT_RAW &&
-        currentRight > CLIMB_HIT_CURRENT_RAW;
+    /* -------------------------- 撞台阶判断 -------------------------- */
+    {
+        /* 1. 取角度大小。leg_angle 相对世界竖直方向，已包含 pitch。 */
+        fp32 pitchAbs = fabsf(chassis->chassis_posture_info.pitch_angle);
+        fp32 leftLegAbs = fabsf(chassis->chassis_posture_info.chassis_posture_L.leg_angle);
+        fp32 rightLegAbs = fabsf(chassis->chassis_posture_info.chassis_posture_R.leg_angle);
+        fp32 legAngleAbs = fmaxf(leftLegAbs, rightLegAbs);
+
+        /* 2. 基本条件：机身倾斜超过 6°，并且任一腿倾斜超过 14°。 */
+        bodyTilted = pitchAbs > CLIMB_HIT_PITCH_RAD;
+        legTilted = legAngleAbs > CLIMB_HIT_LEG_RAD;
+
+        /* 3. 速度辅助：有移动指令，且设定与两轮平均反馈相差超过 0.2 m/s。
+         * 先对设定限幅，避免把限速本身当成速度跟踪误差。
+         */
+        fp32 speedSet = climbClamp(requestedSpeed,
+                                   -CLIMB_APPROACH_SPEED_MAX,
+                                    CLIMB_APPROACH_SPEED_MAX);
+        speedError = fabsf(speedSet - wheelSpeed);
+        bool hasMoveCommand = fabsf(requestedSpeed) > CLIMB_HIT_COMMAND_MIN_MPS;
+
+        hitRiser = (ctx->state == CLIMB_APPROACH)
+                   && legTilted
+                   && ctx->currentFiltered > 6000.0f;
+    }
 
     /*
      * 顶部判断采用投票，防止单个传感器误触发。
      */
     {
-        bool speedRecovered;
-        bool currentReleased;
-        bool legAngleRecovered;
-        bool pitchRecovered;
-        uint8_t votes = 0u;
-
-        speedRecovered =
-            wheelSpeed > CLIMB_RECOVER_SPEED_MPS;
-
-        currentReleased =
-            ctx->currentFiltered <
-            CLIMB_RELEASE_CURRENT_RAW;
-
-        legAngleRecovered =
-            fabsf(localLegAngle -
-                   ctx->approachLegAngle)
-                < CLIMB_LEG_ANGLE_ERROR_RAD;
-
-        pitchRecovered =
-            fabsf(chassis->chassis_posture_info.pitch_angle)
-                < CLIMB_READY_PITCH_RAD &&
-            fabsf(chassis->chassis_posture_info.pitch_gyro)
-                < CLIMB_PITCH_GYRO_STABLE;
-
-        votes += speedRecovered ? 1u : 0u;
-        votes += currentReleased ? 1u : 0u;
-        votes += legAngleRecovered ? 1u : 0u;
-        votes += pitchRecovered ? 1u : 0u;
-        votes += bothGround ? 1u : 0u;
-
-        topDetected =
-            ctx->riserDetected &&
-            speedRecovered &&
-            (currentReleased || legAngleRecovered) &&
-            votes >= 4u;
+        topDetected = ctx->riserDetected ;
     }
 
     /*
@@ -457,7 +512,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
         /*
          * climb_flag is an event trigger, not a hold-to-run command. Once its
          * rising edge starts the state machine, returning the flag to zero
-         * must not abort the climb. Communication freshness is still checked.
+         * must not abort the climb. A second rising edge requests soft return.
          */
         if (sensorInvalid || dangerousPosture || modeConflict)
         {
@@ -478,10 +533,18 @@ void chassisClimbProcess(chassis_move_t *chassis)
             ctx->normalLegLength =
                 chassis->chassis_posture_info.ideal_high;
 
+            if (!climbValueValid(ctx->normalLegLength))
+                ctx->normalLegLength = 0.19f;
+
             ctx->normalLegLength =
                 climbClamp(ctx->normalLegLength,
-                           0.22f,
+                           0.17f,
                            CLIMB_HIGH_LENGTH_M);
+
+            climbSetLegTargets(chassis, normalTargetL, normalTargetR);
+            chassis->chassis_posture_info.foot_speed_set =
+                climbClamp(requestedSpeed, -CLIMB_APPROACH_SPEED_MAX,
+                           CLIMB_APPROACH_SPEED_MAX);
 
             ctx->riserDetected = false;
 
@@ -491,16 +554,20 @@ void chassisClimbProcess(chassis_move_t *chassis)
         case CLIMB_READY:
         {
             bool ready =
-                bothGround &&
-                postureReady &&
-                fabsf(wheelSpeed) < 0.10f &&
                 chassis->mode.chassis_mode == ENABLE_CHASSIS &&
-                chassis->mode.sport_mode != JUMPING_MODE;
+                chassis->mode.chassis_balancing_mode == BALANCING_READY &&
+                chassis->mode.sport_mode == NORMAL_MOVING_MODE;
 
-            /*
-             * 状态检查期间不允许机器人移动。
+            /* Do not gate extension on wheel speed, contact flags or tight
+             * pitch/roll limits. The shared invalid-data, severe-posture and
+             * mode-conflict checks above still abort an unsafe sequence.
              */
-            chassis->chassis_posture_info.foot_speed_set = 0.0f;
+
+            /* Keep low-speed forward/reverse control while preparing. */
+            climbSetLegTargets(chassis, normalTargetL, normalTargetR);
+            chassis->chassis_posture_info.foot_speed_set =
+                climbClamp(requestedSpeed, -CLIMB_APPROACH_SPEED_MAX,
+                           CLIMB_APPROACH_SPEED_MAX);
 
             if (climbConditionHold(ctx,
                                    ready,
@@ -513,7 +580,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             else if (now - ctx->stateTick >=
                      pdMS_TO_TICKS(CLIMB_READY_TIMEOUT_MS))
             {
-                climbEnterAbort(ctx, chassis, now);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -521,7 +588,9 @@ void chassisClimbProcess(chassis_move_t *chassis)
 
         case CLIMB_EXTEND:
 
-            chassis->chassis_posture_info.foot_speed_set = 0.0f;
+            chassis->chassis_posture_info.foot_speed_set =
+                climbClamp(requestedSpeed, -CLIMB_APPROACH_SPEED_MAX,
+                           CLIMB_APPROACH_SPEED_MAX);
             /* 从进入阶段时的实际腿长平滑升腿，起止速度均为零。 */
             climbSetLegLength(chassis,
                               climbSmoothLength(ctx->motionStartLength,
@@ -533,7 +602,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             if (climbConditionHold(ctx,
                                    now - ctx->stateTick >=
                                        pdMS_TO_TICKS(CLIMB_EXTEND_TIME_MS) &&
-                                   legsExtended && postureReady,
+                                   legsExtended,
                                    now,
                                    CLIMB_EXTEND_STABLE_MS))
             {
@@ -543,7 +612,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             else if (now - ctx->stateTick >=
                      pdMS_TO_TICKS(CLIMB_EXTEND_TIMEOUT_MS))
             {
-                climbEnterAbort(ctx, chassis, now);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -553,13 +622,14 @@ void chassisClimbProcess(chassis_move_t *chassis)
             climbSetLegLength(chassis, CLIMB_HIGH_LENGTH_M);
 
             /*
-             * 速度来自操作手，只允许低速向前。
+             * 速度来自操作手，允许低速前进和后退。
              * 操作手不推摇杆时，速度设定就是0。
              */
             chassis->chassis_posture_info.foot_speed_set =
                 climbClamp(requestedSpeed,
-                           0.0f,
+                           -CLIMB_APPROACH_SPEED_MAX,
                            CLIMB_APPROACH_SPEED_MAX);
+
 
             if (climbConditionHold(ctx,
                                    hitRiser,
@@ -578,11 +648,11 @@ void chassisClimbProcess(chassis_move_t *chassis)
 
             /*
              * 已碰到台阶后进一步限制速度，
-             * 但仍然由操作手决定是否向前。
+             * 但仍然由操作手决定前进或后退。
              */
             chassis->chassis_posture_info.foot_speed_set =
                 climbClamp(requestedSpeed,
-                           0.0f,
+                           -CLIMB_CROSS_SPEED_MAX,
                            CLIMB_CROSS_SPEED_MAX);
 
             if (climbConditionHold(ctx,
@@ -597,7 +667,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             else if (now - ctx->stateTick >=
                      pdMS_TO_TICKS(CLIMB_CROSS_TIMEOUT_MS))
             {
-                climbEnterAbort(ctx, chassis, now);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -624,7 +694,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             else if (now - ctx->stateTick >=
                      pdMS_TO_TICKS(CLIMB_TOP_CONFIRM_TIMEOUT_MS))
             {
-                climbEnterAbort(ctx, chassis, now);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -663,7 +733,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             else if (now - ctx->stateTick >=
                      pdMS_TO_TICKS(CLIMB_PULL_TIMEOUT_MS))
             {
-                climbEnterAbort(ctx, chassis, now);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -679,15 +749,11 @@ void chassisClimbProcess(chassis_move_t *chassis)
              * 未确认接地前禁止重新伸腿，避免轮子仍卡在立面时撑车。
              */
             if (climbConditionHold(ctx,
-                                   bothGround &&
-                                   fabsf(chassis->chassis_posture_info
-                                                    .pitch_gyro) <
-                                       CLIMB_PITCH_GYRO_STABLE,
+                                   fabsf(chassis->chassis_posture_info.pitch_gyro) <CLIMB_PITCH_GYRO_STABLE,
                                    now,
                                    CLIMB_WHEEL_CONTACT_STABLE_MS))
             {
                 ctx->motionStartLength = legLength;
-
                 climbEnterState(ctx,
                                 CLIMB_STAND_UP,
                                 now);
@@ -695,7 +761,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             else if (now - ctx->stateTick >=
                      pdMS_TO_TICKS(CLIMB_WHEEL_CONTACT_TIMEOUT_MS))
             {
-                climbEnterAbort(ctx, chassis, now);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -731,7 +797,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
             else if (now - ctx->stateTick >=
                      pdMS_TO_TICKS(CLIMB_STAND_TIMEOUT_MS))
             {
-                climbEnterAbort(ctx, chassis, now);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -754,7 +820,7 @@ void chassisClimbProcess(chassis_move_t *chassis)
                 chassis->chassis_posture_info
                     .position_lock_state = 0u;
 
-                climbReset(ctx);
+                climbEnterReturn(ctx, chassis, now);
             }
 
             break;
@@ -769,20 +835,45 @@ void chassisClimbProcess(chassis_move_t *chassis)
             climbSetLegLength(chassis, ctx->abortHoldLength);
 
             /*
-             * Abort also exits automatically after the robot is safe and
-             * stable; it does not wait for climb_flag to change.
+             * After a real safety abort, hold until enabled and stable, then
+             * use the same soft return instead of jumping directly to IDLE.
              */
             if (climbConditionHold(ctx,
-                                   postureReady,
+                                   postureReady && climbValueValid(legLength) &&
+                                   chassis->mode.chassis_mode == ENABLE_CHASSIS &&
+                                   chassis->mode.chassis_balancing_mode == BALANCING_READY &&
+                                   chassis->mode.sport_mode == NORMAL_MOVING_MODE &&
+                                   chassis->chassis_data_->recovery_flag == 0u,
                                    now,
                                    CLIMB_ABORT_RESET_MS))
             {
                 chassis->chassis_posture_info
                     .position_lock_state = 0u;
 
-                climbReset(ctx);
+                climbEnterReturn(ctx, chassis, now);
             }
 
+            break;
+
+        case CLIMB_RETURN_NORMAL:
+            /* Blend separately into the ordinary targets produced above by
+             * Target_Value_Set, including roll compensation and current height
+             * input. At completion the next IDLE cycle has identical targets.
+             */
+            if (!climbValueValid(normalTargetL) || normalTargetL <= 0.0f)
+                normalTargetL = ctx->normalLegLength;
+            if (!climbValueValid(normalTargetR) || normalTargetR <= 0.0f)
+                normalTargetR = ctx->normalLegLength;
+            chassis->chassis_posture_info.foot_speed_set =
+                climbClamp(requestedSpeed, -CLIMB_APPROACH_SPEED_MAX,
+                           CLIMB_APPROACH_SPEED_MAX);
+            climbSetLegTargets(chassis,
+                climbSmoothLength(ctx->returnStartLengthL, normalTargetL,
+                                  now, ctx->stateTick, CLIMB_RETURN_TIME_MS),
+                climbSmoothLength(ctx->returnStartLengthR, normalTargetR,
+                                  now, ctx->stateTick, CLIMB_RETURN_TIME_MS));
+            if (now - ctx->stateTick >= pdMS_TO_TICKS(CLIMB_RETURN_TIME_MS))
+                climbReset(ctx);
             break;
 
         default:
@@ -791,9 +882,8 @@ void chassisClimbProcess(chassis_move_t *chassis)
             break;
     }
 
-    /*
-     * IDLE之外都关闭普通位置锁。
-     */
-    if (ctx->state != CLIMB_IDLE)
+    /* Position hold remains available during extension/return at zero input;
+     * ordinary movement input releases it through the stop-position module. */
+    if (!chassisClimbAllowsPositionHold())
         climbReleasePositionLock(chassis);
 }

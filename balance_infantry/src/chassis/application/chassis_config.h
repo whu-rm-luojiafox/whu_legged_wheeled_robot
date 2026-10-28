@@ -9,14 +9,14 @@
 /* 跟随外环只有 P，不再维护一套未参与计算的 PID 对象。 */
 #define FOLLOW_KP_RAD_S_PER_DEG 0.16f
 //腿长设定PID
-#define LEG_SET_PID_KP 300.0f
+#define LEG_SET_PID_KP 220.0f
 #define LEG_SET_PID_KI 0.075f
 #define LEG_SET_PID_KD 300.0f
 #define LEG_SET_PID_OUT 50.0f
 #define LEG_SET_PID_IOUT 2.5f
 
 //roll轴水平pid
-#define ROLL_PID_KP 300.0f
+#define ROLL_PID_KP 220.0f
 #define ROLL_PID_KI 0.08f
 #define ROLL_PID_KD 10.0f
 #define ROLL_PID_OUT 10.0f
