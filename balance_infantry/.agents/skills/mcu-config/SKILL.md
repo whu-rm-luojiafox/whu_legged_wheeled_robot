@@ -9,6 +9,7 @@ Use `scripts/config.js` from this skill directory. Never edit VS Code storage or
 
 ## Before you run
 
+- **MCP first**: if this session provides EmberProbe MCP tools (such as `config_get`), use them; the scripts here are the fallback. The authorization and hardware rules on this page apply to both.
 - **Applies to**: reading or changing EmberProbe workspace configuration (ELF, debugger, MCU target, SVD, selected `.ioc`, sampling interval, Tcl port, sample history limit), and identifying the supported route for CubeMX and firmware package setup.
 - **Requires**: the EmberProbe Agent Bridge. No probe or hardware is needed.
 - **Preconditions**: read the current configuration before changing it; change only the fields the user explicitly requested; `openocdPath` and `cubemxPath` are read-only through the Bridge.
@@ -33,7 +34,7 @@ For failure handling, retry limits, cross-skill routing, and result scoping, rea
 4. Report the normalized configuration returned by EmberProbe. The extension validates paths, configuration names, numeric ranges, and synchronizes the sidebar immediately.
 5. On failure, parse the stderr JSON diagnostic and report its `error.code`, `likelyCause`, and `suggestedActions`. Do not guess a hardware or service cause for configuration-validation errors.
 
-`--probes` calls `probe.list` and reads J-Link, CMSIS-DAP and ST-Link OS USB metadata without opening the debug interface. It returns `available`, physical `devices` and `notes`; unreadable fields remain unknown. J-Link uses a decimal `probeSerial`; CMSIS-DAP/ST-Link use exact strings including case and leading zeros. Select `transport=swd` or `transport=jtag` according to the user's board wiring. `adapterSpeedKhz=0` uses the script default and lets flashing raise the clock to the probe's capability; a nonzero value also caps requests in target reset events, retaining initialization and lower speeds, and is the clock used while programming. Do not infer compatibility from “V9/V10” alone. Stop an active session before changing connection settings; do not bypass `PROBE_CONFIGURATION_BUSY` or `PROBE_SESSION_STALE` by editing storage. Configuration and enumeration do not authorize driver replacement.
+`--probes` calls `probe.list` and reads J-Link, CMSIS-DAP and ST-Link OS USB metadata without opening the debug interface. It returns `available`, physical `devices` and `notes`; unreadable fields remain unknown. The device the workspace would use carries `selected: true`. J-Link uses a decimal `probeSerial`; CMSIS-DAP/ST-Link use exact strings including case and leading zeros. Select `transport=swd` or `transport=jtag` according to the user's board wiring. `adapterSpeedKhz=0` uses the script default and lets flashing raise the clock to the probe's capability; a nonzero value also caps requests in target reset events, retaining initialization and lower speeds, and is the clock used while programming. Do not infer compatibility from “V9/V10” alone. Stop an active session before changing connection settings; do not bypass `PROBE_CONFIGURATION_BUSY` or `PROBE_SESSION_STALE` by editing storage. Configuration and enumeration do not authorize driver replacement.
 
 ## CubeMX, IOC and firmware packages
 

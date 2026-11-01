@@ -10,7 +10,7 @@ Use `scripts/debug.js` from this skill directory. It uses VS Code's debugger API
 For paused C/C++ threads, stacks, scopes and object expansion, use `scripts/inspect.js` and
 read [references/paused-inspection.md](references/paused-inspection.md). For RTOS task states,
 priorities and stack fill estimates, use `mcu-rtos`. Inspection requires the native EmberProbe
-adapter; existing execution controls continue to support integrated Cortex-Debug sessions.
+adapter.
 
 C++ breakpoints accept `.cpp` source lines or a quoted, fully qualified function signature
 (for example `--function "app::Worker::run(int)"`). Prefer source lines when overloads or
@@ -19,6 +19,7 @@ has been verified at a firmware address; report adapter verification when availa
 
 ## Before you run
 
+- **MCP first**: if this session provides EmberProbe MCP tools (such as `debug_control`), use them; the scripts here are the fallback. The authorization and hardware rules on this page apply to both.
 - **Applies to**: controlling the workspace debugger session (start/stop/pause/continue/step/restart) and managing source-line or function breakpoints.
 - **Requires**: the EmberProbe Agent Bridge and VS Code's debugger APIs; `--start` also needs a complete EmberProbe debug configuration (ELF, probe, target, OpenOCD, SVD).
 - **Preconditions**: one control action in flight (else `DEBUG_CONTROL_BUSY` — read status instead); pause needs a running target, continue/step need a paused target; breakpoints can be created before a session starts.

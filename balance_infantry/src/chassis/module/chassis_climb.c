@@ -44,7 +44,7 @@
  * pitch 超过 6°，且任一腿相对世界竖直方向超过 14°。
  */
 #define CLIMB_HIT_PITCH_RAD             0.104720f
-#define CLIMB_HIT_LEG_RAD               0.244346f
+#define CLIMB_HIT_LEG_RAD               0.154346f
 
 /* 轮子空转时速度差不一定明显，较大的姿态变化也可作为辅助信号。 */
 #define CLIMB_HIT_STRONG_PITCH_RAD      0.209440f  /* 12° */
@@ -455,8 +455,8 @@ void chassisClimbProcess(chassis_move_t *chassis)
         bool hasMoveCommand = fabsf(requestedSpeed) > CLIMB_HIT_COMMAND_MIN_MPS;
 
         hitRiser = (ctx->state == CLIMB_APPROACH)
-                   && legTilted
-                   && ctx->currentFiltered > 6000.0f;
+                   && legTilted;
+                //    && ctx->currentFiltered > 4000.0f;
     }
 
     /*

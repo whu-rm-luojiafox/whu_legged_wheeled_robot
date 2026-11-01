@@ -35,9 +35,9 @@ float real_time_heat = 0;
  * 3) 动作：反转固定时长 -> 恢复正转。
  * 4) 参数需要你上车后再微调。
  */
-#define TRIGGER_JAM_MIN_CMD_CURRENT      4000      // 判定堵转所需的最小电流输出
+#define TRIGGER_JAM_MIN_CMD_CURRENT      30000      // 判定堵转所需的最小电流输出
 #define TRIGGER_JAM_SPEED_RPM_THRES      400.0f     // 低速阈值，低于此值持续一段时间认为堵转
-#define TRIGGER_JAM_DETECT_MS            300U      // 堵转持续判定时间
+#define TRIGGER_JAM_DETECT_MS            3000U      // 堵转持续判定时间
 #define TRIGGER_REVERSE_SPEED_RPM        2200.0f   // 退弹反转速度
 #define TRIGGER_REVERSE_MS               180U      // 退弹反转时长
 #define TRIGGER_REVERSE_COOLDOWN_MS      100U      // 退弹完成后冷却时间，避免立刻再次误判

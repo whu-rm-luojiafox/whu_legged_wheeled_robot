@@ -6,6 +6,7 @@ const { inspectElf } = require("./elf-file");
 
 const fs = require("fs");
 const { canonicalFileSync } = require("./file-identity");
+const { createLineDecoder } = require("./tool-output");
 const { detectProbe, probeFromText } = require("./probe-detection");
 const { isSafeCfgPath, resolveExecutablePath, resolveOpenOcdLaunch, normalizeTransport } = require("./openocd-launch");
 const path = require("path");
@@ -46,9 +47,9 @@ function parseArgs(argv) {
 
 // 读取 EmberProbe 配置。config.get 失败时不再吞掉异常：返回结构化 diagnostic，
 // 供预检记录降级原因并保留原始错误码与详情；调用方仍可继续用显式参数/自动检测降级。
-async function getEmberProbeConfig(workspace) {
+async function getEmberProbeConfig(workspace, bridgeCall = call) {
     try {
-        return { config: await call(workspace, "config.get", {}), diagnostic: null };
+        return { config: await bridgeCall(workspace, "config.get", {}), diagnostic: null };
     } catch (error) {
         return { config: null, diagnostic: diagnosticForError(error, { operation: "config.get" }) };
     }
@@ -288,29 +289,22 @@ function runOpenOcd(executable, args, options = {}) {
         }, timeoutMs);
         let outputBytes = 0;
         const collect = (stream) => {
-            let buffer = "";
+            // Whole lines, decoded from the system code page where OpenOCD quotes Windows messages.
+            const decoder = createLineDecoder((line) => {
+                lines.push(line);
+                process.stdout.write(line + "\n");
+            });
             stream.on("data", (chunk) => {
                 if (settled) return;
                 outputBytes += chunk.length;
-                if (outputBytes > 4 * 1024 * 1024 || buffer.length + chunk.length > 65536) {
+                if (outputBytes > 4 * 1024 * 1024 || decoder.length + chunk.length > 65536) {
                     child.kill("SIGKILL");
                     finish(Object.assign(new Error("OpenOCD output limit exceeded"), { code: "OPENOCD_OUTPUT_LIMIT" }));
                     return;
                 }
-                buffer += chunk.toString();
-                const parts = buffer.split(/\r?\n/);
-                buffer = parts.pop();
-                for (const line of parts) {
-                    lines.push(line);
-                    process.stdout.write(line + "\n");
-                }
+                decoder.write(chunk);
             });
-            stream.on("end", () => {
-                if (buffer) {
-                    lines.push(buffer);
-                    process.stdout.write(buffer + "\n");
-                }
-            });
+            stream.on("end", () => decoder.end());
         };
         collect(child.stdout);
         collect(child.stderr);
@@ -325,9 +319,11 @@ function runOpenOcd(executable, args, options = {}) {
 
 // 统一预检：显式参数 > EmberProbe 配置（Agent Bridge）> 工作区/USB 自动检测。
 // notes 携带检测工具缺失等提示，随 JSON 一并输出。
-async function preflight(options) {
+// deps.call 允许 MCP 服务器以自己的通道标识调用 Bridge；skill 脚本使用默认的 agent-client。
+async function preflight(options, deps = {}) {
+    const bridgeCall = deps.call || call;
     const root = fs.realpathSync(path.resolve(options.workspace));
-    const { config, diagnostic } = await getEmberProbeConfig(root);
+    const { config, diagnostic } = await getEmberProbeConfig(root, bridgeCall);
     // diagnostics 保留 config.get 失败的原始诊断（错误码/详情），不因降级而丢弃；
     // sources 记录每个字段的最终来源，供 agent 区分显式参数、EmberProbe 配置与自动检测。
     const diagnostics = diagnostic ? [diagnostic] : [];
@@ -442,13 +438,14 @@ async function preflight(options) {
                     transport,
                     probeSerial,
                     adapterSpeedKhz,
-                    successfulConnection: config?.successfulConnection
+                    // Bridge snapshots carry the v3 workspace selection; older ones only the v1/v2 record.
+                    successfulConnection: config?.selectedProbe || config?.successfulConnection
                 },
                 {
                     listProbes: async (inventoryOptions) => {
                         if (config) {
                             try {
-                                return await call(root, "probe.list", inventoryOptions);
+                                return await bridgeCall(root, "probe.list", inventoryOptions);
                             } catch {
                                 /* Use OS metadata without Bridge. */
                             }

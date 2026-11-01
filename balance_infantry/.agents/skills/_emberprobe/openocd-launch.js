@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { normalizeProbeSerial, normalizeAdapterSpeed, probeFamily } = require("./probe-connection");
+const { leavesDirectory } = require("./file-identity");
 
 function normalizeTransport(value = "auto") {
     if (!["auto", "swd", "jtag", "hla_swd", "hla_jtag"].includes(value)) {
@@ -125,6 +126,8 @@ function buildOpenOcdConfigArgs(launch, transport = "auto", connection = {}) {
         launch.scriptsRoot,
         "-f",
         launch.probePath,
+        // Set by the probe preflight only for a CMSIS-DAP that the interface script leaves on its automatic backend.
+        ...(connection.adapterBackend === "hid" ? ["-c", "cmsis-dap backend hid"] : []),
         ...(serial ? ["-c", `adapter serial ${serial.includes(" ") ? JSON.stringify(serial) : serial}`] : []),
         ...(transport === "auto" ? [] : ["-c", `transport select ${transport}`]),
         "-f",
@@ -249,7 +252,7 @@ function resolveConfigFile(scriptsRoot, kind, config) {
         });
     }
     const relative = path.relative(base, resolved);
-    if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    if (!relative || leavesDirectory(relative)) {
         throw Object.assign(new Error(`OpenOCD 配置脚本越界：${kind}/${config}`), { code: "OPENOCD_CONFIG_INVALID" });
     }
     return resolved;

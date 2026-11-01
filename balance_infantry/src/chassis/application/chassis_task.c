@@ -222,7 +222,7 @@ static void chassis_init(chassis_move_t *chassis_move_init)
 		CAN_dm_enable(i);
 		vTaskDelay(2);
 	}
-	// CAN_dm_save_0_point(4);
+	// CAN_dm_save_0_point(3);
 	/* -------------------------param get---------------------------- */
 	chassis_move_init->joint_motor_1.motor_measure = get_DM_motor_measure_point(0);
 	chassis_move_init->joint_motor_2.motor_measure = get_DM_motor_measure_point(1);
