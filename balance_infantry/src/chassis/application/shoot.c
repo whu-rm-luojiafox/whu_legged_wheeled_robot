@@ -35,9 +35,9 @@ float real_time_heat = 0;
  * 3) 动作：反转固定时长 -> 恢复正转。
  * 4) 参数需要你上车后再微调。
  */
-#define TRIGGER_JAM_MIN_CMD_CURRENT      30000      // 判定堵转所需的最小电流输出
-#define TRIGGER_JAM_SPEED_RPM_THRES      400.0f     // 低速阈值，低于此值持续一段时间认为堵转
-#define TRIGGER_JAM_DETECT_MS            3000U      // 堵转持续判定时间
+#define TRIGGER_JAM_MIN_CMD_CURRENT      30000      // 判定堵转所需的最小电流指令
+#define TRIGGER_JAM_SPEED_RPM_THRES      100.0f     // 低速阈值上限，实际取目标转速20%与此值的较小值
+#define TRIGGER_JAM_DETECT_MS            4000U      // 持续近乎停转3秒才退弹，允许短时顶过限位
 #define TRIGGER_REVERSE_SPEED_RPM        2200.0f   // 退弹反转速度
 #define TRIGGER_REVERSE_MS               180U      // 退弹反转时长
 #define TRIGGER_REVERSE_COOLDOWN_MS      100U      // 退弹完成后冷却时间，避免立刻再次误判
@@ -86,11 +86,14 @@ static void trigger_anti_jam_start_reverse(void)
     trigger_jam_start_tick = 0;
 }
 
-static uint8_t trigger_need_anti_jam(fp32 actual_speed_rpm, int16_t given_current, uint8_t motor_should_run)
+static uint8_t trigger_need_anti_jam(fp32 actual_speed_rpm, fp32 target_speed_rpm,
+                                     int16_t given_current, uint8_t motor_should_run)
 {
     uint32_t now = HAL_GetTick();
+    fp32 low_speed_threshold = fminf(TRIGGER_JAM_SPEED_RPM_THRES,
+                                    fabsf(target_speed_rpm) * 0.2f);
 
-    if (!motor_should_run)
+    if (!motor_should_run || target_speed_rpm == 0.0f)
     {
         trigger_jam_checking = 0;
         trigger_jam_start_tick = 0;
@@ -107,7 +110,8 @@ static uint8_t trigger_need_anti_jam(fp32 actual_speed_rpm, int16_t given_curren
         return 0;
     }
 
-    if ((fabsf(actual_speed_rpm) < TRIGGER_JAM_SPEED_RPM_THRES) &&
+    /* 单发末段目标转速较低，只有明显低于目标时才计时，避免正常慢转误退弹。 */
+    if ((fabsf(actual_speed_rpm) < low_speed_threshold) &&
         (abs(given_current) > TRIGGER_JAM_MIN_CMD_CURRENT))
     {
         if (!trigger_jam_checking)
@@ -239,6 +243,7 @@ uint16_t shoot_single_control(void)
 
             /* 单发过程中也允许触发退弹 */
             if (trigger_need_anti_jam(shoot_control.shoot_motor_measure->speed_rpm,
+                                      shoot_control.trigger_motor_angle_pid.out,
                                       shoot_control.given_current,
                                       1))
             {
@@ -372,6 +377,7 @@ void shoot_control_set(void)
 
         /* 连发防堵转判定 */
         if (trigger_need_anti_jam(shoot_control.shoot_motor_measure->speed_rpm,
+                                  shoot_control.speed_set,
                                   shoot_control.given_current,
                                   1))
         {

@@ -1,0 +1,90 @@
+{
+  "source": "exports\\high-leg-2003-2006.csv",
+  "panel": 2,
+  "reported_archive_truncated": false,
+  "labels": "User confirms no stair contacts; turning and rapid movement included.",
+  "row_count": 884,
+  "high_leg_row_count": 787,
+  "high_leg_selection": "Both target lengths >=0.32m and both measured lengths >=0.30m; this is not the climb approach height of 0.40m.",
+  "from": "2026-11-03T20:02:59.831990+08:00",
+  "to": "2026-11-03T20:06:20.217636+08:00",
+  "metrics": {
+    "pitch_rad": {
+      "min": -0.2019256353378296,
+      "median": 0.03901253268122673,
+      "p99": 0.2348787784576416,
+      "max": 0.2954150140285492
+    },
+    "pitch_rate_rad_s": {
+      "min": -1.5654692649841309,
+      "median": 0.00686116237193346,
+      "p99": 0.9730560183525085,
+      "max": 1.4992966651916504
+    },
+    "left_leg_rad": {
+      "min": -0.3459327816963196,
+      "median": 0.08414091169834137,
+      "p99": 0.4424009323120117,
+      "max": 0.5563446283340454
+    },
+    "right_leg_rad": {
+      "min": -0.3119397759437561,
+      "median": 0.08119771629571915,
+      "p99": 0.4475809931755066,
+      "max": 0.5642985105514526
+    },
+    "left_local_rad": {
+      "min": -0.14362576603889465,
+      "median": 0.04692171514034271,
+      "p99": 0.20504330098628998,
+      "max": 0.26092958450317383
+    },
+    "speed_m_s": {
+      "min": -2.7320473194122314,
+      "median": 0.0635170117020607,
+      "p99": 2.234402894973755,
+      "max": 3.015977621078491
+    },
+    "command_m_s": {
+      "min": -2.0,
+      "median": 0.0,
+      "p99": 2.200000047683716,
+      "max": 2.200000047683716
+    },
+    "raw_ax_m_s2": {
+      "min": -4.166794776916504,
+      "median": -0.0942307636141777,
+      "p99": 2.7183332443237305,
+      "max": 5.45192289352417
+    }
+  },
+  "gaps": [
+    {
+      "from": "2026-11-03T20:03:05.722648+08:00",
+      "to": "2026-11-03T20:04:01.750590+08:00",
+      "duration_s": 56.027942
+    },
+    {
+      "from": "2026-11-03T20:05:03.445177+08:00",
+      "to": "2026-11-03T20:05:12.630031+08:00",
+      "duration_s": 9.184854
+    },
+    {
+      "from": "2026-11-03T20:05:25.045849+08:00",
+      "to": "2026-11-03T20:05:33.919862+08:00",
+      "duration_s": 8.874013
+    },
+    {
+      "from": "2026-11-03T20:05:39.523037+08:00",
+      "to": "2026-11-03T20:06:17.383710+08:00",
+      "duration_s": 37.860673
+    }
+  ],
+  "limitations": [
+    "Historical samples are not atomic snapshots.",
+    "No true stair-contact trials: detection sensitivity/latency cannot be established.",
+    "Intervals and archive gaps cannot validate a 20ms hold."
+  ],
+  "median_interval_s": 0.11179,
+  "current_leg_threshold_exceeding_samples": 116
+}

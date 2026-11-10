@@ -1,9 +1,8 @@
-# ifndef __MOTOR_CMD_H
-# define __MOTOR_CMD_H
+#ifndef MOTOR_CMD_H
+#define MOTOR_CMD_H
 
+#include "chassis_fwd.h"
 
 void motor_cmd_task(void const *pvParameters);
-
-# endif
-
-
+void chassisMotorSend(chassis_move_t *chassis);
+#endif

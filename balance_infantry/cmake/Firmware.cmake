@@ -69,6 +69,7 @@ elseif(CHASSIS_FIRMWARE STREQUAL "lqr")
     "${CHASSIS_ROOT}/src/chassis/components/algorithm" "${CHASSIS_ROOT}/src/common/components/algorithm/Include"
     "${CHASSIS_ROOT}/src/chassis/components/controller" "${CHASSIS_ROOT}/src/chassis/components/devices"
     "${CHASSIS_ROOT}/src/chassis/components/UI"
+    "${CHASSIS_ROOT}/src/chassis/service"
     "${CHASSIS_ROOT}/src/chassis/service/CanService" "${CHASSIS_ROOT}/src/chassis/protocols"
     "${CHASSIS_ROOT}/src/chassis/module")
   target_compile_definitions(chassis_firmware PRIVATE ROBOT_BOARD_CHASSIS=1 ARM_MATH_CM4 ARM_MATH_MATRIX_CHECK ARM_MATH_ROUNDING)

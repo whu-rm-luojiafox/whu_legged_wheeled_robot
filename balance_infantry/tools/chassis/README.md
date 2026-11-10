@@ -42,10 +42,10 @@ outside this experiment.
 ## Native MPC validation
 
 `mpc_reference_qp` checks the independent QP, convergence guards and linear rollout.
-The standalone chassis unit test sources and their CMake targets have been removed.
+Chassis behavior checks are separate Python/GCC entry points: `tests/run_control_checks.py` and `tests/run_climb_checks.py`. They do not use the MPC CMake targets.
 
 The firmware adapter for follow is `chassis_update_yaw_follow()` in
-`src/chassis/application/chassis_task.c`; the standalone API is `chassis_follow_step()`.
+`src/chassis/module/chassis_motion.c`; the standalone API is `chassis_follow_step()`.
 Observe `auto_following`, `manual_stopping`, `heading_locked`,
 `angle_ref_rad` and `rate_ref_rad_s`. Encoder error uses degrees; yaw uses radians.
 

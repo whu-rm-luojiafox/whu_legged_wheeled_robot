@@ -1,0 +1,52 @@
+{
+  "trials": [
+    {
+      "trial": "false_1",
+      "pre_pull_samples": 20,
+      "pre_pull_pitch_min": -0.16423103213310242,
+      "pre_pull_pitch_max": 0.15147796273231506,
+      "first_observed_cross_time": "21:42:55.040",
+      "speed_command_at_first_cross": -1.600000023841858,
+      "pitch_at_first_cross": -0.16423103213310242,
+      "first_observed_pull_time": "21:42:55.445",
+      "pitch_gt_018_samples": 0,
+      "first_pitch_gt_018": null,
+      "last_pitch_gt_018": null,
+      "observed_above_span_s": 0
+    },
+    {
+      "trial": "false_2",
+      "pre_pull_samples": 2,
+      "pre_pull_pitch_min": 0.06831027567386627,
+      "pre_pull_pitch_max": 0.09561451524496078,
+      "first_observed_cross_time": "21:42:59.760",
+      "speed_command_at_first_cross": 0.0,
+      "pitch_at_first_cross": 0.09561451524496078,
+      "first_observed_pull_time": "21:42:59.999",
+      "pitch_gt_018_samples": 0,
+      "first_pitch_gt_018": null,
+      "last_pitch_gt_018": null,
+      "observed_above_span_s": 0
+    },
+    {
+      "trial": "true_contact_3",
+      "pre_pull_samples": 39,
+      "pre_pull_pitch_min": 0.01646900549530983,
+      "pre_pull_pitch_max": 0.25754088163375854,
+      "first_observed_cross_time": "21:43:07.293",
+      "speed_command_at_first_cross": 1.600000023841858,
+      "pitch_at_first_cross": 0.13834026455879211,
+      "first_observed_pull_time": "21:43:08.462",
+      "pitch_gt_018_samples": 8,
+      "first_pitch_gt_018": "21:43:07.360",
+      "last_pitch_gt_018": "21:43:08.172",
+      "observed_above_span_s": 0.811743
+    }
+  ],
+  "notes": [
+    "Labels supplied by user: first two false triggers; third genuine stair-contact attempt.",
+    "Compare only APPROACH/CROSS/TOP_CONFIRM, before PULL_UP.",
+    "State and variable samples are not atomic; sample timestamps bound observations, not exact firmware transitions.",
+    "This comparison is observational, not a counterfactual replay after changing thresholds."
+  ]
+}

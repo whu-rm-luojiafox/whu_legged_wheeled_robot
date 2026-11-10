@@ -1,7 +1,7 @@
-#include "chassis_task.h" /* Legacy state adapter; not part of the public interface. */
+#include "chassis_types.h"
 #include "chassis_recovery.h"
 #include "struct_typedef.h"
-#include "uart_receive.h"
+#include "FreeRTOS.h"
 #include "task.h"
 #include <math.h>
 #include <stdbool.h>
@@ -26,7 +26,6 @@ typedef struct
     RecoveryState state;
     uint32_t startTick;
     uint32_t stableTick;
-    fp32 holdLength;
     bool lastKey;
     bool rotatePending;
     uint32_t rotateRequestTick;
@@ -35,23 +34,17 @@ typedef struct
     RecoveryDirection direction;
 } RecoveryContext;
 
-RecoveryContext recovery = {
-    REC_IDLE, 0u, 0u, 0.0f, true, false, 0u,
-    0u, false, REC_DIRECTION_NONE
-};
-
-
+RecoveryContext recovery = {.lastKey = true};
 
 /* Tune these limits only after checking the leg direction on a stand. */
-#define FALL_PITCH       0.80f
-#define FALL_ROLL        0.70f
-#define SIDE_LIMIT       1.0f
-#define UPRIGHT_PITCH    0.18f
-#define LOCAL_ANGLE_MAX  0.35f
+#define FALL_PITCH 0.80f
+#define FALL_ROLL 0.70f
+#define SIDE_LIMIT 1.0f
+#define UPRIGHT_PITCH 0.18f
 #define MOTOR_TORQUE_MAX 5.0f
 #define ROTATE_REQUEST_TIMEOUT_MS 3000u
-#define LEG_ALIGN_ERROR_RAD  0.0873f  // 约5°
-#define LEG_ALIGN_WAIT_MS    200u     // 连续对齐200ms
+#define LEG_ALIGN_ERROR_RAD 0.0873f // 约5°
+#define LEG_ALIGN_WAIT_MS 200u      // 连续对齐200ms
 
 static fp32 clamp(fp32 value, fp32 limit)
 {
@@ -62,32 +55,25 @@ static fp32 clamp(fp32 value, fp32 limit)
 
 static bool valid(fp32 value)
 {
-    return value == value && fabsf(value) < 1000.0f;
+    return isfinite(value);
 }
 
 static fp32 wrappedAngleDifference(fp32 left, fp32 right)
 {
     fp32 difference = left - right;
 
-    while (difference > PI) difference -= PI2;
-    while (difference < -PI) difference += PI2;
+    while (difference > PI)
+        difference -= PI2;
+    while (difference < -PI)
+        difference += PI2;
     return difference;
 }
 
 static void chassisRecoveryInit(RecoveryContext *r)
 {
-    r->state = REC_IDLE;
-    r->startTick = 0u;
-    r->stableTick = 0u;
-    r->holdLength = 0.0f;
-    r->lastKey = true; // First observe R released before accepting a press.
-    r->rotatePending = false;
-    r->rotateRequestTick = 0u;
-    r->alignTick = 0u;
-    r->alignReady = false;
-    r->direction = REC_DIRECTION_NONE;
+    *r = (RecoveryContext){.lastKey = true};
 }
-bool fallenForward,fallenBackward;
+bool fallenForward, fallenBackward;
 /* 返回当前反倒状态 */
 static bool chassisRecoveryUpdate(RecoveryContext *r, const chassis_move_t *c)
 {
@@ -95,11 +81,10 @@ static bool chassisRecoveryUpdate(RecoveryContext *r, const chassis_move_t *c)
     fp32 pitch = c->chassis_posture_info.pitch_angle;
     fp32 roll = c->chassis_posture_info.roll_angle;
     bool key = c->chassis_data_->recovery_flag == 1u;
-    bool pressed =  key && !r->lastKey;
+    bool pressed = key && !r->lastKey;
     r->lastKey = key;
-    bool upright = pitch < UPRIGHT_PITCH && pitch > -UPRIGHT_PITCH &&
-                         fabsf(roll) < 0.25f &&
-                         fabsf(c->chassis_posture_info.pitch_gyro) < 0.40f;
+    bool upright = pitch < UPRIGHT_PITCH && pitch > -UPRIGHT_PITCH && fabsf(roll) < 0.25f &&
+                   fabsf(c->chassis_posture_info.pitch_gyro) < 0.40f;
     fallenForward = pitch > PI_2 && pitch < PI;
     fallenBackward = pitch > -PI && pitch < -PI_2;
 
@@ -117,8 +102,7 @@ static bool chassisRecoveryUpdate(RecoveryContext *r, const chassis_move_t *c)
     }
 
     /* Do not let an old key press trigger recovery at a later time. */
-    if (r->rotatePending &&
-        now - r->rotateRequestTick >= pdMS_TO_TICKS(ROTATE_REQUEST_TIMEOUT_MS))
+    if (r->rotatePending && now - r->rotateRequestTick >= pdMS_TO_TICKS(ROTATE_REQUEST_TIMEOUT_MS))
     {
         r->rotatePending = false;
         r->rotateRequestTick = 0u;
@@ -137,8 +121,7 @@ static bool chassisRecoveryUpdate(RecoveryContext *r, const chassis_move_t *c)
 
     if (r->state == REC_IDLE)
     {
-        if (c->mode.sport_mode != JUMPING_MODE &&
-            (fabsf(pitch) > FALL_PITCH || fabsf(roll) > FALL_ROLL))
+        if (c->mode.sport_mode != JUMPING_MODE && (fabsf(pitch) > FALL_PITCH || fabsf(roll) > FALL_ROLL))
             r->state = REC_WAIT;
     }
     else if (r->state == REC_WAIT)
@@ -155,24 +138,21 @@ static bool chassisRecoveryUpdate(RecoveryContext *r, const chassis_move_t *c)
         else
             r->stableTick = 0u;
 
-        if (r->rotatePending && (fallenForward || fallenBackward) )
+        if (r->rotatePending && (fallenForward || fallenBackward))
         {
             r->rotatePending = false;
             r->rotateRequestTick = 0u;
-            r->holdLength =(c->chassis_posture_info.chassis_posture_L.leg_length +
-                 c->chassis_posture_info.chassis_posture_R.leg_length) * 0.5f;
             r->startTick = now;
             r->stableTick = 0u;
             r->alignTick = 0u;
             r->alignReady = false;
-            r->direction = fallenForward ?
-                REC_DIRECTION_FORWARD : REC_DIRECTION_BACKWARD;
+            r->direction = fallenForward ? REC_DIRECTION_FORWARD : REC_DIRECTION_BACKWARD;
             r->state = REC_ROTATE;
         }
     }
     else if (r->state == REC_ROTATE)
     {
-        if ( now - r->startTick >= pdMS_TO_TICKS(2500))
+        if (now - r->startTick >= pdMS_TO_TICKS(2500))
         {
             r->state = REC_WAIT;
             r->stableTick = 0u;
@@ -192,25 +172,26 @@ static bool chassisRecoveryUpdate(RecoveryContext *r, const chassis_move_t *c)
         else
             r->stableTick = 0u;
 
-        if (r->state == REC_ROTATE && !upright && !r->alignReady )
+        if (r->state == REC_ROTATE && !upright && !r->alignReady)
         {
-            const fp32 angleError = fabsf(wrappedAngleDifference(
-                c->chassis_posture_info.chassis_posture_L.leg_angle,
-                c->chassis_posture_info.chassis_posture_R.leg_angle));
+            const fp32 angleError =
+                fabsf(wrappedAngleDifference(c->chassis_posture_info.chassis_posture_L.leg_angle,
+                                             c->chassis_posture_info.chassis_posture_R.leg_angle));
 
             if (angleError <= LEG_ALIGN_ERROR_RAD)
             {
                 if (r->alignTick == 0u) r->alignTick = now;
-                if (now - r->alignTick >= pdMS_TO_TICKS(LEG_ALIGN_WAIT_MS))
-                    r->alignReady = true;
+                if (now - r->alignTick >= pdMS_TO_TICKS(LEG_ALIGN_WAIT_MS)) r->alignReady = true;
             }
-            else r->alignTick = 0u;
+            else
+                r->alignTick = 0u;
         }
-        else if (!r->alignReady) r->alignTick = 0u;
+        else if (!r->alignReady)
+            r->alignTick = 0u;
     }
     return false;
 }
-fp32 angleDifference ;
+fp32 angleDifference;
 static void chassisRecoveryApply(const RecoveryContext *r, chassis_move_t *c)
 {
     torque_info_t *t = &c->torque_info;
@@ -227,20 +208,16 @@ static void chassisRecoveryApply(const RecoveryContext *r, chassis_move_t *c)
     t->joint_stand_torque_L = t->joint_stand_torque_R = 0.0f;
     angleDifference = wrappedAngleDifference(left->leg_angle, right->leg_angle);
 
-    if (r->state != REC_ROTATE || r->direction == REC_DIRECTION_NONE ||
-        !valid(pitch) || !valid(r->holdLength) ||
-        !valid(left->leg_length) || !valid(right->leg_length) ||
-        !valid(left->leg_angle_local) || !valid(right->leg_angle_local) ||
-        !valid(left->leg_gyro_local) || !valid(right->leg_gyro_local))
+    if (r->state != REC_ROTATE || r->direction == REC_DIRECTION_NONE || !valid(pitch) ||
+        !valid(left->leg_length) || !valid(right->leg_length) || !valid(left->leg_angle) ||
+        !valid(right->leg_angle) || !valid(left->leg_dlength_jacobian) || !valid(right->leg_dlength_jacobian))
         return;
 
-    // Hold the length found when R was pressed; the gas springs provide support.
-    t->joint_stand_torque_L = clamp(
-        280.0f * (0.35 - left->leg_length) -
-        40.0f * left->leg_dlength_jacobian, 8.0f);
-    t->joint_stand_torque_R = clamp(
-        280.0f * (0.35 - right->leg_length) -
-        40.0f * right->leg_dlength_jacobian, 8.0f);
+    /* 自救阶段沿用固定 0.35 m 的腿长目标。 */
+    t->joint_stand_torque_L =
+        clamp(280.0f * (0.35 - left->leg_length) - 40.0f * left->leg_dlength_jacobian, 8.0f);
+    t->joint_stand_torque_R =
+        clamp(280.0f * (0.35 - right->leg_length) - 40.0f * right->leg_dlength_jacobian, 8.0f);
 
     if (fabsf(pitch) < UPRIGHT_PITCH) return;
 
@@ -270,11 +247,8 @@ static void chassisRecoveryApply(const RecoveryContext *r, chassis_move_t *c)
 
     // 角差连续稳定200ms后，双腿同时撑起机身。
     t->joint_balancing_torque_L = t->joint_balancing_torque_R =
-        r->direction == REC_DIRECTION_FORWARD ?
-            MOTOR_TORQUE_MAX : -MOTOR_TORQUE_MAX;
+        r->direction == REC_DIRECTION_FORWARD ? MOTOR_TORQUE_MAX : -MOTOR_TORQUE_MAX;
 }
-
-
 
 uint8_t chassisRecoveryIsActive(void)
 {

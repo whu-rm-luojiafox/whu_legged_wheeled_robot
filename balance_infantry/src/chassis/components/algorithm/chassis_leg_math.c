@@ -73,7 +73,7 @@ void chassis_leg_forward_kinematics(chassis_leg_posture_t *leg,
 	}
 
 	/* 保存与 B、D、phi 同一时刻的未滤波机身局部几何量。
-	 * leg_angle/leg_gyro 由 chassis_feedback_update 叠加 IMU 后一次写入。
+	 * leg_angle/leg_gyro 由 chassis_observer 叠加 IMU 后一次写入。
 	 */
 	leg->leg_length_raw = length;
 	leg->leg_angle_local = leg_angle;

@@ -125,8 +125,13 @@ application 管任务顺序和接入，module 管操作与动作状态，control
 
 | 内容 | 入口 |
 | --- | --- |
-| 底盘周期、传感器接入和电机输出 | `src/chassis/application/chassis_task.c`，见[底盘指南](docs/chassis-control.md) |
-| 底盘 PID 默认值与在线调参声明 | `src/chassis/application/chassis_config.h`；`tune_*` 定义在任务顶部 |
+| 底盘周期和模块调度 | `src/chassis/application/chassis_task.c`，见[底盘指南](docs/chassis-control.md) |
+| 传感器、KF接入和里程估计 | `src/chassis/module/chassis_observer.c` |
+| 使能、起立、跳跃及特殊腿部目标 | `src/chassis/module/chassis_mode.c` |
+| 普通运动、停车和yaw参考接入 | `src/chassis/module/chassis_motion.c` |
+| 控制计算、收腿屏蔽和VMC | `src/chassis/module/chassis_control.c` |
+| 电机指令发送 | `src/chassis/application/motor_cmd.c` |
+| 底盘 PID 默认值与在线调参声明 | `src/chassis/application/chassis_config.h`；`tune_*` 定义在使用它的 motion/control 模块 |
 | 平衡姿态参考、LQR 分量、质心前馈 | `src/chassis/components/controller/chassis_balance.c/.h` |
 | LQR 增益拟合 | `chassis_lqr_gain_calculate(left_m, right_m, gain)`，无 HAL/任务依赖 |
 | 云台任务、pitch PID、CAN 输出 | `src/gimbal/application/gimbal_task.c` |
@@ -135,7 +140,7 @@ application 管任务顺序和接入，module 管操作与动作状态，control
 | 自瞄/USB 与板间 UART | `src/gimbal/application/Self_aim.c`、`UART_task.c` |
 | 任务创建、优先级和栈 | 对应 platform 下的 `src/freertos.c` |
 
-底盘编译默认保持 pitch 参考 0 rad、对地腿角 0.1072 rad、前馈关闭；PID、LQR 系数和电机方向没有重新调参。自救返回是否接管，由任务显式重新做 VMC。旧 `chassis_power_limit()` 只缩放参考，保留历史调用顺序，不能视作最终电机限功率。跳跃准备占位判定、云台每拍两次射击更新和原 pitch 速度环 D 参数接线也保留，后续应分别做功能验证后修改。
+底盘编译默认保持 pitch 参考 0 rad、对地腿角 0.1572 rad、前馈关闭；PID、LQR 系数和电机方向没有重新调参。自救返回是否接管，由任务显式重新做 VMC。旧 `chassis_power_limit()` 只缩放参考，保留历史调用顺序，不能视作最终电机限功率。跳跃准备保留原有直接放行行为；云台每拍两次射击更新和原 pitch 速度环 D 参数接线未在本次整理中改变。
 
 ## 验证与维护
 
@@ -151,6 +156,13 @@ ctest --preset host --output-on-failure
 python tools/project/check_board_builds.py
 ```
 
-主机工具用于 MPC 独立 QP 对照；底盘独立单元测试文件及其构建入口已移除。MPC 当前为固定腿长 0.24 m、采样 4 ms 的独立实验；主机耗时不等于 F407 实时耗时。[工具说明](tools/chassis/README.md)包含更多模型约定。
+底盘行为回归使用原生 GCC 和 Python，不依赖 MPC 实验：
+
+```powershell
+python tools/chassis/tests/run_control_checks.py
+python tools/chassis/tests/run_climb_checks.py
+```
+
+上述 MPC 主机工具用于独立 QP 对照。MPC 当前为固定腿长 0.24 m、采样 4 ms 的独立实验；主机耗时不等于 F407 实时耗时。[工具说明](tools/chassis/README.md)包含更多模型约定。
 
 日志只保留最近 **3 次**编号记录；每次新增后执行 `python tools/project/rotate_logs.py`，自动删除更旧记录并更新[日志索引](log/README.md)。`README.md` 和 `TEMPLATE.md` 永久保留。历史代码通过 Git 追溯，日志中的 RAM 读回不代表当前板上状态。

@@ -1,0 +1,13 @@
+{
+  "top_confirm_first_observed": "2026-11-03T22:07:09.147",
+  "top_confirm_last_observed": "2026-11-03T22:07:14.048",
+  "sample_count": 50,
+  "failures": {
+    "pitch_fail": 47,
+    "roll_fail": 0,
+    "rate_fail": 5,
+    "all_pass": 0
+  },
+  "passing_samples": [],
+  "note": "Sampled transitions are approximate; historical fields may be read at different instants."
+}
