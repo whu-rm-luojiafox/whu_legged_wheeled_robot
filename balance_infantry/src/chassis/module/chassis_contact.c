@@ -58,8 +58,7 @@ void Supportive_Force_Calculate(chassis_move_t *detect)
         0.7f * detect->torque_info.supportive_force_R + 0.3f * detect->torque_info.last_supportive_force_R;
     detect->torque_info.last_supportive_force_L = detect->torque_info.supportive_force_L;
     detect->torque_info.last_supportive_force_R = detect->torque_info.supportive_force_R;
-    // detect->torque_info.supportive_force_L = 30;
-    // detect->torque_info.supportive_force_R = 30;
+
 }
 
 TickType_t offTickL = 0, onTickL = 0;
@@ -109,5 +108,7 @@ void Chassis_Status_Detect(chassis_move_t *detect)
         }
         else
             onTickR = 0;
+
+        // detect->flag_info.suspend_flag_L = detect->flag_info.suspend_flag_R = ON_GROUND;
     }
 }

@@ -3,8 +3,9 @@
 
 #include "chassis_fwd.h"
 
-/* 计算虚拟力/力矩；自救覆盖后可以只重新调用 Map。 */
+/* 计算虚拟力/力矩；起立/自救 Apply 后统一映射一次。 */
 void chassisControlInit(chassis_move_t *chassis);
 void chassisControlCalculate(chassis_move_t *chassis, float dt_s);
-void chassisControlMap(chassis_move_t *chassis);
+void chassisControlMap(chassis_move_t *chassis, float dt_s);
+float chassisControlLegAngleReference(void);
 #endif

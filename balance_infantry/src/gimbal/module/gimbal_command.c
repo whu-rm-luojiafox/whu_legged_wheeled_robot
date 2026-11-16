@@ -46,6 +46,8 @@ void gimbal_command_update(gimbal_control_t *gimbal_control_set, chassis_data_t 
 
   // yaw轴设置更新
   yaw_set(gimbal_control_set, chassis_data);
+  /* Publish the mode every frame, including frames without a key edge. */
+  chassis_data->auto_flag = gimbal_command_auto_aim_enabled() ? 1u : 0u;
 
   chassis_data->yaw_angle = gimbal_control_set->gimbal_yaw_motor.absolute_angle;
   chassis_data->yaw_gyro = gimbal_control_set->gimbal_yaw_motor.motor_gyro;

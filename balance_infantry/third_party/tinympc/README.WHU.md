@@ -50,6 +50,6 @@ expression evaluation during solve. A float build uses the M4 single-precision
 FPU, but it is not a no-heap/fixed-workspace implementation. Compiler/archive
 success does not verify startup, final linking, heap/stack capacity or timing.
 ARMCC5 is rejected by bundled Eigen; independent ARMClang6.7 compilation works
-with `-std=c++1z`. The legacy Keil project has been removed. Root CMake provides
-ARMClang6 builds for the complete LQR firmware and a separate MPC probe image;
-see the root README for commands and board-validation limits.
+with `-std=c++1z`. The legacy Keil project has been removed. Root CMake now builds only the chassis and gimbal firmware. Standalone MPC
+probe and validation entry points have been removed; the solver and offline
+parameter generator remain available as source references.

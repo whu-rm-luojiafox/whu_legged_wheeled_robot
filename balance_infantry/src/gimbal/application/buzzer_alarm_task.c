@@ -1,6 +1,6 @@
 /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
-  * @file       test_task.c/h
+  * @file       buzzer_alarm_task.c/h
   * @brief      buzzer warning task.蜂鸣器报警任务
   * @note       
   * @history
@@ -15,7 +15,7 @@
   ****************************(C) COPYRIGHT 2019 DJI****************************
   */
 
-#include "test_task.h"
+#include "buzzer_alarm_task.h"
 #include "main.h"
 #include "cmsis_os.h"
 #include "bsp_buzzer.h"
@@ -23,25 +23,25 @@
 
 static void buzzer_warn_error(uint8_t num);
 
-const error_t *error_list_test_local;
+const error_t *error_list_alarm;
 
 
 
 /**
-  * @brief          test task
+  * @brief          buzzer alarm task
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
 /**
-  * @brief          test任务
+  * @brief          蜂鸣器报警任务
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
-void test_task(void const * argument)
+void buzzer_alarm_task(void const * argument)
 {
     static uint8_t error, last_error;
     static uint8_t error_num;
-    error_list_test_local = get_error_list_point();
+    error_list_alarm = get_error_list_point();
 
     while(1)
     {
@@ -51,7 +51,7 @@ void test_task(void const * argument)
         //发现错误
         for(error_num = 0; error_num < REFEREE_TOE; error_num++)
         {
-            if(error_list_test_local[error_num].error_exist)
+            if(error_list_alarm[error_num].error_exist)
             {
                 error = 1;
                 break;

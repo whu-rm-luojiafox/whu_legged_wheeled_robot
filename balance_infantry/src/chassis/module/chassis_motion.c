@@ -5,6 +5,7 @@
 #include "chassis_observer.h"
 #include "chassis_climb.h"
 #include "chassis_recovery.h"
+#include "chassis_collision.h"
 #include "chassis_power.h"
 #include "arm_math.h"
 #include <math.h>
@@ -35,6 +36,7 @@ float chassis_position_speed_request(float command_m_s)
 static void release(chassis_position_t *state, float distance_m)
 {
     state->locked = 0u;
+    state->braking = 0u;
     state->stopped_time_s = 0.0f;
     state->reference_m = distance_m;
 }
@@ -50,8 +52,17 @@ void chassis_position_step(chassis_position_t *state, const chassis_position_inp
     }
     if (state->locked) return; /* 捕获后固定目标，不能每拍重新跟随实际位置。 */
 
-    /* 松杆先让零速反馈制动，位置参考随车走，避免立刻倒回松杆点。 */
-    state->reference_m = input->distance_m;
+    /* Engage position feedback before the speed-settled test. An endlessly
+     * following reference otherwise removes all position braking above the
+     * capture threshold. Limit the lag so a long coast cannot request a large
+     * return to the original stick-release point. */
+    if (!state->braking)
+    {
+        state->braking = 1u;
+        state->reference_m = input->distance_m;
+    }
+    state->reference_m = fmaxf(input->distance_m - POSITION_BRAKE_ERROR_LIMIT_M,
+                               fminf(state->reference_m, input->distance_m + POSITION_BRAKE_ERROR_LIMIT_M));
     if (fabsf(input->measured_speed_m_s) <= POSITION_SETTLED_SPEED_M_S)
         state->stopped_time_s += input->dt_s;
     else
@@ -59,7 +70,12 @@ void chassis_position_step(chassis_position_t *state, const chassis_position_inp
 
     /* 必须连续低速后才捕获停车点，不能因超时在滑行中强制锁定。 */
     if (state->stopped_time_s >= POSITION_SETTLE_TIME_S)
+    {
+        /* Capture here, rather than keeping the bounded braking lag as a
+         * reverse position request after the vehicle has slowed down. */
+        state->reference_m = input->distance_m;
         state->locked = 1u;
+    }
 }
 
 void chassisMotionUpdate(chassis_move_t *target_value_set, float dt_s)
@@ -99,6 +115,7 @@ void chassisMotionUpdate(chassis_move_t *target_value_set, float dt_s)
      * climb module limits speed; stop-position hold releases on movement and
      * captures again after release, just as in ordinary control. */
 
+    chassisCollisionProcess(target_value_set, dt_s);
     //位置环控制器
     chassis_update_stop_position(target_value_set, dt_s);
 
@@ -117,6 +134,9 @@ void chassisMotionUpdate(chassis_move_t *target_value_set, float dt_s)
         target_value_set->chassis_posture_info.foot_roll_angle = roll;
         offset = 0.24f * arm_sin_f32(roll) / arm_cos_f32(roll);
     }
+    /* Bound both targets while retaining symmetric roll compensation. */
+    const float available_offset = fminf(height - 0.17f, 0.34f - height);
+    offset = fp32_constrain(offset, -available_offset, available_offset);
     target_value_set->chassis_posture_info.chassis_posture_L.leg_length_set = height - offset;
     target_value_set->chassis_posture_info.chassis_posture_R.leg_length_set = height + offset;
 }
@@ -130,7 +150,7 @@ static void chassis_update_stop_position(chassis_move_t *chassis, float dt_s)
     input.allowed =
         chassisIsEnabledOnGround(chassis) && chassis->mode.chassis_balancing_mode == BALANCING_READY &&
         chassis->mode.sport_mode == NORMAL_MOVING_MODE && chassisClimbAllowsPositionHold() &&
-        !chassisRecoveryIsActive() && !chassis->chassis_data_->recovery_flag &&
+        !chassisRecoveryIsActive() && !chassisCollisionIsActive() && !chassis->chassis_data_->recovery_flag &&
         chassis_odometry.sample_valid && fabsf(chassis->chassis_data_->wz_set) < CHASSIS_RC_WZ_DEADLINE;
     input.dt_s = dt_s;
     input.command_speed_m_s = chassis->chassis_posture_info.foot_speed_set;
@@ -151,6 +171,7 @@ static void chassis_update_yaw_follow(chassis_move_t *chassis, float move_deg, f
         chassis->gimbal_yaw_motor.relative_angle_init = forward_deg;
     input.dt_s = dt_s;
     input.allowed = chassisIsEnabledOnGround(chassis) && chassis->mode.sport_mode != NONE;
+    input.auto_inhibited = chassis->chassis_data_->auto_flag != 0u || chassisCollisionIsActive();
     input.relative_deg = chassis->gimbal_yaw_motor.relative_angle;
     input.zero_deg = chassis->gimbal_yaw_motor.relative_angle_init;
     /* 无平移指令时朝向云台，忽略死区内 atan2 得到的不稳定方向。 */
@@ -163,6 +184,8 @@ static void chassis_update_yaw_follow(chassis_move_t *chassis, float move_deg, f
     input.filter_s = tune_follow_filter_s;
     chassis_follow_step(&chassis_follow, &input);
     chassis->chassis_posture_info.yaw_angle_sett = chassis_follow.angle_ref_rad;
+    if (chassisCollisionIsActive())
+        chassis->chassis_posture_info.yaw_angle_sett = chassis_collision.heading_rad;
     chassis->chassis_posture_info.yaw_gyro_set = chassis_follow.rate_ref_rad_s;
     chassis->chassis_posture_info.yaw_lock_flag = !chassis_follow.heading_locked;
     chassis->gimbal_yaw_motor.relative_limit = chassis_follow.error_deg;

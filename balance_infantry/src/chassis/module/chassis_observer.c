@@ -1,6 +1,7 @@
 #include "chassis_types.h"
 #include "chassis_observer.h"
 #include "chassis_contact.h"
+#include "chassis_mode.h"
 #include "kalman_service.h"
 #include "INS_task.h"
 #include "FreeRTOS.h"
@@ -157,6 +158,21 @@ static void update_velocity(chassis_move_t *fdb, float dt_s)
     const chassis_posture_info_t *posture = &fdb->chassis_posture_info;
     const float acceleration = forward_acceleration(posture->x_accel, posture->y_accel, posture->z_accel,
                                                     posture->pitch_angle, posture->roll_angle);
+    const chassis_data_t *cmd = fdb->chassis_data_;
+    chassis_odometry.forward_accel_m_s2 = acceleration;
+    const uint8_t quiet = wheel_valid && chassisIsBalancingOnGround(fdb) &&
+        isfinite(dt_s) && dt_s > 0.0f && dt_s <= 0.05f &&
+        fabsf(cmd->vx_set) < 0.02f && fabsf(cmd->vy_set) < 0.02f && fabsf(cmd->wz_set) < 0.02f &&
+        fabsf(posture->yaw_gyro_set) < 0.02f && fabsf(posture->yaw_gyro) < 0.08f &&
+        fabsf(wheel_velocity) < 0.04f && fabsf(fdb->foot_motor_L.speed) < 0.05f &&
+        fabsf(fdb->foot_motor_R.speed) < 0.05f && fabsf(posture->pitch_gyro) < 0.08f &&
+        fabsf(posture->roll_gyro) < 0.08f &&
+        fabsf(posture->chassis_posture_L.leg_gyro) < 0.08f &&
+        fabsf(posture->chassis_posture_R.leg_gyro) < 0.08f &&
+        fabsf(acceleration - ChassisVelocityKF_Get()->accel_bias_m_s2) < 0.15f;
+    chassis_odometry.stationary_time_s = quiet ? fminf(chassis_odometry.stationary_time_s + dt_s, 0.2f) : 0.0f;
+    chassis_odometry.stationary_filter = chassis_odometry.stationary_time_s >= 0.2f;
+    ChassisVelocityKF_SetStationary(chassis_odometry.stationary_filter);
     const uint8_t fused_valid = ChassisVelocityKF_Update(acceleration, wheel_velocity, dt_s, wheel_valid);
     const chassis_velocity_kf_result_t *result = ChassisVelocityKF_Get();
 
@@ -185,6 +201,7 @@ void chassisObserverInit(chassis_move_t *c)
     c->chassis_INS_accel = get_accel_data_point();
 
     ChassisVelocityKF_Init(0.0f);
+    chassis_odometry = (chassis_odometry_t){0};
     c->flag_info.init_flag = 1;
     read_feedback(c, 0.0f);
     c->flag_info.init_flag = 0;

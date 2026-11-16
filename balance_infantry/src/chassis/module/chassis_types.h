@@ -21,10 +21,10 @@ typedef enum
 
 typedef enum
 {
-    NO_FORCE,
-    FOOT_LAUNCHING,
-    JOINT_LAUNCHING,
-    BALANCING_READY,
+    NO_FORCE,        /* 遥控失能，或倒地后卸力等待 */
+    FOOT_LAUNCHING,  /* 双腿相对机身后摆到 1.3±0.05 rad 并等待 */
+    JOINT_LAUNCHING, /* 固定腿角缩腿，随后渐进接入 LQR 并回站立角 */
+    BALANCING_READY, /* 正常平衡控制 */
 } chassis_balancing_mode_e;
 
 typedef enum
@@ -180,6 +180,8 @@ typedef struct
     // fp32 velocity_kf; //滤波后的速度
 
     fp32 torque_out, torque_get;
+    fp32 velocity_set;
+    bool_t velocity_native; /* 旧速度协议标志；恢复摆腿为径向零力的 MIT 角向控制。 */
     fp32 max_torque, min_torque;
 } joint_motor_t;
 
@@ -247,6 +249,8 @@ struct chassis_move
     chassis_posture_info_t chassis_posture_info;
     torque_info_t torque_info;
     mapping_info_t mapping_info;
+    uint8_t swing_velocity_active;
+    fp32 swing_rate_L, swing_rate_R; /* Fixed paired motor speeds; right side is mirrored at output. */
     const RC_ctrl_t *chassis_RC;
     const fp32 *chassis_INS_angle;
     const fp32 *chassis_INS_gyro;

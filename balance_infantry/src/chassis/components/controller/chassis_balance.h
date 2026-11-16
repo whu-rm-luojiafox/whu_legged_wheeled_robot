@@ -3,14 +3,8 @@
 
 #include <stdint.h>
 
-/* 平衡控制的三部分放在同一文件：姿态参考 -> LQR 反馈分量 -> 质心前馈。
- * 只计算模型坐标下的参考/力矩，不处理驱动、电机极性或 VMC。 */
-/* 机身姿态与对地腿角分别标定。减小 pitch 时保持对地腿角参考，
- * 让机身可相对腿部转动，避免同步移动腿的支撑几何参考。
- * 默认值采用 2026-10-23 用户选定的实车试调组合，供请求变量和参考初始化共用。
- * 这些参考不能从 IMU 反馈中减掉。 */
 #define BALANCE_PITCH_DEFAULT_RAD  0.0f// (-0.0200f)
-#define BALANCE_LEG_GROUND_DEFAULT_RAD 0.1572f
+#define BALANCE_LEG_GROUND_DEFAULT_RAD 0.1702f
 #define BALANCE_PITCH_LIMIT_RAD 0.15f
 #define BALANCE_LEG_GROUND_LIMIT_RAD 0.30f
 #define BALANCE_LEG_LOCAL_LIMIT_RAD 0.20f
@@ -30,23 +24,56 @@ void chassis_balance_reference_step(chassis_balance_reference_t *state,
                                     uint8_t enabled, float pitch_rad,
                                     float leg_ground_rad, float dt_s);
 
-#define CHASSIS_LQR_STATE_COUNT 10
-#define CHASSIS_LQR_INPUT_COUNT 4
+/* K 的列：十个状态。误差一律为 reference - feedback。 */
+enum {
+    LQR_X_POSITION = 0,       /* s：轮轴中点前后位置，m */
+    LQR_X_SPEED,              /* ds：前后速度，m/s */
+    LQR_X_YAW,                /* yaw：连续航向角，rad */
+    LQR_X_YAW_RATE,           /* dyaw：航向角速度，rad/s */
+    LQR_X_LEG_L_ANGLE,        /* thetaL：左腿对地角，rad */
+    LQR_X_LEG_L_RATE,         /* dthetaL：左腿对地角速度，rad/s */
+    LQR_X_LEG_R_ANGLE,        /* thetaR：右腿对地角，rad */
+    LQR_X_LEG_R_RATE,         /* dthetaR：右腿对地角速度，rad/s */
+    LQR_X_BODY_PITCH,         /* pitch：机身俯仰角，rad */
+    LQR_X_BODY_PITCH_RATE,    /* dpitch：机身俯仰角速度，rad/s */
+    CHASSIS_LQR_STATE_COUNT
+};
 
-/* error = reference - feedback，模型坐标顺序与 K_Fit 一致：
- * [s, ds, yaw, dyaw, thetaL, dthetaL, thetaR, dthetaR, pitch, dpitch]。
- * 输出顺序：[左轮、右轮、左虚拟腿、右虚拟腿]，单位 N*m。
- * 这里不翻转电机极性，不做 VMC，也不承担离地/跳跃切换。 */
+/* K 的行：四个模型力矩。第 2/3 行不是某一台关节电机的力矩。 */
+enum {
+    LQR_U_WHEEL_L = 0,        /* 左轮驱动力矩 */
+    LQR_U_WHEEL_R,            /* 右轮驱动力矩 */
+    LQR_U_LEG_L,              /* 左虚拟腿摆动力矩，VMC 后分配到电机 1/2 */
+    LQR_U_LEG_R,              /* 右虚拟腿摆动力矩，VMC 后分配到电机 4/3 */
+    CHASSIS_LQR_INPUT_COUNT
+};
+
+/* 一行 K 产生的力矩分解；以下每个字段的单位都是 N*m。
+ * 例如 left_wheel.body_pitch_nm：机身 pitch 误差对左轮力矩的贡献。
+ * 这些是 LQR 模型力矩，尚未加前馈、限幅或转换电机正方向。 */
 typedef struct {
-    float balance[CHASSIS_LQR_INPUT_COUNT]; /* 腿角、机身姿态分量 */
-    float motion[CHASSIS_LQR_INPUT_COUNT];  /* 位置、速度、航向分量 */
-    float cross_leg[CHASSIS_LQR_INPUT_COUNT]; /* 对侧腿分量，未乘权重的诊断量 */
+    float position_nm, speed_nm;             /* 前后位置、速度误差贡献 */
+    float yaw_nm, yaw_rate_nm;               /* 航向角、角速度误差贡献 */
+    float left_leg_angle_nm, left_leg_rate_nm;
+    float right_leg_angle_nm, right_leg_rate_nm;
+    float body_pitch_nm, body_pitch_rate_nm;
+    float motion_nm;  /* position + speed + yaw + yaw_rate */
+    float balance_nm; /* 左右腿角/角速度 + 机身 pitch/角速度 */
+    float total_nm;   /* motion + balance；十项之和 */
+} chassis_lqr_torque_t;
+
+typedef struct {
+    chassis_lqr_torque_t left_wheel;  /* K[0] */
+    chassis_lqr_torque_t right_wheel; /* K[1] */
+    chassis_lqr_torque_t left_leg;    /* K[2]，虚拟腿摆动力矩 */
+    chassis_lqr_torque_t right_leg;   /* K[3]，虚拟腿摆动力矩 */
 } chassis_lqr_feedback_t;
 
-/* scale=0 复现原实现；scale=1 使用完整矩阵。
- * 输入及增益须为有效模型数据；无效 scale 回退到原实现。
- * 当前固件默认 0，完整耦合需独立验证后再启用。 */
-void chassis_lqr_feedback_calculate(const float gain[4][10], const float error[10],
+/* scale=1：四行都使用全部十个状态，u = K * error（正常落地默认）。
+ * scale=0：去掉对侧腿的两项，保留旧行为用于对比；非法 scale 按 0 处理。
+ * 起跳/离地等工况由调用方选择权重及覆盖输出。 */
+void chassis_lqr_feedback_calculate(const float gain[CHASSIS_LQR_INPUT_COUNT][CHASSIS_LQR_STATE_COUNT],
+                                   const float error[CHASSIS_LQR_STATE_COUNT],
                                    float cross_leg_scale, chassis_lqr_feedback_t *output);
 
 /* 实验性水平质心偏置补偿，不包含模型已有的垂直质心项。

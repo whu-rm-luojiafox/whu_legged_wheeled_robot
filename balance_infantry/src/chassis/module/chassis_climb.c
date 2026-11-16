@@ -25,7 +25,7 @@
 #define CLIMB_READY_ROLL_RAD 0.10f
 
 /* 向前接近时，机身正向俯仰超过门限并持续确认，才判定撞阶。 */
-#define CLIMB_HIT_PITCH_RAD 0.24f
+#define CLIMB_HIT_PITCH_RAD 0.19f
 
 #define CLIMB_ABORT_PITCH_RAD 0.55f
 #define CLIMB_ABORT_ROLL_RAD 0.30f

@@ -12,6 +12,8 @@ typedef struct
 
 /* Init 可重置状态，矩阵只在首次调用时分配。 */
 uint8_t ChassisVelocityKF_Init(float initial_speed_m_s);
+/* Select quieter Q/R only after observer confirms sustained standstill. */
+void ChassisVelocityKF_SetStationary(uint8_t stationary);
 /* 每拍更新；wheel_valid=0 或输入无法计算时返回 0，保留上一状态。
  * 零速是有效量测；重力投影/轮速有效性/回退由 observer 负责。
  */

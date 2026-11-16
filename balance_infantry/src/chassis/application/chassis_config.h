@@ -12,18 +12,43 @@
 /* 跟随外环为角差 P + 相对转速 D + 云台速度前馈，不维护额外 PID 对象。 */
 #define FOLLOW_KP_RAD_S_PER_DEG 0.10f
 //腿长设定PID
-#define LEG_SET_PID_KP 220.0f
-#define LEG_SET_PID_KI 0.075f
+#define LEG_SET_PID_KP 350.0f
+#define LEG_SET_PID_KI 0.8f
 #define LEG_SET_PID_KD 300.0f
-#define LEG_SET_PID_OUT 50.0f
-#define LEG_SET_PID_IOUT 2.5f
+#define LEG_SET_PID_OUT 60.0f
+#define LEG_SET_PID_IOUT 30.0f
 
 //roll轴水平pid
 #define ROLL_PID_KP 220.0f
 #define ROLL_PID_KI 0.08f
-#define ROLL_PID_KD 10.0f
+#define ROLL_PID_KD 1.0f /* Measured-rate damping, N/(rad/s). */
 #define ROLL_PID_OUT 10.0f
 #define ROLL_PID_IOUT 2.5f
+/* Keep Ki's original per-4ms tuning convention, integrate using measured dt.
+ * D uses measured roll rate, N/(rad/s), instead of differencing the angle. */
+#define ROLL_PID_NOMINAL_DT_S 0.004f
+/* 起立/自救：腿相对机身后摆到 1.3 rad 就缩腿，不要求先撑起机身。 */
+#define LEG_SWING_MOTOR_SPEED_RAD_S 0.8f
+#define STARTUP_SWING_DIRECTION (-1.0f) /* 统一从车体左侧看顺时针；右侧镜像由电机映射处理。 */
+#define STARTUP_SWING_RATE_KP 8.0f /* 仅虚拟腿角速度 PI，N*m/(rad/s)。 */
+#define STARTUP_SWING_RATE_KI 6.0f /* N*m/rad；不约束径向腿长。 */
+#define STARTUP_SWING_TORQUE_LIMIT_NM 8.0f
+#define STARTUP_SWING_TARGET_ANGLE_RAD 1.6f
+#define STARTUP_LEG_ANGLE_MIN_RAD 1.0f /* 已在后方的腿直接记为到位，不因略过 1.3 而再绕一圈。 */
+#define STARTUP_LEG_ANGLE_MAX_RAD (STARTUP_SWING_TARGET_ANGLE_RAD + 0.05f)
+#define STARTUP_SWING_STALL_PROGRESS_RAD 0.015f /* 检查局部腿角，排除机身 pitch 的假进展。 */
+#define STARTUP_SWING_STALL_TIME_S 1.5f
+#define STARTUP_RETRACT_SPEED_M_S 0.30f /* 三次曲线峰值速度：缩短 20 cm 约需 1.0 s。 */
+#define STARTUP_RETRACT_MIN_TIME_S 0.3f
+#define STARTUP_LENGTH_TOLERANCE_M 0.03f /* 轨迹结束且腿长到位后交接，不再要求腿角到位。 */
+#define STARTUP_SETTLE_TIME_S 0.15f
+#define STARTUP_PHASE_TIMEOUT_S 10.0f
+#define STARTUP_ANGLE_KP 8.0f  /* 虚拟腿角 PD，N*m/rad */
+#define STARTUP_ANGLE_KD 0.6f  /* N*m/(rad/s) */
+#define STARTUP_LEG_TORQUE_LIMIT_NM 4.0f /* 到位等待/收腿角度 PD 总限幅，不叠加固定积分偏置。 */
+#define STARTUP_JOINT_TORQUE_LIMIT_NM 8.0f
+#define STARTUP_JOINT_TORQUE_SLEW_NM_S 20.0f
+#define STARTUP_LQR_BLEND_TIME_S 2.0f /* 交接时才从后摆角平滑回到配平角。 */
 
 /* 腿长、roll：每个控制周期同步到 PID，并将已有积分输出收回新限幅内。 */
 extern volatile float tune_leg_ki;
@@ -42,7 +67,7 @@ extern volatile float tune_com_ff_moment;
 extern volatile float tune_gimbal_forward_deg;
 extern volatile float tune_balance_pitch_rad;
 extern volatile float tune_balance_leg_ground_rad;
-/* 实验耦合：0 保留原反馈，1 使用完整矩阵；目前默认 0。 */
+/* 对侧腿反馈：默认 1 使用完整矩阵，0 可对比之前删减的反馈。 */
 extern volatile float tune_lqr_cross_leg_scale;
 
 /* 底盘硬件、协议换算和控制默认值。 */
@@ -162,9 +187,9 @@ extern volatile float tune_lqr_cross_leg_scale;
 #define WHEEL_RADIUS 0.068f
 #define LEG_OFFSET 30.0f // 标定姿态相对主动杆朝外水平的软件角偏置（轴侧逆时针为正）
 #define LOWER_SUPPORT_FORCE_FOR_JUMP 5.0f
-#define EXIT_PITCH_ANGLE 0.2f
+#define EXIT_PITCH_ANGLE 0.4f
 
-#define FEED_f 35.0f
+#define FEED_f 0.0f
 
 #define MOTOR_POS_UPPER_BOUND 29.0f
 #define MOTOR_POS_LOWER_BOUND 64.0f
@@ -178,10 +203,5 @@ extern volatile float tune_lqr_cross_leg_scale;
 #define PI 3.14159265358979f
 #define PI_2 1.57079632679489f
 #define PI_4 0.78539816339744f
-
-#define FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH 0.17f
-#define FOOT_LAUNCH_LEG_MIN (-0.23f)
-#define FOOT_LAUNCH_LEG_MAX PI_2
-#define FOOT_LAUNCH_LEG_LENGTH 0.30f
 
 #endif

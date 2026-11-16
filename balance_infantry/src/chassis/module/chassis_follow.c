@@ -175,7 +175,14 @@ void chassis_follow_step(chassis_follow_t *state, const chassis_follow_input_t *
         reset_to_heading(state, input->yaw_rad);
         return;
     }
-    update_target_rate(state, input);
+    if (!input->auto_inhibited)
+        update_target_rate(state, input);
+    else
+    {
+        state->target_rate_valid = 0u;
+        state->target_rate_rad_s = 0.0f;
+        state->relative_rate_rad_s = 0.0f;
+    }
 
     /* 2. 选择控制来源：手动转向 > 手动松杆制动 > 云台自动跟随。 */
     const float raw_error_deg = wrap_deg(input->zero_deg - input->move_deg - input->relative_deg);
@@ -201,7 +208,14 @@ void chassis_follow_step(chassis_follow_t *state, const chassis_follow_input_t *
     }
     else
     {
-        desired_rate_rad_s = automatic_rate_target(state, input, raw_error_deg);
+        if (input->auto_inhibited)
+        {
+            state->auto_following = 0u;
+            state->error_deg = 0.0f;
+            state->rate_ref_rad_s = 0.0f;
+        }
+        else
+            desired_rate_rad_s = automatic_rate_target(state, input, raw_error_deg);
     }
 
     /* 3. 限制自动转速变化，再生成交给 LQR 的角速度和航向参考。 */

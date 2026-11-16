@@ -2,17 +2,15 @@
 
 一份 CMake 工程，分别构建 **底盘板 chassis** 和 **云台板 gimbal** 固件。名称 `balance_robot` 表达整车工程；物理目录暂保留 `chassis_mpc`，避免已有工具的绝对路径失效。打开 [balance_robot.code-workspace](balance_robot.code-workspace) 可使用新的工作区显示名。
 
-云台代码来自同级 `02Balance_gimbal_task`，已复制到本工程，构建不依赖同级目录。原工程未修改。实车编译统一使用 `chassis` 和 `gimbal` 两个入口；底盘使用 LQR。旧的 `lqr` 重复入口已移除，`host`、`mpc-probe` 仅供主动运行独立算法实验时使用。
+云台代码来自同级 `02Balance_gimbal_task`，已复制到本工程，构建不依赖同级目录。原工程未修改。编译只保留 `chassis` 和 `gimbal` 两个入口；底盘使用 LQR。独立测试、仿真、MPC 探针及其构建入口已移除。
 
 ## 选择、编译与烧录文件
 
-固件使用 **CMake ≥ 3.21、Ninja、已授权 ARM Compiler 6**；本机以 ARMClang 6.7 验证。现有 AHRS/DSP 二进制库和启动汇编依赖 ARM 工具链，暂不支持直接切换为完整 GNU Arm 固件。
+固件使用 **CMake ≥ 3.21、Ninja、已授权 ARM Compiler 6**；本机以 ARMClang 6.7 验证。`CMakePresets.json` 的 `arm-base` 已指定本机 WinGet 安装的 Ninja 和 `D:/Keil5/ARM/ARMCLANG`，无需在终端额外设置 Ninja 的 PATH 或 `ARMCLANG_ROOT`。其他电脑需按安装位置调整这两项。现有 AHRS/DSP 二进制库和启动汇编依赖 ARM 工具链，暂不支持直接切换为完整 GNU Arm 固件。
 
 在工程根目录执行：
 
 ```powershell
-$env:ARMCLANG_ROOT = 'D:/Keil5/ARM/ARMCLANG'
-
 # 底盘板
 cmake --preset chassis
 cmake --build --preset chassis
@@ -27,9 +25,9 @@ cmake --build --preset gimbal
 | `chassis` | 底盘 LQR、轮腿控制、底盘侧 yaw 与发射控制 | `build/chassis/chassis_firmware.elf` |
 | `gimbal` | 云台姿态估计、pitch、遥控/键鼠、自瞄通信及底盘指令生成 | `build/gimbal/gimbal_firmware.elf` |
 
-固件同目录还会生成 `.hex`、`.bin`、`.map`。在烧录工具/EmberProbe 中选择**对应板的 ELF**；调试和变量读取也使用同一次构建的 ELF。日常 `build/` 只保留 `chassis/` 和 `gimbal/`；旧测试目录、历史 ELF、临时脚本和报告已清理。`host` 与 `mpc-probe` 只有显式运行对应 preset 时才会重新生成实验目录，不能作为整车运行固件烧录。
+固件同目录还会生成 `.hex`、`.bin`、`.map`。在烧录工具/EmberProbe 中选择**对应板的 ELF**；调试和变量读取也使用同一次构建的 ELF。`build/` 只保留 `chassis/` 和 `gimbal/`；独立测试生成目录和实验入口已清理。
 
-CMake 缓存变量 `ROBOT_BOARD=chassis|gimbal` 选择不同的**源码清单、main、外设配置和头文件目录**，并自动定义 `ROBOT_BOARD_CHASSIS=1` 或 `ROBOT_BOARD_GIMBAL=1`。不需要手工编辑宏；两个宏同时出现或都缺失会编译报错。`CHASSIS_FIRMWARE=lqr|mpc-probe` 用于底盘应用选择，云台不允许选择 MPC probe。兼容旧脚本的 CMake 构建目标名仍为 `chassis_firmware`，输出文件按板区分。
+CMake 缓存变量 `ROBOT_BOARD=chassis|gimbal` 选择不同的**源码清单、main、外设配置和头文件目录**，并自动定义 `ROBOT_BOARD_CHASSIS=1` 或 `ROBOT_BOARD_GIMBAL=1`。不需要手工编辑宏；两个宏同时出现或都缺失会编译报错。兼容旧脚本的 CMake 构建目标名仍为 `chassis_firmware`，输出文件按板区分。
 
 VS Code 的“运行生成任务”提供 `Balance robot: build chassis` 和 `Balance robot: build gimbal`；默认生成任务（Ctrl+Shift+B）编译底盘。
 
@@ -59,8 +57,8 @@ cmake --build --preset gimbal
 
 ```text
 balance_robot/                  # 工程名；当前物理目录为 chassis_mpc
-├── CMakeLists.txt               # host / firmware 总入口
-├── CMakePresets.json            # chassis / gimbal；host / mpc-probe 为独立实验
+├── CMakeLists.txt               # 两板固件总入口
+├── CMakePresets.json            # chassis / gimbal
 ├── balance_robot.code-workspace
 ├── cmake/
 │   ├── Firmware.cmake           # 板选择、独立 include、宏与固件输出
@@ -73,7 +71,6 @@ balance_robot/                  # 工程名；当前物理目录为 chassis_mpc
 │   ├── chassis/
 │   │   ├── src/ + include/      # 底盘 main、任务创建、外设配置
 │   │   ├── cubemx/              # 底盘 CubeMX 参考
-│   │   ├── mpc_probe_main.c
 │   │   └── protocol_layout_checks.c
 │   ├── gimbal/
 │   │   ├── src/ + include/      # 云台 main、任务创建、外设与 USB 接入
@@ -102,7 +99,7 @@ balance_robot/                  # 工程名；当前物理目录为 chassis_mpc
 │       ├── protocols/          # 两板唯一的命令与 UART 帧定义
 │       └── bsp/boards/         # 两板共用 BSP
 ├── third_party/                # CMSIS、FreeRTOS、HAL、USB、TinyMPC
-├── tools/chassis/              # 模型、主机测试、仿真、MPC probe
+├── tools/chassis/              # 模型导出与 MPC 参数生成
 ├── tools/project/              # 构建隔离检查与日志轮换
 ├── docs/chassis-control.md     # 底盘启动、数据流、周期与调参入口
 ├── log/                        # 最近 3 次记录、索引和模板
@@ -140,29 +137,12 @@ application 管任务顺序和接入，module 管操作与动作状态，control
 | 自瞄/USB 与板间 UART | `src/gimbal/application/Self_aim.c`、`UART_task.c` |
 | 任务创建、优先级和栈 | 对应 platform 下的 `src/freertos.c` |
 
-底盘编译默认保持 pitch 参考 0 rad、对地腿角 0.1572 rad、前馈关闭；PID、LQR 系数和电机方向没有重新调参。自救返回是否接管，由任务显式重新做 VMC。旧 `chassis_power_limit()` 只缩放参考，保留历史调用顺序，不能视作最终电机限功率。跳跃准备保留原有直接放行行为；云台每拍两次射击更新和原 pitch 速度环 D 参数接线未在本次整理中改变。
+底盘编译默认保持 pitch 参考 0 rad、对地腿角 0.1572 rad、实验质心前馈关闭。2026-11-10 增加 roll 抗积分饱和和角速度阻尼、起立/自救 MIT 速度环、静止 KF 的 Q/R 调整、自瞄禁跟随及纵向碰撞退离，参数、限制和验证结果见[底盘指南](docs/chassis-control.md)。LQR 系数和电机方向未改，自救返回仍由任务显式重新做 VMC。旧 `chassis_power_limit()` 只缩放参考，不能视作最终电机限功率。跳跃准备、云台每拍两次射击更新和原 pitch 速度环 D 参数接线保持。
 
 ## 验证与维护
 
-主机验证需要原生 GCC/G++、Python、NumPy/SciPy，依赖见 `tools/chassis/mpc/requirements.txt`：
+当前通过两板固件构建及编译期协议尺寸/偏移断言检查工程接入。独立主机测试、仿真、探针和检查脚本已按要求删除，不再提供这些入口。源码中的 MPC 算法与模型/参数生成工具保留，未接入实车控制；见[工具说明](tools/chassis/README.md)。
 
-```powershell
-python tools/chassis/mpc/run_host_checks.py
-# 已配置后可直接执行
-cmake --build --preset host
-ctest --preset host --output-on-failure
-
-# 两板构建后检查源码、include、宏和 ELF 是否隔离
-python tools/project/check_board_builds.py
-```
-
-底盘行为回归使用原生 GCC 和 Python，不依赖 MPC 实验：
-
-```powershell
-python tools/chassis/tests/run_control_checks.py
-python tools/chassis/tests/run_climb_checks.py
-```
-
-上述 MPC 主机工具用于独立 QP 对照。MPC 当前为固定腿长 0.24 m、采样 4 ms 的独立实验；主机耗时不等于 F407 实时耗时。[工具说明](tools/chassis/README.md)包含更多模型约定。
+底盘原空循环 `test_task` 已删除。云台同名任务实际负责设备故障蜂鸣器报警，现改名为 `buzzer_alarm_task` 并保留原优先级、栈和报警逻辑。
 
 日志只保留最近 **3 次**编号记录；每次新增后执行 `python tools/project/rotate_logs.py`，自动删除更旧记录并更新[日志索引](log/README.md)。`README.md` 和 `TEMPLATE.md` 永久保留。历史代码通过 Git 追溯，日志中的 RAM 读回不代表当前板上状态。

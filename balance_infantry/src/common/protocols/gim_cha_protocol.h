@@ -39,6 +39,7 @@ typedef struct
 	RC_chassis_mode_e chassis_mode;//底盘模式
 	shoot_mode_e shoot_mode_rc;//射击模式
   uint8_t jump_flag,sit_flag,climb_flag,fric_flag,auto_flag,ui_init_flag,recovery_flag;
+  /* auto_flag: self-aim enabled (not target validity); inhibits chassis auto-follow. */
   float fric_speed_set;
 }chassis_data_t;	
 

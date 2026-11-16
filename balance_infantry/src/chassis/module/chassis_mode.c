@@ -46,41 +46,7 @@ static void chassis_mode_change_control_transit(chassis_move_t *chassis_mode_cha
         chassis_mode_change->chassis_posture_info.yaw_angle_sett =
             chassis_mode_change->chassis_posture_info.yaw_angle_total;
     }
-    else if (chassis_mode_change->mode.chassis_balancing_mode == FOOT_LAUNCHING)
-    {
-        chassis_leg_posture_t *L = &chassis_mode_change->chassis_posture_info.chassis_posture_L;
-        chassis_leg_posture_t *R = &chassis_mode_change->chassis_posture_info.chassis_posture_R;
-
-        /* Both legs must enter the allowed range and slow down. */
-        if (L->leg_length < FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH &&
-            R->leg_length < FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
-        {
-            chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
-        }
-        else if (L->leg_length < FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
-        {
-            if (R->leg_angle > FOOT_LAUNCH_LEG_MIN && R->leg_angle < FOOT_LAUNCH_LEG_MAX)
-            {
-                chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
-            }
-        }
-        else if (R->leg_length < FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
-        {
-            if (L->leg_angle > FOOT_LAUNCH_LEG_MIN && L->leg_angle < FOOT_LAUNCH_LEG_MAX)
-            {
-                chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
-            }
-        }
-        else if (L->leg_angle > FOOT_LAUNCH_LEG_MIN && L->leg_angle < FOOT_LAUNCH_LEG_MAX &&
-                 R->leg_angle > FOOT_LAUNCH_LEG_MIN && R->leg_angle < FOOT_LAUNCH_LEG_MAX &&
-                 fabsf(chassis_mode_change->chassis_posture_info.pitch_angle) < EXIT_PITCH_ANGLE &&
-                 fabsf(chassis_mode_change->chassis_posture_info.roll_angle) < 0.25f)
-        {
-            chassis_mode_change->mode.chassis_balancing_mode = JOINT_LAUNCHING;
-        }
-    }
-    else if (chassis_mode_change->mode.chassis_balancing_mode == JOINT_LAUNCHING)
-        chassis_mode_change->mode.chassis_balancing_mode = BALANCING_READY;
+    /* 起立阶段由 chassis_recovery.c 统一推进，不在这里直接跳入 LQR。 */
     //跳跃模式流程
     if (chassis_mode_change->mode.sport_mode == JUMPING_MODE &&
         chassis_mode_change->mode.last_sport_mode != JUMPING_MODE)
@@ -246,13 +212,7 @@ void chassisModeSetTargets(chassis_move_t *c)
         }
         left->leg_length_set = right->leg_length_set = length;
     }
-    if (c->mode.chassis_balancing_mode == FOOT_LAUNCHING)
-    {
-        if (left->leg_length > FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
-            left->leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
-        if (right->leg_length > FOOT_LAUNCH_APPROPRIATE_LEG_LENGTH)
-            right->leg_length_set = FOOT_LAUNCH_LEG_LENGTH;
-    }
+
 }
 
 uint8_t chassisIsEnabledOnGround(const chassis_move_t *chassis)

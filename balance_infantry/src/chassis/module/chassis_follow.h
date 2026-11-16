@@ -45,6 +45,7 @@ typedef struct
 typedef struct
 {
     uint8_t allowed;         /* 由任务层判断使能、运动模式和双腿触地条件 */
+    uint8_t auto_inhibited;  /* Inhibit automatic following; manual turn remains available. */
     float dt_s;              /* 实测调用间隔，超过 50 ms 则重置 */
     float relative_deg;      /* 云台相对底盘的编码器角度 */
     float zero_deg;          /* 云台与底盘对齐时的编码器角度 */

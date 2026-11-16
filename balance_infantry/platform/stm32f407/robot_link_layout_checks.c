@@ -10,6 +10,7 @@ _Static_assert(sizeof(chassis_data_t) == 48, "chassis command wire size changed"
 _Static_assert(offsetof(chassis_data_t, chassis_mode) == 32, "mode offset changed");
 _Static_assert(offsetof(chassis_data_t, shoot_mode_rc) == 33, "shoot offset changed");
 _Static_assert(offsetof(chassis_data_t, recovery_flag) == 40, "recovery offset changed");
+_Static_assert(offsetof(chassis_data_t, auto_flag) == 38, "self-aim flag offset changed");
 _Static_assert(offsetof(chassis_data_t, fric_speed_set) == 44, "friction speed offset changed");
 _Static_assert(CHASSIS_MODE_OFF == 0 && CHASSIS_MOVE_ON == 1 &&
                CHASSIS_MODE_DEBUG == 2 && CHASSIS_MODE_INIT == 3,

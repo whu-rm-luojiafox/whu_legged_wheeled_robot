@@ -23,6 +23,9 @@ static void chassis_init(chassis_move_t *chassis)
     vTaskDelay(3000);
     for (uint8_t id = 1; id <= 4; ++id)
     {
+        /* 摆腿只施加角向力矩，径向交给弹簧；在动作开始前选定 MIT。 */
+        CAN_dm_request_control_mode(id, DM_CONTROL_MIT);
+        vTaskDelay(2);
         CAN_dm_enable(id);
         vTaskDelay(2);
     }
@@ -52,9 +55,10 @@ void chassis_task(void const *pvParameters)
         chassisModeSetTargets(&chassis_move);
         chassisClimbProcess(&chassis_move);
 
+        chassisRecoveryUpdate(&chassis_move, chassis_control_dt_s);
         chassisControlCalculate(&chassis_move, chassis_control_dt_s);
-        chassisControlMap(&chassis_move);
-        if (chassisRecoveryProcess(&chassis_move)) chassisControlMap(&chassis_move);
+        chassisRecoveryApply(&chassis_move);
+        chassisControlMap(&chassis_move, chassis_control_dt_s);
 
         chassis_power_limit(&chassis_move);
         chassisMotorSend(&chassis_move);

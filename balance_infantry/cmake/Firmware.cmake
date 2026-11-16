@@ -3,11 +3,6 @@ set_property(CACHE ROBOT_BOARD PROPERTY STRINGS chassis gimbal)
 if(NOT ROBOT_BOARD MATCHES "^(chassis|gimbal)$")
   message(FATAL_ERROR "Unknown ROBOT_BOARD=${ROBOT_BOARD}; choose chassis or gimbal")
 endif()
-set(CHASSIS_FIRMWARE "lqr" CACHE STRING "Chassis application: lqr or mpc-probe")
-set_property(CACHE CHASSIS_FIRMWARE PROPERTY STRINGS lqr mpc-probe)
-if(ROBOT_BOARD STREQUAL "gimbal" AND NOT CHASSIS_FIRMWARE STREQUAL "lqr")
-  message(FATAL_ERROR "mpc-probe is a chassis-only diagnostic; select ROBOT_BOARD=chassis")
-endif()
 set(board_include "${CHASSIS_ROOT}/platform/stm32f407/chassis/include")
 set(hal_root "${CHASSIS_ROOT}/third_party/stm32_hal")
 set(firmware_name chassis_firmware)
@@ -16,13 +11,8 @@ if(ROBOT_BOARD STREQUAL "gimbal")
   set(hal_root "${CHASSIS_ROOT}/third_party/stm32_hal_gimbal")
   set(firmware_name gimbal_firmware)
 endif()
-set(startup_options)
-if(CHASSIS_FIRMWARE STREQUAL "mpc-probe")
-  # Explicit test budget, not an assertion about measured heap peak.
-  list(APPEND startup_options --pd "WHU_HEAP_SIZE SETA 0x8000")
-endif()
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/startup_stm32f407xx.o"
-  COMMAND "${CHASSIS_ARMASM}" --cpu Cortex-M4.fp.sp --apcs=interwork ${startup_options}
+  COMMAND "${CHASSIS_ARMASM}" --cpu Cortex-M4.fp.sp --apcs=interwork
     "${CHASSIS_ROOT}/platform/stm32f407/startup_stm32f407xx.s"
     -o "${CMAKE_BINARY_DIR}/startup_stm32f407xx.o"
   DEPENDS "${CHASSIS_ROOT}/platform/stm32f407/startup_stm32f407xx.s" VERBATIM)
@@ -51,7 +41,7 @@ if(ROBOT_BOARD STREQUAL "gimbal")
   target_compile_definitions(chassis_firmware PRIVATE
     ROBOT_BOARD_GIMBAL=1 ARM_MATH_CM4 ARM_MATH_MATRIX_CHECK ARM_MATH_ROUNDING)
   target_link_libraries(chassis_firmware PRIVATE ${GIMBAL_FIRMWARE_LIBRARIES})
-elseif(CHASSIS_FIRMWARE STREQUAL "lqr")
+else()
   include("${CMAKE_CURRENT_LIST_DIR}/ChassisSources.cmake")
   add_executable(chassis_firmware ${CHASSIS_FIRMWARE_SOURCES} "${startup}"
     "${CHASSIS_ROOT}/platform/stm32f407/chassis/protocol_layout_checks.c"
@@ -76,18 +66,6 @@ elseif(CHASSIS_FIRMWARE STREQUAL "lqr")
   target_link_libraries(chassis_firmware PRIVATE
     "${CHASSIS_ROOT}/src/common/components/algorithm/AHRS.lib"
     "${CHASSIS_ROOT}/src/common/components/algorithm/arm_cortexM4lf_math.lib")
-elseif(CHASSIS_FIRMWARE STREQUAL "mpc-probe")
-  chassis_add_mpc(chassis_mpc float)
-  add_executable(chassis_firmware "${startup}"
-    "${CHASSIS_ROOT}/platform/stm32f407/chassis/mpc_probe_main.c"
-    "${CHASSIS_ROOT}/tools/chassis/mpc/board_probe.c"
-    "${CHASSIS_ROOT}/platform/stm32f407/chassis/src/system_stm32f4xx.c")
-  target_include_directories(chassis_firmware PRIVATE "${CHASSIS_ROOT}/tools/chassis/mpc")
-  target_link_libraries(chassis_firmware PRIVATE chassis_mpc)
-  target_compile_definitions(chassis_firmware PRIVATE ROBOT_BOARD_CHASSIS=1)
-  set_target_properties(chassis_firmware PROPERTIES LINKER_LANGUAGE CXX)
-else()
-  message(FATAL_ERROR "Unknown CHASSIS_FIRMWARE=${CHASSIS_FIRMWARE}")
 endif()
 target_include_directories(chassis_firmware PRIVATE
   "${board_include}" "${hal_root}/Inc" "${hal_root}/Inc/Legacy"
@@ -115,4 +93,4 @@ add_custom_command(TARGET chassis_firmware POST_BUILD
   COMMAND "${CHASSIS_FROMELF}" --i32combined "--output=${CMAKE_BINARY_DIR}/${firmware_name}.hex" "$<TARGET_FILE:chassis_firmware>"
   COMMAND "${CHASSIS_FROMELF}" --bin "--output=${CMAKE_BINARY_DIR}/${firmware_name}.bin" "$<TARGET_FILE:chassis_firmware>"
   VERBATIM)
-message(STATUS "balance_robot: board=${ROBOT_BOARD}, application=${CHASSIS_FIRMWARE}, output=${firmware_name}")
+message(STATUS "balance_robot: board=${ROBOT_BOARD}, output=${firmware_name}")

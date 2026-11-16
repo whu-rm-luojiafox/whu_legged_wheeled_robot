@@ -48,7 +48,7 @@ set(GIMBAL_FIRMWARE_SOURCES
   "${CHASSIS_ROOT}/src/gimbal/application/referee_usart_task.c"
   "${CHASSIS_ROOT}/src/gimbal/application/remote_control.c"
   "${CHASSIS_ROOT}/src/gimbal/application/shoot.c"
-  "${CHASSIS_ROOT}/src/gimbal/application/test_task.c"
+  "${CHASSIS_ROOT}/src/gimbal/application/buzzer_alarm_task.c"
   "${CHASSIS_ROOT}/src/common/application/led_flow_task.c"
   "${CHASSIS_ROOT}/src/gimbal/application/servo_task.c"
   "${CHASSIS_ROOT}/src/gimbal/application/vofa.c"

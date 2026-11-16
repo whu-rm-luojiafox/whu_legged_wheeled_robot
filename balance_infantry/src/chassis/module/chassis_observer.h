@@ -7,6 +7,9 @@
 typedef struct
 {
     uint8_t sample_valid;
+    uint8_t stationary_filter;
+    float stationary_time_s;
+    float forward_accel_m_s2;
     float speed_m_s;
     float distance_m;
 } chassis_odometry_t;

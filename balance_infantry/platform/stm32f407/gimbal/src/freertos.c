@@ -33,6 +33,7 @@
 #include "led_flow_task.h"
 #include "UART_task.h"
 #include "Self_aim.h"
+#include "buzzer_alarm_task.h"
 
 /* USER CODE END Includes */
 
@@ -62,16 +63,14 @@ osThreadId Self_aim_task_handle;
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-osThreadId testHandle;
+osThreadId buzzer_alarm_handle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 extern void ins_task(void const * argument);
 /* USER CODE END FunctionPrototypes */
 
-void test_task(void const * argument);
 
-extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* GetIdleTaskMemory prototype (linked to static allocation support) */
@@ -134,9 +133,9 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of test */
-  osThreadDef(test, test_task, osPriorityNormal, 0, 128);
-  testHandle = osThreadCreate(osThread(test), NULL);
+  /* Runtime device-fault buzzer alarm. */
+  osThreadDef(BuzzerAlarm, buzzer_alarm_task, osPriorityNormal, 0, 128);
+  buzzer_alarm_handle = osThreadCreate(osThread(BuzzerAlarm), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -165,27 +164,6 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE END RTOS_THREADS */
 
-}
-
-/* USER CODE BEGIN Header_test_task */
-/**
-  * @brief  Function implementing the test thread.
-  * @param  argument: Not used 
-  * @retval None
-  */
-/* USER CODE END Header_test_task */
-__weak void test_task(void const * argument)
-{
-  /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
-
-  /* USER CODE BEGIN test_task */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END test_task */
 }
 
 /* Private application code --------------------------------------------------*/

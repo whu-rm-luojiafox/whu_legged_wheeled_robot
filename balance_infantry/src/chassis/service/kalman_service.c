@@ -11,14 +11,23 @@
 #define VELOCITY_KF_ACCEL_NOISE 0.04f
 #define VELOCITY_KF_BIAS_NOISE 1e-5f
 #define VELOCITY_KF_WHEEL_VARIANCE 0.02f
+#define VELOCITY_KF_REST_ACCEL_NOISE 0.01f
+#define VELOCITY_KF_REST_WHEEL_VARIANCE 0.04f
 
 static KalmanFilter_t velocity_kf;
 static chassis_velocity_kf_result_t velocity_result;
 static uint8_t storage_initialized;
+static uint8_t stationary_mode;
+
+void ChassisVelocityKF_SetStationary(uint8_t stationary)
+{
+    stationary_mode = stationary != 0u;
+}
 
 uint8_t ChassisVelocityKF_Init(float initial_speed_m_s)
 {
     velocity_result.valid = 0u;
+    stationary_mode = 0u;
     if (!isfinite(initial_speed_m_s)) return 0u;
 
     /* 通用 KF 的 Init 会分配矩阵，只允许执行一次；后续只重置状态。 */
@@ -59,7 +68,9 @@ uint8_t ChassisVelocityKF_Update(float accel_forward_m_s2, float wheel_velocity_
     velocity_kf.B_data[1] = 0.0f;
 
     const float dt2 = dt_s * dt_s;
-    velocity_kf.Q_data[0] = VELOCITY_KF_ACCEL_NOISE * dt_s + VELOCITY_KF_BIAS_NOISE * dt2 * dt_s / 3.0f;
+    const float accel_noise = stationary_mode ? VELOCITY_KF_REST_ACCEL_NOISE : VELOCITY_KF_ACCEL_NOISE;
+    velocity_kf.R_data[0] = stationary_mode ? VELOCITY_KF_REST_WHEEL_VARIANCE : VELOCITY_KF_WHEEL_VARIANCE;
+    velocity_kf.Q_data[0] = accel_noise * dt_s + VELOCITY_KF_BIAS_NOISE * dt2 * dt_s / 3.0f;
     velocity_kf.Q_data[1] = -VELOCITY_KF_BIAS_NOISE * dt2 / 2.0f;
     velocity_kf.Q_data[2] = velocity_kf.Q_data[1];
     velocity_kf.Q_data[3] = VELOCITY_KF_BIAS_NOISE * dt_s;

@@ -4,13 +4,15 @@
 #include "chassis_fwd.h"
 
 #define POSITION_COMMAND_DEADBAND_M_S 0.02f
-#define POSITION_SETTLED_SPEED_M_S 0.06f
+#define POSITION_SETTLED_SPEED_M_S 0.10f
 #define POSITION_SETTLE_TIME_S 0.15f
+#define POSITION_BRAKE_ERROR_LIMIT_M 0.06f
 
 /* 只管理位置参考，位置/速度误差仍由 LQR 处理，不额外叠加 PID。 */
 typedef struct
 {
     uint8_t locked;       /* 捕获后固定目标，直到移动指令或控制条件将其释放 */
+    uint8_t braking;      /* 松杆后保留有界位置参考，辅助零速反馈制动 */
     float stopped_time_s; /* 实际速度连续低于门限的时长，单位 s */
     float reference_m;    /* 输出给 LQR 的位置目标，单位 m */
 } chassis_position_t;

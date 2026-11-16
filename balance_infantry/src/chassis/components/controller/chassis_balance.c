@@ -37,26 +37,46 @@ void chassis_balance_reference_step(chassis_balance_reference_t *state,
     state->leg_local_rad = state->leg_ground_rad - state->pitch_rad;
 }
 
-void chassis_lqr_feedback_calculate(const float gain[4][10], const float error[10],
+/* 将一行增益逐项展开：每个字段都能直接对应一个状态产生的力矩。 */
+static void calculate_torque_row(const float gain[CHASSIS_LQR_STATE_COUNT],
+                                const float error[CHASSIS_LQR_STATE_COUNT],
+                                float left_leg_scale, float right_leg_scale,
+                                chassis_lqr_torque_t *torque)
+{
+    torque->position_nm = gain[LQR_X_POSITION] * error[LQR_X_POSITION];
+    torque->speed_nm = gain[LQR_X_SPEED] * error[LQR_X_SPEED];
+    torque->yaw_nm = gain[LQR_X_YAW] * error[LQR_X_YAW];
+    torque->yaw_rate_nm = gain[LQR_X_YAW_RATE] * error[LQR_X_YAW_RATE];
+
+    torque->left_leg_angle_nm = left_leg_scale * gain[LQR_X_LEG_L_ANGLE] * error[LQR_X_LEG_L_ANGLE];
+    torque->left_leg_rate_nm = left_leg_scale * gain[LQR_X_LEG_L_RATE] * error[LQR_X_LEG_L_RATE];
+    torque->right_leg_angle_nm = right_leg_scale * gain[LQR_X_LEG_R_ANGLE] * error[LQR_X_LEG_R_ANGLE];
+    torque->right_leg_rate_nm = right_leg_scale * gain[LQR_X_LEG_R_RATE] * error[LQR_X_LEG_R_RATE];
+
+    torque->body_pitch_nm = gain[LQR_X_BODY_PITCH] * error[LQR_X_BODY_PITCH];
+    torque->body_pitch_rate_nm = gain[LQR_X_BODY_PITCH_RATE] * error[LQR_X_BODY_PITCH_RATE];
+
+    torque->motion_nm = torque->position_nm + torque->speed_nm + torque->yaw_nm + torque->yaw_rate_nm;
+    torque->balance_nm = torque->left_leg_angle_nm + torque->left_leg_rate_nm +
+                         torque->right_leg_angle_nm + torque->right_leg_rate_nm +
+                         torque->body_pitch_nm + torque->body_pitch_rate_nm;
+    torque->total_nm = torque->motion_nm + torque->balance_nm;
+}
+
+void chassis_lqr_feedback_calculate(const float gain[CHASSIS_LQR_INPUT_COUNT][CHASSIS_LQR_STATE_COUNT],
+                                   const float error[CHASSIS_LQR_STATE_COUNT],
                                    float cross_leg_scale, chassis_lqr_feedback_t *output)
 {
     if (!gain || !error || !output) return;
     if (!isfinite(cross_leg_scale) || cross_leg_scale < 0.0f || cross_leg_scale > 1.0f)
         cross_leg_scale = 0.0f;
 
-    for (int row = 0; row < CHASSIS_LQR_INPUT_COUNT; ++row) {
-        const int own_leg = (row == 0 || row == 2) ? 4 : 6;
-        const int other_leg = own_leg == 4 ? 6 : 4;
-        output->motion[row] = gain[row][0] * error[0] + gain[row][1] * error[1] +
-                              gain[row][2] * error[2] + gain[row][3] * error[3];
-        output->balance[row] = gain[row][own_leg] * error[own_leg] +
-                               gain[row][own_leg + 1] * error[own_leg + 1] +
-                               gain[row][8] * error[8] + gain[row][9] * error[9];
-        output->cross_leg[row] = gain[row][other_leg] * error[other_leg] +
-                                 gain[row][other_leg + 1] * error[other_leg + 1];
-        if (cross_leg_scale != 0.0f)
-            output->balance[row] += cross_leg_scale * output->cross_leg[row];
-    }
+    /* 左侧输出：左腿权重为 1，右腿权重为 cross_leg_scale。 */
+    calculate_torque_row(gain[LQR_U_WHEEL_L], error, 1.0f, cross_leg_scale, &output->left_wheel);
+    calculate_torque_row(gain[LQR_U_LEG_L], error, 1.0f, cross_leg_scale, &output->left_leg);
+    /* 右侧输出：右腿权重为 1，左腿权重为 cross_leg_scale。 */
+    calculate_torque_row(gain[LQR_U_WHEEL_R], error, cross_leg_scale, 1.0f, &output->right_wheel);
+    calculate_torque_row(gain[LQR_U_LEG_R], error, cross_leg_scale, 1.0f, &output->right_leg);
 }
 
 static float clamp(float value, float limit)

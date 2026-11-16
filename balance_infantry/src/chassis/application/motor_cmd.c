@@ -8,6 +8,41 @@ extern chassis_move_t chassis_move;
 extern robot_status_t robot_state;
 extern power_heat_data_t power_heat_data;
 
+static void send_joint(const joint_motor_t *motor, uint16_t id)
+{
+    static uint8_t transition_target[4];
+    const uint8_t mode = CAN_dm_control_mode(id);
+    const uint16_t mode_id = id + (mode == DM_CONTROL_SPEED ? 0x200u : 0u);
+    const uint8_t force_enabled = motor->motor_mode == MOTOR_FORCE;
+    /* 遥控失能 = MIT 零力矩卸力：退出速度闭环，但不向驱动器发送失能帧。
+     * 不能一直 speed_ctrl(0)，否则速度环会主动抗住外力。 */
+    const uint8_t target = force_enabled && motor->velocity_native ? DM_CONTROL_SPEED : DM_CONTROL_MIT;
+    const uint8_t pending = CAN_dm_control_mode_pending(id);
+    if (mode != target || pending != 0u)
+    {
+        /* One frame per motor per tick: stop, request mode, then enable on ACK.
+         * No delay or extra burst into the three hardware CAN mailboxes. */
+        if (transition_target[id - 1u] != target)
+        {
+            if (mode == DM_CONTROL_SPEED) speed_ctrl(0.0f, id);
+            else MIT_CtrlMotor(0, 0, 0, 0, 0, id);
+            transition_target[id - 1u] = target;
+        }
+        else
+            CAN_dm_request_control_mode(id, target);
+        return;
+    }
+    if (transition_target[id - 1u])
+    {
+        CAN_dm_enable(mode_id);
+        transition_target[id - 1u] = 0u;
+        return;
+    }
+    if (!force_enabled) MIT_CtrlMotor(0, 0, 0, 0, 0, id);
+    else if (motor->velocity_native) speed_ctrl(motor->velocity_set, id);
+    else MIT_CtrlMotor(0.0f, 0.0f, 0.0f, 0.0f, motor->torque_out, id);
+}
+
 void motor_cmd_task(void const *pvParameters)
 {
     osDelay(500);
@@ -34,23 +69,11 @@ void chassisMotorSend(chassis_move_t *CMD_Send)
     if (CMD_Send->foot_motor_R.motor_mode != MOTOR_FORCE) CMD_Send->foot_motor_R.torque_out = 0.0f;
     if (CMD_Send->foot_motor_L.motor_mode != MOTOR_FORCE) CMD_Send->foot_motor_L.torque_out = 0.0f;
 
-    if (CMD_Send->joint_motor_1.motor_mode == MOTOR_FORCE)
-        MIT_CtrlMotor(0, 0, 0, 0, CMD_Send->joint_motor_1.torque_out, 0x01);
-    else
-        MIT_CtrlMotor(0, 0, 0, 0, 0, 0x01);
-    if (CMD_Send->joint_motor_3.motor_mode == MOTOR_FORCE)
-        MIT_CtrlMotor(0, 0, 0, 0, CMD_Send->joint_motor_3.torque_out, 0x03);
-    else
-        MIT_CtrlMotor(0, 0, 0, 0, 0, 0x03);
+    send_joint(&CMD_Send->joint_motor_1, 0x01);
+    send_joint(&CMD_Send->joint_motor_3, 0x03);
     vTaskDelay(1);
-    if (CMD_Send->joint_motor_2.motor_mode == MOTOR_FORCE)
-        MIT_CtrlMotor(0, 0, 0, 0, CMD_Send->joint_motor_2.torque_out, 0x02);
-    else
-        MIT_CtrlMotor(0, 0, 0, 0, 0, 0x02);
-    if (CMD_Send->joint_motor_4.motor_mode == MOTOR_FORCE)
-        MIT_CtrlMotor(0, 0, 0, 0, CMD_Send->joint_motor_4.torque_out, 0x04);
-    else
-        MIT_CtrlMotor(0, 0, 0, 0, 0, 0x04);
+    send_joint(&CMD_Send->joint_motor_2, 0x02);
+    send_joint(&CMD_Send->joint_motor_4, 0x04);
 
     const int16_t cmd_L = (int16_t)fp32_constrain(((-1.0f) * CMD_Send->foot_motor_L.torque_out * 2598.20f),
                                                   -16384.0f, 16384.0f);

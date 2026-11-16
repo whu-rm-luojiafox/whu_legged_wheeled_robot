@@ -17,6 +17,11 @@ static uint8_t referee_can_send_data[1];
 static CAN_TxHeaderTypeDef  dm_tx_message;
 static uint8_t  			dm_can_send_data[8];
 static uint8_t  			dm_speed_ctrl_data[4];
+/* Existing startup enables MIT. Only acknowledged writes change this cache. */
+static volatile uint8_t dm_control_modes[4] = {DM_CONTROL_MIT, DM_CONTROL_MIT,
+                                               DM_CONTROL_MIT, DM_CONTROL_MIT};
+static volatile uint8_t dm_requested_modes[4];
+static TickType_t dm_mode_request_ticks[4];
 
 
 motor_measure_t motor_chassis[7];
@@ -41,6 +46,18 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     }
     if ((rx_header.IDE != CAN_ID_STD) || (rx_header.RTR != CAN_RTR_DATA))
     {
+      return;
+    }
+    /* Register replies must not be decoded as position/velocity feedback. */
+    if (rx_header.DLC == 8u && rx_data[0] >= 1u && rx_data[0] <= 4u && rx_data[1] == 0u &&
+        (rx_header.StdId == 0x7FFu || rx_header.StdId == CAN_DM_MOTOR_ID1 + rx_data[0] - 1u) &&
+        rx_data[2] == 0x55u && rx_data[3] == 0x0Au &&
+        rx_data[5] == 0u && rx_data[6] == 0u && rx_data[7] == 0u &&
+        (rx_data[4] == DM_CONTROL_MIT || rx_data[4] == DM_CONTROL_SPEED))
+    {
+      dm_control_modes[rx_data[0] - 1u] = rx_data[4];
+      if (rx_data[4] == dm_requested_modes[rx_data[0] - 1u])
+        dm_requested_modes[rx_data[0] - 1u] = 0u;
       return;
     }
     switch (rx_header.StdId)
@@ -553,6 +570,40 @@ void pos_sped_ctrl(float p_des,float v_limit,uint16_t motor_ID)
     dm_can_send_data[6] = *(v_limit_temp+2);
     dm_can_send_data[7] = *(v_limit_temp+3);
     HAL_CAN_AddTxMessage(&DM_CAN, &dm_tx_message, dm_can_send_data, &send_mail_box);
+}
+
+uint8_t CAN_dm_control_mode(uint16_t motor_ID)
+{
+    return motor_ID >= 1u && motor_ID <= 4u ? dm_control_modes[motor_ID - 1u] : 0u;
+}
+
+uint8_t CAN_dm_control_mode_pending(uint16_t motor_ID)
+{
+    return motor_ID >= 1u && motor_ID <= 4u ? dm_requested_modes[motor_ID - 1u] : 0u;
+}
+
+void CAN_dm_request_control_mode(uint16_t motor_ID, uint8_t mode)
+{
+    if (motor_ID < 1u || motor_ID > 4u ||
+        (mode != DM_CONTROL_MIT && mode != DM_CONTROL_SPEED)) return;
+    const unsigned index = motor_ID - 1u;
+    const TickType_t now = xTaskGetTickCount();
+    if (dm_requested_modes[index] == mode &&
+        (TickType_t)(now - dm_mode_request_ticks[index]) < pdMS_TO_TICKS(20)) return;
+
+    /* Volatile CTRL_MODE (0x0A), uint32 little endian; never store to flash. */
+    CAN_TxHeaderTypeDef header = {0};
+    header.StdId = 0x7FFu;
+    header.IDE = CAN_ID_STD;
+    header.RTR = CAN_RTR_DATA;
+    header.DLC = 8u;
+    uint8_t data[8] = {(uint8_t)motor_ID, 0u, 0x55u, 0x0Au, mode, 0u, 0u, 0u};
+    uint32_t mailbox;
+    dm_requested_modes[index] = mode;
+    if (HAL_CAN_AddTxMessage(&DM_CAN, &header, data, &mailbox) == HAL_OK)
+        dm_mode_request_ticks[index] = now;
+    else
+        dm_requested_modes[index] = 0u;
 }
 
 void speed_ctrl(float vel,uint16_t motor_ID)
