@@ -17,18 +17,15 @@ enum {
 typedef struct {
     bool ready, stalled;
     float direction;
-    float hold_angle;
     float progress_angle, no_progress_s;
-    float last_angle;
-    float rate_integral_nm;
+    float last_angle; /* 上一拍对地腿角。 */
 } SwingLegContext;
 
 typedef struct {
     chassis_recovery_stage_e state;
     bool last_key;
     float elapsed_s, settled_s;
-    float control_dt_s;
-    float swing_direction; /* 双腿统一方向：从车体左侧看顺时针。 */
+    float swing_direction; /* 双腿统一的机身局部角方向。 */
     SwingLegContext swing_L, swing_R;
     float retract_time_s;
     float start_length_L, start_length_R, target_length;
@@ -52,7 +49,7 @@ static float smoothstep(float progress)
 
 static float body_leg_angle(const chassis_leg_posture_t *leg, bool right_leg)
 {
-    /* 只把腿摆到机身后方；不随 pitch 追对地角，右侧镜像只统一一次。 */
+    /* 缩腿时保持相对机身的角度，右腿镜像成统一方向。 */
     return rad_format(right_leg ? -leg->leg_angle_local : leg->leg_angle_local);
 }
 
@@ -61,31 +58,25 @@ static float body_leg_rate(const chassis_leg_posture_t *leg, bool right_leg)
     return right_leg ? -leg->leg_gyro_local : leg->leg_gyro_local;
 }
 
-static bool leg_in_swing_window(const chassis_leg_posture_t *leg, bool right_leg)
+static bool leg_in_rear_window(float angle)
 {
-    const float angle = body_leg_angle(leg, right_leg);
     return angle >= STARTUP_LEG_ANGLE_MIN_RAD && angle <= STARTUP_LEG_ANGLE_MAX_RAD;
 }
 
-static void update_swing_leg(SwingLegContext *swing, const chassis_leg_posture_t *leg, bool right_leg, float dt_s)
+static void update_swing_leg(SwingLegContext *swing, const chassis_leg_posture_t *leg, float dt_s)
 {
-    const float angle = body_leg_angle(leg, right_leg);
-    const float travel = swing->direction * rad_format(angle - swing->last_angle);
-    const float to_entry = swing->direction * rad_format(STARTUP_LEG_ANGLE_MAX_RAD - swing->last_angle);
-    const bool crossed_entry = travel > 0.0f && to_entry >= 0.0f && to_entry <= travel;
+    const float angle = rad_format(leg->leg_angle);
     swing->last_angle = angle;
-    if (!swing->ready && (leg_in_swing_window(leg, right_leg) || crossed_entry))
+    if (!swing->ready && leg_in_rear_window(angle))
     {
         swing->ready = true;
-        /* 到后方即停，保持实际到位角，不回追标称值或重新绕圈。 */
-        swing->hold_angle = angle;
-        swing->rate_integral_nm = 0.0f;
+        /* 到位后锁存，等另一条腿到位。 */
         swing->stalled = false;
         swing->no_progress_s = 0.0f;
     }
     if (swing->ready) return;
 
-    /* 不对机械卡点加力硬顶；未到窗口且局部腿角长期无进展就中止本次动作。 */
+    /* 未到位且局部腿角长期无进展就中止本次动作。 */
     if (fabsf(rad_format(leg->leg_angle_local - swing->progress_angle)) >= STARTUP_SWING_STALL_PROGRESS_RAD)
     {
         swing->progress_angle = leg->leg_angle_local;
@@ -138,12 +129,14 @@ static void begin_balance(chassis_move_t *c)
     PID_clear(&c->chassis_roll_pid);
 }
 
-static SwingLegContext begin_swing_leg(const chassis_leg_posture_t *leg, bool right_leg)
+static SwingLegContext begin_swing_leg(const chassis_leg_posture_t *leg)
 {
+    const float angle = rad_format(leg->leg_angle);
     return (SwingLegContext){
+        .ready = leg_in_rear_window(angle),
         .direction = STARTUP_SWING_DIRECTION,
         .progress_angle = leg->leg_angle_local,
-        .last_angle = body_leg_angle(leg, right_leg)
+        .last_angle = angle
     };
 }
 
@@ -155,23 +148,10 @@ static void begin_swing(chassis_move_t *c)
     recovery.angle_error_L = recovery.angle_error_R = 0.0f;
     recovery.force_bias_L = recovery.force_bias_R = 0.0f;
     recovery.torque_bias_L = recovery.torque_bias_R = 0.0f;
-    /* 劈叉时两腿也统一从左侧看顺时针，不按各自角差选择最短路径。
-     * 左侧电机负速度，右侧驱动端镜像为正速度，由 ControlMap 统一转换。 */
-    recovery.swing_L = begin_swing_leg(&c->chassis_posture_info.chassis_posture_L, false);
-    recovery.swing_R = begin_swing_leg(&c->chassis_posture_info.chassis_posture_R, true);
-    recovery.swing_direction = recovery.swing_L.direction;
-    update_swing_leg(&recovery.swing_L, &c->chassis_posture_info.chassis_posture_L, false, 0.0f);
-    update_swing_leg(&recovery.swing_R, &c->chassis_posture_info.chassis_posture_R, true, 0.0f);
     c->mode.chassis_balancing_mode = FOOT_LAUNCHING;
     PID_clear(&c->leg_L_length_pid);
     PID_clear(&c->leg_R_length_pid);
     PID_clear(&c->chassis_roll_pid);
-}
-
-static void begin_startup(chassis_move_t *c)
-{
-    if (both_legs_short(c)) begin_balance(c);
-    else begin_swing(c);
 }
 
 static void update_retract_status(const chassis_posture_info_t *p)
@@ -212,6 +192,16 @@ static void begin_retract(chassis_move_t *c)
     recovery.force_bias_L = recovery.force_bias_R = 0.0f;
     /* 速度积分不能冻结成收腿阶段的持续推力；改为保持各腿实际后摆角。 */
     recovery.torque_bias_L = recovery.torque_bias_R = 0.0f;
+}
+
+static void begin_startup(chassis_move_t *c)
+{
+    recovery.swing_L = begin_swing_leg(&c->chassis_posture_info.chassis_posture_L);
+    recovery.swing_R = begin_swing_leg(&c->chassis_posture_info.chassis_posture_R);
+    recovery.swing_direction = STARTUP_SWING_DIRECTION;
+    if (recovery.swing_L.ready && recovery.swing_R.ready) begin_retract(c);
+    else if (both_legs_short(c)) begin_balance(c);
+    else begin_swing(c);
 }
 
 static void begin_blend(const chassis_move_t *c)
@@ -260,7 +250,6 @@ void chassisRecoveryUpdate(chassis_move_t *c, float dt_s)
         return;
     }
 
-    recovery.control_dt_s = isfinite(dt_s) && dt_s > 0.0f && dt_s <= 0.05f ? dt_s : 0.0f;
     recovery.elapsed_s += dt_s;
     switch (recovery.state)
     {
@@ -280,17 +269,13 @@ void chassisRecoveryUpdate(chassis_move_t *c, float dt_s)
         break;
 
     case REC_SWING:
-        if (both_legs_short(c))
-        {
-            begin_balance(c);
-            break;
-        }
-        update_swing_leg(&recovery.swing_L, &p->chassis_posture_L, false, dt_s);
-        update_swing_leg(&recovery.swing_R, &p->chassis_posture_R, true, dt_s);
+        update_swing_leg(&recovery.swing_L, &p->chassis_posture_L, dt_s);
+        update_swing_leg(&recovery.swing_R, &p->chassis_posture_R, dt_s);
         /* 各腿到位分别锁存，不要求两腿同一拍卡在窄窗口内。 */
         if (recovery.swing_L.ready && recovery.swing_R.ready) begin_retract(c);
+        else if (both_legs_short(c)) begin_balance(c);
         else if (recovery.swing_L.stalled || recovery.swing_R.stalled) enter_stage(REC_WAIT);
-        else if (recovery.elapsed_s >= STARTUP_PHASE_TIMEOUT_S) enter_stage(REC_WAIT);
+        else if (recovery.elapsed_s >= STARTUP_SWING_TIMEOUT_S) enter_stage(REC_WAIT);
         break;
 
     case REC_RETRACT:
@@ -343,25 +328,6 @@ static float leg_angle_torque(const chassis_leg_posture_t *leg, bool right_leg, 
                           -STARTUP_LEG_TORQUE_LIMIT_NM, STARTUP_LEG_TORQUE_LIMIT_NM);
 }
 
-static float swing_angle_torque(SwingLegContext *swing, const chassis_leg_posture_t *leg,
-                                bool right_leg, float desired_rate)
-{
-    if (swing->ready)
-    {
-        swing->rate_integral_nm = 0.0f;
-        return leg_angle_torque(leg, right_leg, swing->hold_angle);
-    }
-    const float error = desired_rate - body_leg_rate(leg, right_leg);
-    if (!isfinite(error)) return 0.0f;
-    const float limit = STARTUP_SWING_TORQUE_LIMIT_NM;
-    const float p = STARTUP_SWING_RATE_KP * error;
-    const float delta_i = STARTUP_SWING_RATE_KI * error * recovery.control_dt_s;
-    const float candidate = fp32_constrain(swing->rate_integral_nm + delta_i, -limit, limit);
-    if (fabsf(p + candidate) <= limit || (p + candidate) * delta_i <= 0.0f)
-        swing->rate_integral_nm = candidate;
-    return fp32_constrain(p + swing->rate_integral_nm, -limit, limit);
-}
-
 static float retract_force(pid_type_def *pid, float length, float target)
 {
     PID_calc(pid, length, target);
@@ -387,12 +353,9 @@ void chassisRecoveryApply(chassis_move_t *c)
         break;
     case REC_SWING:
         clear_commands(t);
+        c->swing_velocity_active = !recovery.swing_L.ready || !recovery.swing_R.ready;
         c->swing_rate_L = swing_leg_rate(&recovery.swing_L);
         c->swing_rate_R = swing_leg_rate(&recovery.swing_R);
-        /* 仅角向力矩：径向力始终为零，允许弹簧改变腿长。
-         * 两关节独立速度环会间接锁住开合角，因此此处必须用 MIT + VMC。 */
-        t->joint_balancing_torque_L = swing_angle_torque(&recovery.swing_L, left, false, c->swing_rate_L);
-        t->joint_balancing_torque_R = swing_angle_torque(&recovery.swing_R, right, true, c->swing_rate_R);
         break;
     case REC_RETRACT:
         clear_commands(t);

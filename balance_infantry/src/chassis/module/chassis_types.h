@@ -22,7 +22,7 @@ typedef enum
 typedef enum
 {
     NO_FORCE,        /* 遥控失能，或倒地后卸力等待 */
-    FOOT_LAUNCHING,  /* 双腿相对机身后摆到 1.3±0.05 rad 并等待 */
+    FOOT_LAUNCHING,  /* 双腿按对地角摆腿到位 */
     JOINT_LAUNCHING, /* 固定腿角缩腿，随后渐进接入 LQR 并回站立角 */
     BALANCING_READY, /* 正常平衡控制 */
 } chassis_balancing_mode_e;

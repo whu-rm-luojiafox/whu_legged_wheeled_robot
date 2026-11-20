@@ -8,9 +8,21 @@ extern chassis_move_t chassis_move;
 extern robot_status_t robot_state;
 extern power_heat_data_t power_heat_data;
 
-static void send_joint(const joint_motor_t *motor, uint16_t id)
+static uint8_t transition_target[4];
+
+static uint8_t swing_drives_ready(void)
 {
-    static uint8_t transition_target[4];
+    for (uint16_t id = 1; id <= 4; ++id)
+    {
+        if (CAN_dm_control_mode(id) != DM_CONTROL_SPEED ||
+            CAN_dm_control_mode_pending(id) || transition_target[id - 1u])
+            return 0u;
+    }
+    return 1u;
+}
+
+static void send_joint(const joint_motor_t *motor, uint16_t id, uint8_t swing_ready)
+{
     const uint8_t mode = CAN_dm_control_mode(id);
     const uint16_t mode_id = id + (mode == DM_CONTROL_SPEED ? 0x200u : 0u);
     const uint8_t force_enabled = motor->motor_mode == MOTOR_FORCE;
@@ -39,7 +51,7 @@ static void send_joint(const joint_motor_t *motor, uint16_t id)
         return;
     }
     if (!force_enabled) MIT_CtrlMotor(0, 0, 0, 0, 0, id);
-    else if (motor->velocity_native) speed_ctrl(motor->velocity_set, id);
+    else if (motor->velocity_native) speed_ctrl(swing_ready ? motor->velocity_set : 0.0f, id);
     else MIT_CtrlMotor(0.0f, 0.0f, 0.0f, 0.0f, motor->torque_out, id);
 }
 
@@ -69,11 +81,13 @@ void chassisMotorSend(chassis_move_t *CMD_Send)
     if (CMD_Send->foot_motor_R.motor_mode != MOTOR_FORCE) CMD_Send->foot_motor_R.torque_out = 0.0f;
     if (CMD_Send->foot_motor_L.motor_mode != MOTOR_FORCE) CMD_Send->foot_motor_L.torque_out = 0.0f;
 
-    send_joint(&CMD_Send->joint_motor_1, 0x01);
-    send_joint(&CMD_Send->joint_motor_3, 0x03);
+    /* 等四个关节切完模式，再下发非零摆腿速度。 */
+    const uint8_t swing_ready = CMD_Send->swing_velocity_active && swing_drives_ready();
+    send_joint(&CMD_Send->joint_motor_1, 0x01, swing_ready);
+    send_joint(&CMD_Send->joint_motor_3, 0x03, swing_ready);
     vTaskDelay(1);
-    send_joint(&CMD_Send->joint_motor_2, 0x02);
-    send_joint(&CMD_Send->joint_motor_4, 0x04);
+    send_joint(&CMD_Send->joint_motor_2, 0x02, swing_ready);
+    send_joint(&CMD_Send->joint_motor_4, 0x04, swing_ready);
 
     const int16_t cmd_L = (int16_t)fp32_constrain(((-1.0f) * CMD_Send->foot_motor_L.torque_out * 2598.20f),
                                                   -16384.0f, 16384.0f);

@@ -9,7 +9,7 @@
 
 /* -------------------------- 腿长参数 -------------------------- */
 
-#define CLIMB_HIGH_LENGTH_M 0.43f
+#define CLIMB_HIGH_LENGTH_M 0.40f
 #define CLIMB_PULL_LENGTH_M 0.14f
 #define CLIMB_LENGTH_ERROR_M 0.06f
 #define CLIMB_EXTEND_LENGTH_ERROR_M 0.040f
@@ -25,7 +25,7 @@
 #define CLIMB_READY_ROLL_RAD 0.10f
 
 /* 向前接近时，机身正向俯仰超过门限并持续确认，才判定撞阶。 */
-#define CLIMB_HIT_PITCH_RAD 0.19f
+#define CLIMB_HIT_PITCH_RAD 0.22f
 
 #define CLIMB_ABORT_PITCH_RAD 0.55f
 #define CLIMB_ABORT_ROLL_RAD 0.30f
@@ -401,7 +401,6 @@ void chassisClimbProcess(chassis_move_t *chassis)
 
             lengthSet = climbSmoothLength(ctx->motionStartLength, CLIMB_PULL_LENGTH_M, now, ctx->stateTick,
                                           CLIMB_PULL_TIME_MS);
-
             climbSetLegLength(chassis, lengthSet);
 
             /* 收腿到位的确认与轨迹并行，不再串行等待机身静止。

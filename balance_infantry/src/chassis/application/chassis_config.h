@@ -27,18 +27,16 @@
 /* Keep Ki's original per-4ms tuning convention, integrate using measured dt.
  * D uses measured roll rate, N/(rad/s), instead of differencing the angle. */
 #define ROLL_PID_NOMINAL_DT_S 0.004f
-/* 起立/自救：腿相对机身后摆到 1.3 rad 就缩腿，不要求先撑起机身。 */
-#define LEG_SWING_MOTOR_SPEED_RAD_S 0.8f
-#define STARTUP_SWING_DIRECTION (-1.0f) /* 统一从车体左侧看顺时针；右侧镜像由电机映射处理。 */
-#define STARTUP_SWING_RATE_KP 8.0f /* 仅虚拟腿角速度 PI，N*m/(rad/s)。 */
-#define STARTUP_SWING_RATE_KI 6.0f /* N*m/rad；不约束径向腿长。 */
-#define STARTUP_SWING_TORQUE_LIMIT_NM 8.0f
-#define STARTUP_SWING_TARGET_ANGLE_RAD 1.6f
-#define STARTUP_LEG_ANGLE_MIN_RAD 1.0f /* 已在后方的腿直接记为到位，不因略过 1.3 而再绕一圈。 */
+/* 起立/自救：双腿的对地角到位后开始缩腿。 */
+#define LEG_SWING_MOTOR_SPEED_RAD_S 0.80f
+#define STARTUP_SWING_DIRECTION (-1.0f) /* 手摆实测：前到后时机身局部角沿负方向跨过 ±π。 */
+#define STARTUP_SWING_TARGET_ANGLE_RAD 1.4f
+#define STARTUP_LEG_ANGLE_MIN_RAD 1.2f /* 摆腿到位窗口使用对地角。 */
 #define STARTUP_LEG_ANGLE_MAX_RAD (STARTUP_SWING_TARGET_ANGLE_RAD + 0.05f)
 #define STARTUP_SWING_STALL_PROGRESS_RAD 0.015f /* 检查局部腿角，排除机身 pitch 的假进展。 */
 #define STARTUP_SWING_STALL_TIME_S 1.5f
-#define STARTUP_RETRACT_SPEED_M_S 0.30f /* 三次曲线峰值速度：缩短 20 cm 约需 1.0 s。 */
+#define STARTUP_SWING_TIMEOUT_S 17.0f /* 0.40 rad/s 下最长摆动约 14.1 s，另留跟踪余量。 */
+#define STARTUP_RETRACT_SPEED_M_S 0.40f /* 三次曲线峰值速度：缩短 20 cm 约需 1.0 s。 */
 #define STARTUP_RETRACT_MIN_TIME_S 0.3f
 #define STARTUP_LENGTH_TOLERANCE_M 0.03f /* 轨迹结束且腿长到位后交接，不再要求腿角到位。 */
 #define STARTUP_SETTLE_TIME_S 0.15f

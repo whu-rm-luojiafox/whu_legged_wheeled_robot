@@ -317,7 +317,8 @@ void chassisControlMap(chassis_move_t *bl_ctrl, float dt_s)
         speed_control ? -bl_ctrl->swing_rate_R : 0.0f;
     bl_ctrl->joint_motor_1.velocity_native = bl_ctrl->joint_motor_2.velocity_native =
         bl_ctrl->joint_motor_3.velocity_native = bl_ctrl->joint_motor_4.velocity_native = speed_control;
-    if (speed_control)
+    /* 失能时清零实际命令，避免再次使能时从未下发的力矩开始限斜率。 */
+    if (speed_control || bl_ctrl->mode.chassis_mode == DISABLE_CHASSIS)
     {
         bl_ctrl->joint_motor_1.torque_out = bl_ctrl->joint_motor_2.torque_out =
             bl_ctrl->joint_motor_3.torque_out = bl_ctrl->joint_motor_4.torque_out = 0.0f;
